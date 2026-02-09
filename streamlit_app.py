@@ -146,6 +146,7 @@ st.markdown("Explanation / introduction")
 
 st.header("Data input", divider="rainbow")
 
+# Age input
 age = st.number_input(
     "**Age**",
     min_value=18,
@@ -155,6 +156,8 @@ age = st.number_input(
     value=None,
     placeholder="Age",
 )
+
+# Ethnicity selectbox
 ethnicity = st.selectbox(
     "**Ethnicity**",
     ETHCNICITIES,
@@ -162,6 +165,8 @@ ethnicity = st.selectbox(
     index=None,
     placeholder="Select ethnicity",
 )
+
+# Sex radio buttons
 sex_map = {"M": "Male", "F": "Female"}
 sex = st.radio(
     "**Sex**",
@@ -170,6 +175,8 @@ sex = st.radio(
     index=None,
     help="Patient sex at birth",
 )
+
+# Cancer radio buttons
 cancer = st.radio(
     "**Prior cancer**",
     options=[True, False],
@@ -177,18 +184,24 @@ cancer = st.radio(
     index=1,
     help="Did the patient have cancer?",
 )
+
+# Acuity radio buttons
 acuity = st.radio(
     "**Admission acuity**",
     ["Elective", "Acute"],
     index=0,
     help="Is the surgery elective or acute?",
 )
+
+# Source radio buttons
 source = st.radio(
     "**Admission source**",
     ["Routine", "Transfer"],
     index=0,
     help="Is the patient transfered from another hospital?",
 )
+
+# Traum radio buttons
 trauma = st.radio(
     "**Trauma**",
     index=1,
@@ -196,9 +209,13 @@ trauma = st.radio(
     options=[True, False],
     format_func=lambda x: "Yes" if x else "No",
 )
+
+# DEP slider
 dep = st.slider(
     "**NZDep**", min_value=1, max_value=10, step=1, help="NZ Index of Depravation"
 )
+
+# GCH selectbox
 gch = st.selectbox(
     "**GCH**",
     GCH,
@@ -206,6 +223,8 @@ gch = st.selectbox(
     index=None,
     placeholder="Select GCH",
 )
+
+# M3 score input
 m3_score = st.number_input(
     "**M3 score**",
     min_value=0.0,
@@ -247,6 +266,7 @@ op_severity = st.slider(
     help="Operation severity",
     step=1,
 )
+
 selected_labels = st.multiselect(
     "**Predicted outcomes**",
     options=LABEL_MAP.keys(),
