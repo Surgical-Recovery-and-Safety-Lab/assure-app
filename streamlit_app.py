@@ -327,20 +327,21 @@ if is_ready:
 
 st.header("Results", divider="rainbow")
 if computed:
-    labels = [LABEL_MAP[label_list[idx]] for idx in idx_list]
-    plot_df = DataFrame({"Predicted outcomes": labels, "Probability": output_proba})
+    with st.container():
+        labels = [LABEL_MAP[label_list[idx]] for idx in idx_list]
+        plot_df = DataFrame({"Predicted outcomes": labels, "Probability": output_proba})
 
-    chart = (
-        alt.Chart(plot_df)
-        .mark_bar()
-        .encode(
-            # Fix the X axis from 0 to 1
-            x=alt.X("Probability:Q", scale=alt.Scale(domain=[0, 1])),
-            # Sort by probability so the highest is at the top
-            y=alt.Y("Predicted outcomes:N", sort="-x"),
-            # Optional: Change color based on value
-            color=alt.Color("Probability:Q", scale=alt.Scale()),
-            tooltip=["Predicted outcomes", "Probability"],
+        chart = (
+            alt.Chart(plot_df)
+            .mark_bar()
+            .encode(
+                # Fix the X axis from 0 to 1
+                x=alt.X("Probability:Q", scale=alt.Scale(domain=[0, 1])),
+                # Sort by probability so the highest is at the top
+                y=alt.Y("Predicted outcomes:N", sort="-x"),
+                # Optional: Change color based on value
+                color=alt.Color("Probability:Q", scale=alt.Scale()),
+                tooltip=["Predicted outcomes", "Probability"],
+            )
         )
-    )
-    st.altair_chart(chart)
+        st.altair_chart(chart)
