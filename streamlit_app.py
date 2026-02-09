@@ -32,10 +32,13 @@ def convert_dtypes(data):
     return data
 
 
-# Define some constants
+# Define session state variables
 if "model_run" not in st.session_state:
     # Session state flag to check if model has run at least once
     st.session_state.model_run = False
+if "output_proba" not in st.session_state:
+    # Session state variable to keep output probabilities
+    st.session_state.output_proba = array([])
 
 st.title("NZ AI Risk Score")
 st.logo("assets/logo.png", size="large")
@@ -184,26 +187,30 @@ input_features = [
 ]
 is_ready = None not in input_features  # Define the is_ready flag
 
-run = st.button("Run model", disabled=not is_ready)
+run_model_col, run_info_col = st.columns(2, vertical_alignment="center")
+with run_model_col:
+    run = st.button("Run model", disabled=not is_ready)
+with run_info_col:
+    if is_ready:
+        if run:
+            # Your model code here
+            pipeline = app_load_pipeline()
+            label_list = pipeline.label_list
+            data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
+            input_data = pipeline.transform(convert_dtypes(data))
+            output_proba = pipeline.predict_proba(
+                input_data, idx=-1, model_type="predictor"
+            )
+            st.session_state.output_proba = array(output_proba)[
+                :, 0, 1
+            ]  # Reshape to only get positives
+            st.session_state.model_run = True
+        st.info("To generate results with new data, please click on 'Run model' again.")
+    else:
+        st.info("Please fill out all fields to enable the 'Run model' button.")
 
-if is_ready:
-    if run:
-        # Your model code here
-        pipeline = app_load_pipeline()
-        label_list = pipeline.label_list
-        data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-        input_data = pipeline.transform(convert_dtypes(data))
-        output_proba = pipeline.predict_proba(
-            input_data, idx=-1, model_type="predictor"
-        )
-        pos_proba = array(output_proba)[:, 0, 1]  # Reshape to only get positives
-        st.session_state.model_run = True
-
-else:
-    st.info("Please fill out all fields to enable the 'Run model' button.")
-
-st.header("Results", divider="rainbow")
-if computed:
+if st.session_state.model_run:
+    st.header("Results", divider="rainbow")
     with st.container():
         labels = [LABEL_MAP[label_list[idx]] for idx in idx_list]
         plot_df = DataFrame({"Predicted outcomes": labels, "Probability": output_proba})
