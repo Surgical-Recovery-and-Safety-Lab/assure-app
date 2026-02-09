@@ -25,6 +25,7 @@ def convert_dtypes(data):
 ETHCNICITIES = ["Asian", "European", "Māori", "MELAA/Other", "Pacific Peoples"]
 GCH = ["U1", "U2", "R1", "R2", "R3"]
 CATEGORIES = {
+    None: "Placeholder",
     "Obstetrics & Gynaecology": [
         "Cervical & Vulval",
         "Obstetrics",
@@ -214,21 +215,31 @@ m3_score = st.number_input(
     value=None,
     placeholder="M3 score",
 )
+
+# Category L1 selectbox
+category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
 category_l1 = st.selectbox(
     "**Surgical specialty**",
-    CATEGORIES.keys(),
+    category_l1_options,
     help="Surgical specialty of the operation",
     index=None,
     placeholder="Specialty",
 )
+
+# Category L2 selectbox (depends on L1)
+category_l2_disabled = True
 if category_l1:
-    category_l2 = st.selectbox(
-        "**Surgical sub-specialty**",
-        CATEGORIES[category_l1],
-        help="Surgical sub-specialty",
-        index=None,
-        placeholder="Sub-specialty",
-    )
+    category_l2_disabled = False
+category_l2 = st.selectbox(
+    "**Surgical sub-specialty**",
+    CATEGORIES[category_l1],
+    help="Surgical sub-specialty, select a specialty to see options",
+    index=None,
+    placeholder="Sub-specialty",
+    disabled=category_l2_disabled,
+)
+
+# Op severity slider
 op_severity = st.slider(
     "**Operation severity**",
     min_value=1,
