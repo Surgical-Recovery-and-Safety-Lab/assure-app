@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+streamlit_app.py
+
+Streamlit NZ Risk Score app.
+"""
+
 import altair as alt
 import streamlit as st
 from numpy import arange, expand_dims, zeros
