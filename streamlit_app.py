@@ -137,6 +137,9 @@ LABEL_MAP = {
     "UTI": "UTI",
 }
 
+if "model_run" not in st.session_state:
+    # Session state flag to check if model has run at least once
+    st.session_state.model_run = False
 
 st.title("NZ AI Risk Score")
 st.logo("assets/logo.png", size="large")
@@ -267,33 +270,23 @@ op_severity = st.slider(
     step=1,
 )
 
-selected_labels = st.multiselect(
-    "**Predicted outcomes**",
-    options=LABEL_MAP.keys(),
-    format_func=lambda x: LABEL_MAP[x],
-    placeholder="Predicted outcomes",
-)
-
-is_ready = False  # Define the is_ready flag
-computed = False  # Flag to see if model has computed
-if category_l1:
-    input_features = [
-        age,
-        ethnicity,
-        sex,
-        dep,
-        gch,
-        m3_score,
-        cancer,
-        "Auckland City Hospital",
-        acuity,
-        source,
-        category_l1,
-        category_l2,
-        op_severity,
-        trauma,
-    ]
-    is_ready = None not in input_features and None not in selected_labels
+input_features = [
+    age,
+    ethnicity,
+    sex,
+    dep,
+    gch,
+    m3_score,
+    cancer,
+    "Auckland City Hospital",
+    acuity,
+    source,
+    category_l1,
+    category_l2,
+    op_severity,
+    trauma,
+]
+is_ready = None not in input_features  # Define the is_ready flag
 
 run = st.button("Run model", disabled=not is_ready)
 
@@ -304,26 +297,14 @@ if is_ready:
         label_list = pipeline.label_list
         data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
         input_data = pipeline.transform(convert_dtypes(data))
+        output_proba = pipeline.predict_proba(
+            input_data, idx=-1, model_type="predictor"
+        )
+        pos_proba = array(output_proba)[:, 0, 1]  # Reshape to only get positives
+        st.session_state.model_run = True
 
-        if "ALL" in selected_labels:
-            idx_list = arange(len(label_list))
-        else:
-            idx_list = [
-                label_list.index(selected_labels[i])
-                for i in range(len(selected_labels))
-            ]
-        output_proba = zeros(len(idx_list))
-
-        for i, idx in enumerate(idx_list):
-            prediction = pipeline.predict_proba(
-                input_data, idx=idx, model_type="predictor"
-            )
-            output_proba[i] = prediction[0][1]
-        computed = True
-
-    else:
-        if not is_ready:
-            st.info("Please fill out all fields to enable the 'Run model' button.")
+else:
+    st.info("Please fill out all fields to enable the 'Run model' button.")
 
 st.header("Results", divider="rainbow")
 if computed:
