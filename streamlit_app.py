@@ -8,7 +8,7 @@ Streamlit NZ Risk Score app.
 
 import altair as alt
 import streamlit as st
-from numpy import arange, expand_dims, zeros
+from numpy import array, expand_dims
 from pandas import DataFrame, to_numeric
 from pyrisk.models.core import load_pipeline
 
@@ -30,6 +30,12 @@ def convert_dtypes(data):
         if column in ["PRIOR_CANCER", "TRAUMA"]:
             data[column] = data[column].astype(bool)
     return data
+
+
+def sync_toggles():
+    """Sync the toggles based on the all toggle"""
+    for key in LABEL_MAP.keys():
+        st.session_state[key] = st.session_state.ALL
 
 
 # Define session state variables
@@ -227,5 +233,38 @@ if st.session_state.model_run:
                 color=alt.Color("Probability:Q", scale=alt.Scale()),
                 tooltip=["Predicted outcomes", "Probability"],
             )
+        else:
+            st.info("Please fill out all fields to enable the 'Run model' button.")
+
+    st.divider()
+    if st.session_state.model_run:
+        st.header("Results", divider="rainbow")
+        st.subheader("Outcomes")
+        st.write(
+            "Please select the outcomes to visualise. There is no need to re-run the model to view different outcomes."
         )
-        st.altair_chart(chart)
+        col1, col2, col3 = st.columns(3)
+        selected_labels = []
+        with col1:
+            for i, key in enumerate(LABEL_MAP.keys()):
+                if i >= len(LABEL_MAP) / 3:
+                    # Break after passing the first third
+                    break
+
+                if key == "ALL":
+                    toggle = st.toggle(LABEL_MAP[key], key=key, on_change=sync_toggles)
+                else:
+                    toggle = st.toggle(LABEL_MAP[key], key=key)
+                selected_labels.append(toggle)
+        with col2:
+            for i, key in enumerate(LABEL_MAP.keys()):
+                if i >= 2 * len(LABEL_MAP) / 3:
+                    # Break after passing the second third
+                    break
+
+                if i >= len(LABEL_MAP) / 3:
+                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
+        with col3:
+            for i, key in enumerate(LABEL_MAP.keys()):
+                if i >= 2 * len(LABEL_MAP) / 3:
+                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
