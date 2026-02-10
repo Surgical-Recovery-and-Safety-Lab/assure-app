@@ -70,12 +70,12 @@ if "consent" not in st.session_state:
 if not st.session_state.consent:
     show_consent_page()
 else:
-    st.title("NZ AI Risk Score")
+    st.title("PAIRS ANZ")
     st.logo("assets/logo.png", size="large")
 
     st.header("Surgical risk score calculator", divider="rainbow")
     st.write(
-        "The NZ AI Risk Score Calculator uses artificial intelligence to predict the risk of mortality and complications post-surgery. Input the patient information below and click on 'Run model' to generate the results."
+        "The PAIRS ANZ (Patient AI Risk Score Aotearoa New Zealand) uses artificial intelligence to predict the risk of mortality and complications post-surgery. Input the patient information below and click on 'Run model' to generate the results."
     )
     st.write("Click on the 'Reset' button below if you do not want to continue.")
     st.button("Reset", on_click=lambda: st.session_state.update({"consent": False}))
