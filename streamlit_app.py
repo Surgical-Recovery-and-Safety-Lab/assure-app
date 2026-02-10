@@ -268,3 +268,29 @@ if st.session_state.model_run:
             for i, key in enumerate(LABEL_MAP.keys()):
                 if i >= 2 * len(LABEL_MAP) / 3:
                     selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
+
+        with st.container():
+            labels = [
+                LABEL_MAP[key]
+                for key in LABEL_MAP.keys()
+                if st.session_state[key] and key != "ALL"
+            ]
+            probabilities = st.session_state.output_proba[selected_labels[1:]]
+            plot_df = DataFrame(
+                {"Predicted outcomes": labels, "Probability": probabilities}
+            )
+
+            chart = (
+                alt.Chart(plot_df)
+                .mark_bar()
+                .encode(
+                    # Fix the X axis from 0 to 1
+                    x=alt.X("Probability:Q", scale=alt.Scale(domain=[0, 1])),
+                    # Sort by probability so the highest is at the top
+                    y=alt.Y("Predicted outcomes:N", sort="-x"),
+                    # Optional: Change color based on value
+                    color=alt.Color("Probability:Q", scale=alt.Scale()),
+                    tooltip=["Predicted outcomes", "Probability"],
+                )
+            )
+            st.altair_chart(chart)
