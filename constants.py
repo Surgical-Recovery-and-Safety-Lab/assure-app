@@ -50,7 +50,7 @@ CATEGORIES = {
         "Head & Neck Tumour / Resection",
         "Other ENT",
     ],
-    "Oral & Maxillofacial": "Oral & Maxillofacial",
+    "Oral & Maxillofacial": ["Oral & Maxillofacial"],
     "Neurosurgery": ["Cranial", "Spine", "Peripheral Nerve", "Other Neurosurgery"],
     "Urology": [
         "Bladder",
@@ -81,7 +81,7 @@ CATEGORIES = {
         "Other Thoracic",
     ],
     "Transplant": ["Kidney", "Liver", "Heart", "Lung", "Pancreas"],
-    "Other": "Other",
+    "Other": ["Other"],
 }
 COLUMNS = [
     "AGE",
