@@ -253,9 +253,9 @@ else:
                 output_proba = pipeline.predict_proba(
                     input_data, idx=-1, model_type="predictor"
                 )
-                st.session_state.output_proba = array(output_proba)[
-                    :, 0, 1
-                ]  # Reshape to only get positives
+                st.session_state.output_proba = (
+                    100 * array(output_proba)[:, 0, 1]
+                )  # Reshape to only get positives
                 st.session_state.model_run = True
             st.info(
                 "To generate results with new data, please click on 'Run model' again."
@@ -304,7 +304,7 @@ else:
             ]
             probabilities = st.session_state.output_proba[selected_labels[1:]]
             plot_df = DataFrame(
-                {"Predicted outcomes": labels, "Probability": probabilities}
+                {"Predicted outcomes": labels, "Risk percentage": probabilities}
             )
 
             chart = (
@@ -312,12 +312,12 @@ else:
                 .mark_bar()
                 .encode(
                     # Fix the X axis from 0 to 1
-                    x=alt.X("Probability:Q", scale=alt.Scale(domain=[0, 1])),
+                    x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
                     # Sort by probability so the highest is at the top
                     y=alt.Y("Predicted outcomes:N", sort="-x"),
                     # Optional: Change color based on value
-                    color=alt.Color("Probability:Q", scale=alt.Scale()),
-                    tooltip=["Predicted outcomes", "Probability"],
+                    color=alt.Color("Risk percentage:Q", scale=alt.Scale()),
+                    tooltip=["Predicted outcomes", "Risk percentage"],
                 )
             )
             st.altair_chart(chart)
