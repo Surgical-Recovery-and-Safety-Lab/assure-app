@@ -263,7 +263,6 @@ else:
         else:
             st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    st.divider()
     if st.session_state.model_run:
         st.header("Results", divider="rainbow")
         st.subheader("Outcomes")
@@ -307,17 +306,25 @@ else:
                 {"Predicted outcomes": labels, "Risk percentage": probabilities}
             )
 
-            chart = (
-                alt.Chart(plot_df)
-                .mark_bar()
-                .encode(
-                    # Fix the X axis from 0 to 1
-                    x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
-                    # Sort by probability so the highest is at the top
-                    y=alt.Y("Predicted outcomes:N", sort="-x"),
-                    # Optional: Change color based on value
-                    color=alt.Color("Risk percentage:Q", scale=alt.Scale()),
-                    tooltip=["Predicted outcomes", "Risk percentage"],
-                )
+            base = alt.Chart(plot_df).encode(
+                x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
+                y=alt.Y("Predicted outcomes:N", sort="-x"),
+                tooltip=["Predicted outcomes", "Risk percentage"],
             )
+
+            bars = base.mark_bar().encode(
+                color=alt.Color("Risk percentage:Q", scale=alt.Scale(scheme="cividis"))
+            )
+
+            text = base.mark_text(
+                align="left",
+                baseline="middle",
+                dx=3,  # Shifts the text slightly to the right of the bar
+            ).encode(
+                text=alt.Text(
+                    "Risk percentage:Q", format=".1f"
+                )  # Rounds to 1 decimal place
+            )
+
+            chart = (bars + text).properties(width=600)
             st.altair_chart(chart)
