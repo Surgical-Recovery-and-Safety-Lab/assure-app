@@ -38,6 +38,15 @@ def sync_toggles():
         st.session_state[key] = st.session_state.ALL
 
 
+def reset_app():
+    """Reset all session state variables"""
+    for key in LABEL_MAP.keys():
+        st.session_state[key] = False
+
+    st.session_state.consent = False
+    st.session_state.model_run = False
+
+
 def show_consent_page():
     st.title("Data Usage & Model Consent")
     st.warning("Please read the following carefully before proceeding.")
@@ -78,7 +87,7 @@ else:
         "The PAIRS ANZ (Patient AI Risk Score Aotearoa New Zealand) uses artificial intelligence to predict the risk of mortality and complications post-surgery. Input the patient information below and click on 'Run model' to generate the results."
     )
     st.write("Click on the 'Reset' button below if you do not want to continue.")
-    st.button("Reset", on_click=lambda: st.session_state.update({"consent": False}))
+    st.button("Reset", on_click=reset_app)
 
     st.header("Data input", divider="rainbow")
 
