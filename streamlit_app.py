@@ -188,13 +188,17 @@ else:
 
     # Category L2 selectbox (depends on L1)
     category_l2_disabled = True
+    index = None
     if category_l1:
         category_l2_disabled = False
+        if len(CATEGORIES[category_l1]) == 1:
+            index = 0
+
     category_l2 = st.selectbox(
         "**Surgical sub-specialty**",
         CATEGORIES[category_l1],
         help="Surgical sub-specialty, select a specialty to see options",
-        index=None,
+        index=index,
         placeholder="Sub-specialty",
         disabled=category_l2_disabled,
     )
