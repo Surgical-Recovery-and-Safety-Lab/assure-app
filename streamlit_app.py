@@ -110,6 +110,7 @@ else:
         format_func=lambda x: sex_map[x],
         index=None,
         help="Patient sex at birth",
+        horizontal=True,
     )
 
     # Cancer radio buttons
@@ -119,6 +120,7 @@ else:
         format_func=lambda x: "Yes" if x else "No",
         index=1,
         help="Did the patient have cancer?",
+        horizontal=True,
     )
 
     # Acuity radio buttons
@@ -127,6 +129,7 @@ else:
         ["Elective", "Acute"],
         index=0,
         help="Is the surgery elective or acute?",
+        horizontal=True,
     )
 
     # Source radio buttons
@@ -135,6 +138,7 @@ else:
         ["Routine", "Transfer"],
         index=0,
         help="Is the patient transfered from another hospital?",
+        horizontal=True,
     )
 
     # Traum radio buttons
@@ -144,6 +148,7 @@ else:
         help="Trauma",
         options=[True, False],
         format_func=lambda x: "Yes" if x else "No",
+        horizontal=True,
     )
 
     # DEP slider
