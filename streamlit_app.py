@@ -18,7 +18,7 @@ from constants import CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP
 @st.cache_resource
 def app_load_pipeline():
     """Load the pipeline"""
-    pipeline = load_pipeline("models/ai_risk_HGB-v0.3.1.3-d.1.3.2.pkl")
+    pipeline = load_pipeline("model/ai_risk_HGB-v0.4.1.4-d.1.3.2.pkl")
     return pipeline
 
 
@@ -229,7 +229,6 @@ else:
         gch,
         m3_score,
         cancer,
-        "Auckland City Hospital",
         acuity,
         source,
         category_l1,
