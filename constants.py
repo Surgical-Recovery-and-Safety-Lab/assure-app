@@ -42,7 +42,7 @@ CATEGORIES = {
         "Arthroscopy",
         "Amputations",
     ],
-    "Ophthalmology": "Ophthalmology",
+    "Ophthalmology": ["Ophthalmology"],
     "ENT": [
         "Throat / Larynx / Airway",
         "Nasal / Sinus Surgery",
@@ -91,7 +91,6 @@ COLUMNS = [
     "GCH2018_ORIGINAL",
     "M3_SCORE",
     "PRIOR_CANCER",
-    "FACILITY",
     "ADMISSION_ACUITY",
     "ADMISSION_SOURCE",
     "CATEGORY_LEVEL_1",
@@ -102,6 +101,10 @@ COLUMNS = [
 LABEL_MAP = {
     "ALL": "All",
     "MORTALITY_30D": "30-day mortality",
+    "MORTALITY_90D": "90-day mortality",
+    "MORTALITY_1Y": "1-year mortality",
+    "READMIT_ACUTE_30D": "30-day acute readmission",
+    "READMIT_ACUTE_90D": "90-day acute readmission",
     "ANY_COMP": "Any complications",
     "SSI": "SSI",
     "VTE": "VTE",

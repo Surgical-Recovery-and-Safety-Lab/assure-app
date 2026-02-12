@@ -250,7 +250,7 @@ else:
                 data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
                 input_data = pipeline.transform(convert_dtypes(data))
                 output_proba = pipeline.predict_proba(
-                    input_data, idx=-1, model_type="predictor"
+                    input_data, label_list="all", model_type="predictor"
                 )
                 st.session_state.output_proba = (
                     100 * array(output_proba)[:, 0, 1]
