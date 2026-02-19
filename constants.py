@@ -118,7 +118,7 @@ LABEL_MAP = {
     "DELIRIUM": "Delirium",
     "GI_BLEEDING": "GI bleeding",
     "HAEMORRHAGE": "Haemorrhage",
-    "IMPLANT_GRAFT": "Implant graft",
+    "IMPLANT_GRAFT": "Implant / graft complications",
     "MYOCARDIAL_INFARCTION": "Myocardial infarction",
     "PNEUMONIA": "Pneumonia",
     "UTI": "UTI",
