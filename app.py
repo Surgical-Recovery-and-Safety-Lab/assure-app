@@ -8,9 +8,9 @@ Streamlit NZ Risk Score app.
 
 import altair as alt
 import streamlit as st
+from medpipe.models.core import load_pipeline
 from numpy import array, expand_dims
 from pandas import DataFrame, to_numeric
-from pyrisk.models.core import load_pipeline
 
 from constants import CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP
 
