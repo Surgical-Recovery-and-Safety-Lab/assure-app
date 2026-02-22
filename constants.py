@@ -85,10 +85,10 @@ CATEGORIES = {
 }
 COLUMNS = [
     "AGE",
-    "ETHNICITY_ORIGINAL",
-    "SEX_ORIGINAL",
-    "DEP18_ORIGINAL",
-    "GCH2018_ORIGINAL",
+    "ETHNICITY",
+    "SEX",
+    "DEP18",
+    "GCH2018",
     "M3_SCORE",
     "PRIOR_CANCER",
     "ADMISSION_ACUITY",
