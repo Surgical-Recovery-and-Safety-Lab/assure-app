@@ -1,2 +1,2 @@
 __pycache__/
-models/  # Ignore models
+assets/*.joblib
