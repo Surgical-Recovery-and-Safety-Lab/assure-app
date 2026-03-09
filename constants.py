@@ -7,6 +7,7 @@ Constants for the app.
 """
 
 MODEL = "assets/ai_risk_HGBc-v0.5.1.5-d.1.3.2.joblib"
+AVERAGES = "assets/op_averages.joblib"
 ETHCNICITIES = ["Asian", "European", "Māori", "MELAA/Other", "Pacific Peoples"]
 GCH = ["U1", "U2", "R1", "R2", "R3"]
 CATEGORIES = {

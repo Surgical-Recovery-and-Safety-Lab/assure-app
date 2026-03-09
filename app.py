@@ -7,12 +7,13 @@ Streamlit NZ Risk Score app.
 """
 
 import altair as alt
+import joblib
 import streamlit as st
 from medpipe.models.core import load_pipeline
 from numpy import array, expand_dims
 from pandas import DataFrame, to_numeric
 
-from constants import CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP
+from constants import AVERAGES, CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP, MODEL
 
 
 @st.cache_resource
@@ -20,6 +21,13 @@ def app_load_pipeline():
     """Load the pipeline"""
     pipeline = load_pipeline(MODEL)
     return pipeline
+
+
+@st.cache_resource
+def app_load_averages():
+    """Load operation averages"""
+    op_averages = joblib.load(AVERAGES)
+    return op_averages
 
 
 def convert_dtypes(data):
