@@ -18,7 +18,7 @@ from constants import CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP
 @st.cache_resource
 def app_load_pipeline():
     """Load the pipeline"""
-    pipeline = load_pipeline("model/ai_risk_HGBc-v0.5.1.5-d.1.3.2.pkl")
+    pipeline = load_pipeline(MODEL)
     return pipeline
 
 
