@@ -40,19 +40,28 @@ def convert_dtypes(data):
     return data
 
 
-def sync_toggles():
-    """Sync the toggles based on the all toggle"""
-    for key in LABEL_MAP.keys():
-        st.session_state[key] = st.session_state.ALL
+def sync_global_outcome_toggles():
+    """Sync the global outcome toggles based on the all toggle"""
+    for key in LABEL_MAP["GLOBAL_OUTCOMES"].keys():
+        st.session_state[key] = st.session_state.GLOBAL_OUTCOMES
+
+
+def sync_complication_toggles():
+    """Sync the complication toggles based on the all toggle"""
+    for key in LABEL_MAP["COMPLICATIONS"].keys():
+        st.session_state[key] = st.session_state.COMPLICATIONS
 
 
 def reset_app():
     """Reset all session state variables"""
-    for key in LABEL_MAP.keys():
-        st.session_state[key] = False
-
+    st.session_state.COMPLICATIONS = False
+    st.session_state.GLOBAL_OUTCOMES = False
     st.session_state.consent = False
     st.session_state.model_run = False
+
+    # Reset all toggles to False
+    sync_complication_toggles()
+    sync_global_outcome_toggles()
 
 
 def show_consent_page():
@@ -83,6 +92,13 @@ if "output_proba" not in st.session_state:
 if "consent" not in st.session_state:
     # Session state varible for consent
     st.session_state.consent = False
+if "GLOBAL_OUTCOMES" not in st.session_state:
+    # Session state variable for all global outcomes
+    st.session_state.GLOBAL_OUTCOMES = False
+if "COMPLICATIONS" not in st.session_state:
+    # Session state variable for all global outcomes
+    st.session_state.COMPLICATIONS = False
+
 
 if not st.session_state.consent:
     show_consent_page()
@@ -252,7 +268,6 @@ else:
     with run_info_col:
         if is_ready:
             if run:
-                # Your model code here
                 pipeline = app_load_pipeline()
                 label_list = pipeline.label_list
                 data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
@@ -260,9 +275,11 @@ else:
                 output_proba = pipeline.predict_proba(
                     input_data, label_list="all", model_type="predictor"
                 )
-                st.session_state.output_proba = (
-                    100 * array(output_proba)[:, 0, 1]
-                )  # Reshape to only get positives
+                st.session_state.output_proba = {
+                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(label_list))
+                }
+                # Reshape to create dictionary with only positive probas
                 st.session_state.model_run = True
             st.info(
                 "To generate results with new data, please click on 'Run model' again."
@@ -272,51 +289,121 @@ else:
 
     if st.session_state.model_run:
         st.header("Results", divider="rainbow")
-        st.subheader("Outcomes")
+        st.subheader("Global outcomes")
         st.write(
-            "Please select the outcomes to visualise. There is no need to re-run the model to view different outcomes."
+            "Please select the global outcomes to visualise. There is no need to re-run the model to view different outcomes."
         )
-        col1, col2, col3 = st.columns(3)
-        selected_labels = []
-        with col1:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= len(LABEL_MAP) / 3:
-                    # Break after passing the first third
-                    break
+        # Get global outcome and complication dictionaries
+        global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
+        complications_dict = LABEL_MAP["COMPLICATIONS"]
 
-                if key == "ALL":
-                    toggle = st.toggle(LABEL_MAP[key], key=key, on_change=sync_toggles)
-                else:
-                    toggle = st.toggle(LABEL_MAP[key], key=key)
-                selected_labels.append(toggle)
-        with col2:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= 2 * len(LABEL_MAP) / 3:
-                    # Break after passing the second third
-                    break
-
-                if i >= len(LABEL_MAP) / 3:
-                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
-        with col3:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= 2 * len(LABEL_MAP) / 3:
-                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
+        # Create global outcomes layout
+        all_toggle = st.toggle(
+            global_outcomes_dict["GLOBAL_OUTCOMES"],
+            key="GLOBAL_OUTCOMES",
+            on_change=sync_global_outcome_toggles,
+        )
 
         with st.container():
-            labels = [
-                LABEL_MAP[key]
-                for key in LABEL_MAP.keys()
-                if st.session_state[key] and key != "ALL"
-            ]
-            probabilities = st.session_state.output_proba[selected_labels[1:]]
+            global_outcomes_col1, global_outcomes_col2 = st.columns(2)
+            for i, key in enumerate(global_outcomes_dict.keys()):
+                if i >= len(global_outcomes_dict) / 2:
+                    col = global_outcomes_col2
+                else:
+                    col = global_outcomes_col1
+
+                with col:
+                    if key == "GLOBAL_OUTCOMES":
+                        continue
+                    else:
+                        toggle = st.toggle(global_outcomes_dict[key], key=key)
+
+            # Empty list to store global outcomes to plot
+            global_labels = []
+            global_outcomes_proba = []
+
+            for key in global_outcomes_dict.keys():
+                if st.session_state[key] and key != "GLOBAL_OUTCOMES":
+                    global_labels.append(global_outcomes_dict[key])
+                    global_outcomes_proba.append(st.session_state.output_proba[key])
             plot_df = DataFrame(
-                {"Predicted outcomes": labels, "Risk percentage": probabilities}
+                {
+                    "Global outcomes": global_labels,
+                    "Risk percentage": global_outcomes_proba,
+                }
             )
 
             base = alt.Chart(plot_df).encode(
                 x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
-                y=alt.Y("Predicted outcomes:N", sort="-x"),
-                tooltip=["Predicted outcomes", "Risk percentage"],
+                y=alt.Y("Global outcomes:N", sort="-x"),
+                tooltip=["Global outcomes", "Risk percentage"],
+            )
+
+            bars = base.mark_bar().encode(
+                color=alt.Color("Risk percentage:Q", scale=alt.Scale(scheme="cividis"))
+            )
+
+            text = base.mark_text(
+                align="left",
+                baseline="middle",
+                dx=3,  # Shifts the text slightly to the right of the bar
+            ).encode(
+                text=alt.Text(
+                    "Risk percentage:Q", format=".1f"
+                )  # Rounds to 1 decimal place
+            )
+
+            chart = (bars + text).properties(width=600)
+            st.altair_chart(chart)
+
+        # Create complications layout
+        st.subheader("Complications")
+        st.write(
+            "Please select the complications to visualise. There is no need to re-run the model to view different outcomes."
+        )
+
+        all_toggle = st.toggle(
+            complications_dict["COMPLICATIONS"],
+            key="COMPLICATIONS",
+            on_change=sync_complication_toggles,
+        )
+
+        with st.container():
+            comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+            for i, key in enumerate(complications_dict.keys()):
+                if i >= 3 * len(complications_dict) / 4:
+                    col = comp_col4
+                elif i >= 2 * len(complications_dict) / 4:
+                    col = comp_col3
+                elif i >= len(complications_dict) / 4:
+                    col = comp_col2
+                else:
+                    col = comp_col1
+                with col:
+                    if key == "COMPLICATIONS":
+                        continue
+                    else:
+                        toggle = st.toggle(complications_dict[key], key=key)
+
+            # Empty list to store complications to plot
+            comp_labels = []
+            comp_outcomes_proba = []
+
+            for key in complications_dict.keys():
+                if st.session_state[key] and key != "COMPLICATIONS":
+                    comp_labels.append(complications_dict[key])
+                    comp_outcomes_proba.append(st.session_state.output_proba[key])
+            plot_df = DataFrame(
+                {
+                    "Complications": comp_labels,
+                    "Risk percentage": comp_outcomes_proba,
+                }
+            )
+
+            base = alt.Chart(plot_df).encode(
+                x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
+                y=alt.Y("Complications:N", sort="-x"),
+                tooltip=["Complications", "Risk percentage"],
             )
 
             bars = base.mark_bar().encode(
