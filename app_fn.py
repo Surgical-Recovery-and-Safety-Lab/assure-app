@@ -15,14 +15,14 @@ from pandas import DataFrame, to_numeric
 from constants import AVERAGES, LABEL_MAP, MODEL
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def app_load_pipeline():
     """Load the pipeline"""
     pipeline = load_pipeline(MODEL)
     return pipeline
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def app_load_averages():
     """Load operation averages"""
     op_averages = joblib.load(AVERAGES)
