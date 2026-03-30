@@ -226,6 +226,12 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         # Use st.dataframe or st.table for a clean look
         st.dataframe(
             table_to_display.style.format({"Risk percentage": "{:.1f}%"}),
+            column_config={
+                "Complications": "Complications",
+                "Risk percentage": "Patient risk",
+                "Population average": "Population average (95% CI)",
+                "Status": "Status",
+            },
             hide_index=True,
             width="stretch",
         )
