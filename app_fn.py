@@ -135,7 +135,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             x=alt.X(
                 "Lower CI:Q",
                 title="Risk percentage (%)",
-                scale=alt.Scale(domain=[0, 100]),
+                scale=alt.Scale(domain=[0, 95]),
             ),
             x2="Upper CI:Q",
             y=alt.Y("Complications:N", sort=None),
@@ -200,7 +200,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     if display == "table":
         # Create table in column 2
-        st.write("Risk summary")
+        st.write("**Risk summary**")
         # Format the dataframe for display
         display_df = plot_df.copy()
 
