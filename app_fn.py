@@ -64,6 +64,7 @@ def reset_app():
 
 
 def show_consent_page():
+    """Show consent page to user"""
     st.title("Data Usage & Model Consent")
     st.warning("Please read the following carefully before proceeding.")
 
