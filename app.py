@@ -238,106 +238,110 @@ else:
         op_average = averages[category_l2]
         display_options = {"graph": "Graph", "table": "Table"}
 
-        st.subheader("Global outcomes")
-        st.write(
-            "Please select the global outcomes to visualise. There is no need to re-run the model to view different outcomes."
-        )
-        # Get global outcome and complication dictionaries
-        global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
-        complications_dict = LABEL_MAP["COMPLICATIONS"]
+        global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
 
-        # Create global outcomes layout
-        all_toggle = st.toggle(
-            global_outcomes_dict["GLOBAL_OUTCOMES"],
-            key="GLOBAL_OUTCOMES",
-            on_change=sync_global_outcome_toggles,
-        )
+        with global_tab:
+            st.subheader("Global outcomes")
+            st.write(
+                "Please select the global outcomes to visualise. There is no need to re-run the model to view different outcomes."
+            )
+            # Get global outcome and complication dictionaries
+            global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
+            complications_dict = LABEL_MAP["COMPLICATIONS"]
 
-        with st.container():
-            global_outcomes_col1, global_outcomes_col2 = st.columns(2)
-            for i, key in enumerate(global_outcomes_dict.keys()):
-                if i >= len(global_outcomes_dict) / 2:
-                    col = global_outcomes_col2
-                else:
-                    col = global_outcomes_col1
+            # Create global outcomes layout
+            all_toggle = st.toggle(
+                global_outcomes_dict["GLOBAL_OUTCOMES"],
+                key="GLOBAL_OUTCOMES",
+                on_change=sync_global_outcome_toggles,
+            )
 
-                with col:
-                    if key == "GLOBAL_OUTCOMES":
-                        continue
+            with st.container():
+                global_outcomes_col1, global_outcomes_col2 = st.columns(2)
+                for i, key in enumerate(global_outcomes_dict.keys()):
+                    if i >= len(global_outcomes_dict) / 2:
+                        col = global_outcomes_col2
                     else:
-                        toggle = st.toggle(global_outcomes_dict[key], key=key)
+                        col = global_outcomes_col1
 
-            # Empty list to store global outcomes to plot
-            global_labels = []
-            global_outcomes_proba = []
-            global_average = []
-            global_lower = []
-            global_upper = []
+                    with col:
+                        if key == "GLOBAL_OUTCOMES":
+                            continue
+                        else:
+                            toggle = st.toggle(global_outcomes_dict[key], key=key)
 
-            # Create the graph/table toggle
-            global_display_option = st.pills(
-                "Display type",
-                key="global_display_option",
-                options=display_options.keys(),
-                format_func=lambda option: display_options[option],
-                selection_mode="single",
-                default="graph",
+                # Empty list to store global outcomes to plot
+                global_labels = []
+                global_outcomes_proba = []
+                global_average = []
+                global_lower = []
+                global_upper = []
+
+                # Create the graph/table toggle
+                global_display_option = st.pills(
+                    "Display type",
+                    key="global_display_option",
+                    options=display_options.keys(),
+                    format_func=lambda option: display_options[option],
+                    selection_mode="single",
+                    default="graph",
+                )
+
+                data_visualisation(
+                    global_outcomes_dict,
+                    op_average,
+                    display=st.session_state.global_display_option,
+                )
+
+        with comp_tab:
+            # Create complications layout
+            st.subheader("Specific complications")
+            st.write(
+                "Please select the complications to visualise. There is no need to re-run the model to view different outcomes."
             )
 
-            data_visualisation(
-                global_outcomes_dict,
-                op_average,
-                display=st.session_state.global_display_option,
+            all_toggle = st.toggle(
+                complications_dict["COMPLICATIONS"],
+                key="COMPLICATIONS",
+                on_change=sync_complication_toggles,
             )
 
-        # Create complications layout
-        st.subheader("Complications")
-        st.write(
-            "Please select the complications to visualise. There is no need to re-run the model to view different outcomes."
-        )
-
-        all_toggle = st.toggle(
-            complications_dict["COMPLICATIONS"],
-            key="COMPLICATIONS",
-            on_change=sync_complication_toggles,
-        )
-
-        with st.container():
-            comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
-            for i, key in enumerate(complications_dict.keys()):
-                if i >= 3 * len(complications_dict) / 4:
-                    col = comp_col4
-                elif i >= 2 * len(complications_dict) / 4:
-                    col = comp_col3
-                elif i >= len(complications_dict) / 4:
-                    col = comp_col2
-                else:
-                    col = comp_col1
-                with col:
-                    if key == "COMPLICATIONS":
-                        continue
+            with st.container():
+                comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+                for i, key in enumerate(complications_dict.keys()):
+                    if i >= 3 * len(complications_dict) / 4:
+                        col = comp_col4
+                    elif i >= 2 * len(complications_dict) / 4:
+                        col = comp_col3
+                    elif i >= len(complications_dict) / 4:
+                        col = comp_col2
                     else:
-                        toggle = st.toggle(complications_dict[key], key=key)
+                        col = comp_col1
+                    with col:
+                        if key == "COMPLICATIONS":
+                            continue
+                        else:
+                            toggle = st.toggle(complications_dict[key], key=key)
 
-            # Empty list to store complications to plot
-            comp_labels = []
-            comp_outcomes_proba = []
-            comp_average = []
-            comp_lower = []
-            comp_upper = []
+                # Empty list to store complications to plot
+                comp_labels = []
+                comp_outcomes_proba = []
+                comp_average = []
+                comp_lower = []
+                comp_upper = []
 
-            # Create the graph/table toggle
-            comp_display_option = st.pills(
-                "Display type",
-                key="comp_display_option",
-                options=display_options.keys(),
-                format_func=lambda option: display_options[option],
-                selection_mode="single",
-                default="graph",
-            )
+                # Create the graph/table toggle
+                comp_display_option = st.pills(
+                    "Display type",
+                    key="comp_display_option",
+                    options=display_options.keys(),
+                    format_func=lambda option: display_options[option],
+                    selection_mode="single",
+                    default="graph",
+                )
 
-            data_visualisation(
-                complications_dict,
-                op_average,
-                display=st.session_state.comp_display_option,
-            )
+                data_visualisation(
+                    complications_dict,
+                    op_average,
+                    display=st.session_state.comp_display_option,
+                )
