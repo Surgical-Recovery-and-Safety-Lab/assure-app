@@ -6,7 +6,6 @@ app.py
 Streamlit NZ Risk Score app.
 """
 
-import altair as alt
 import streamlit as st
 from numpy import array, expand_dims
 from pandas import DataFrame
