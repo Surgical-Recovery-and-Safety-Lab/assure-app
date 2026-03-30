@@ -202,13 +202,17 @@ else:
     ]
     is_ready = None not in input_features  # Define the is_ready flag
 
+    with st.spinner("Loading model and data..."):
+        pipeline = app_load_pipeline()
+        averages = app_load_averages()
+    st.success("Model loaded successfully")
+
     run_model_col, run_info_col = st.columns(2, vertical_alignment="center")
     with run_model_col:
         run = st.button("Run model", disabled=not is_ready)
     with run_info_col:
         if is_ready:
             if run:
-                pipeline = app_load_pipeline()
                 label_list = pipeline.label_list
                 data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
                 input_data = pipeline.transform(convert_dtypes(data))
@@ -231,7 +235,6 @@ else:
         # If the model has been run
         st.header("Results", divider="rainbow")
 
-        averages = app_load_averages()
         op_average = averages[category_l2]
         display_options = {"graph": "Graph", "table": "Table"}
 
