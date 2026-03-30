@@ -121,7 +121,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         {
             "Complications": comp_labels,
             "Risk percentage": comp_outcomes_proba,
-            "Average risk": comp_average,
+            "Population average": comp_average,
             "Lower CI": comp_lower,
             "Upper CI": comp_upper,
         }
@@ -147,9 +147,9 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         alt.Chart(plot_df)
         .mark_point(filled=True, color="black", size=100)
         .encode(
-            x="Average risk:Q",
+            x="Population average:Q",
             y="Complications:N",
-            tooltip=["Complications", "Average risk", "Lower CI", "Upper CI"],
+            tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
         )
     )
 
@@ -162,7 +162,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             x="Risk percentage:Q",
             y="Complications:N",
             color=alt.condition(
-                alt.datum["Risk percentage"] > alt.datum["Average risk"],
+                alt.datum["Risk percentage"] > alt.datum["Population average"],
                 alt.value("red"),  # Higher than average
                 alt.value("green"),  # Lower than average
             ),
@@ -186,7 +186,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                 "Risk percentage:Q", format=".1f"
             ),  # Formats to 1 decimal place
             color=alt.condition(
-                alt.datum["Risk percentage"] > alt.datum["Average risk"],
+                alt.datum["Risk percentage"] > alt.datum["Population average"],
                 alt.value("red"),
                 alt.value("green"),
             ),
@@ -195,7 +195,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     # Combine layers
     chart = (error_bars + avg_point + patient_tick + text_labels).properties(
-        title="Patient Risk vs. Population Average (95% CI)"
+        title="Patient risk vs. Population average (95% CI)"
     )
 
     if display == "table":
@@ -207,18 +207,20 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         # Adding a 'Status' column for a quick visual cue
         display_df["Status"] = display_df.apply(
             lambda x: (
-                "⚠️ Higher" if x["Risk percentage"] > x["Average risk"] else "✅ Lower"
+                "⚠️ Higher"
+                if x["Risk percentage"] > x["Population average"]
+                else "✅ Lower"
             ),
             axis=1,
         )
 
-        display_df["Average risk"] = display_df.apply(
-            lambda x: f"{x["Average risk"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
+        display_df["Population average"] = display_df.apply(
+            lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
             axis=1,
         )
 
         table_to_display = display_df[
-            ["Complications", "Risk percentage", "Average risk", "Status"]
+            ["Complications", "Risk percentage", "Population average", "Status"]
         ]
 
         # Use st.dataframe or st.table for a clean look
