@@ -81,14 +81,18 @@ def show_consent_page():
         st.rerun()  # Rerun to immediately switch to the main app
 
 
-def data_visualisation():
+def data_visualisation(complications_dict, op_average, display="graph"):
     """
     Visualise data in the web app.
 
     Parameters
     ----------
-    arg
-        arg description.
+    complications_dict : dict[str: str]
+        Dictionary containing the complications and the corresponding plot label.
+    op_average : dict[str: float]
+        Dictionary containing the operation averages for each complication.
+    display : str, {"graph", "table"}
+        Flag to plot the graph rather than the table, default: graph.
 
     Returns
     -------
@@ -104,7 +108,9 @@ def data_visualisation():
     comp_upper = []
 
     for key in complications_dict.keys():
-        if st.session_state[key] and key != "COMPLICATIONS":
+        if st.session_state[key]:
+            if key == "COMPLICATIONS" or key == "GLOBAL_OUTCOMES":
+                continue
             comp_labels.append(complications_dict[key])
             comp_outcomes_proba.append(st.session_state.output_proba[key])
             comp_average.append(op_average[key][0] * 100)
@@ -150,7 +156,7 @@ def data_visualisation():
     # We use a conditional color: Red if > Avg, Green if <= Avg
     patient_tick = (
         alt.Chart(plot_df)
-        .mark_tick(thickness=4, size=30)  # Height of the tick
+        .mark_tick(thickness=3, size=12)  # Height of the tick
         .encode(
             x="Risk percentage:Q",
             y="Complications:N",
@@ -163,9 +169,62 @@ def data_visualisation():
         )
     )
 
-    # Combine layers
-    chart = (error_bars + avg_point + patient_tick).properties(
-        width=600, title="Patient Risk vs. Population Average (95% CI)"
+    # This places the percentage value at the end of the chart for readability
+    text_labels = (
+        alt.Chart(plot_df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=10,  # Shifts text to the right of the anchor point
+            fontWeight="bold",
+        )
+        .encode(
+            x=alt.value(500),  # Fixed pixel position
+            y=alt.Y("Complications:N", sort=None),
+            text=alt.Text(
+                "Risk percentage:Q", format=".1f"
+            ),  # Formats to 1 decimal place
+            color=alt.condition(
+                alt.datum["Risk percentage"] > alt.datum["Average risk"],
+                alt.value("red"),
+                alt.value("green"),
+            ),
+        )
     )
 
-    st.altair_chart(chart)
+    # Combine layers
+    chart = (error_bars + avg_point + patient_tick + text_labels).properties(
+        title="Patient Risk vs. Population Average (95% CI)"
+    )
+
+    if display == "table":
+        # Create table in column 2
+        st.write("Risk summary")
+        # Format the dataframe for display
+        display_df = plot_df.copy()
+
+        # Adding a 'Status' column for a quick visual cue
+        display_df["Status"] = display_df.apply(
+            lambda x: (
+                "⚠️ Higher" if x["Risk percentage"] > x["Average risk"] else "✅ Lower"
+            ),
+            axis=1,
+        )
+
+        display_df["Average risk"] = display_df.apply(
+            lambda x: f"{x["Average risk"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
+            axis=1,
+        )
+
+        table_to_display = display_df[
+            ["Complications", "Risk percentage", "Average risk", "Status"]
+        ]
+
+        # Use st.dataframe or st.table for a clean look
+        st.dataframe(
+            table_to_display.style.format({"Risk percentage": "{:.1f}%"}),
+            hide_index=True,
+            width="stretch",
+        )
+    else:
+        st.altair_chart(chart)

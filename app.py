@@ -234,6 +234,7 @@ else:
 
         averages = app_load_averages()
         op_average = averages[category_l2]
+        display_options = {"graph": "Graph", "table": "Table"}
 
         st.subheader("Global outcomes")
         st.write(
@@ -271,73 +272,21 @@ else:
             global_lower = []
             global_upper = []
 
-            for key in global_outcomes_dict.keys():
-                if st.session_state[key] and key != "GLOBAL_OUTCOMES":
-                    global_labels.append(global_outcomes_dict[key])
-                    global_outcomes_proba.append(st.session_state.output_proba[key])
-                    global_average.append(op_average[key][0] * 100)
-                    global_lower.append(op_average[key][1] * 100)
-                    global_upper.append(op_average[key][2] * 100)
-
-            plot_df = DataFrame(
-                {
-                    "Complications": global_labels,
-                    "Risk percentage": global_outcomes_proba,
-                    "Average risk": global_average,
-                    "Lower CI": global_lower,
-                    "Upper CI": global_upper,
-                }
+            # Create the graph/table toggle
+            global_display_option = st.pills(
+                "Display type",
+                key="global_display_option",
+                options=display_options.keys(),
+                format_func=lambda option: display_options[option],
+                selection_mode="single",
+                default="graph",
             )
 
-            # 1. The Confidence Interval Layer (The horizontal "whisker")
-            error_bars = (
-                alt.Chart(plot_df)
-                .mark_errorbar()
-                .encode(
-                    x=alt.X(
-                        "Lower CI:Q",
-                        title="Risk percentage (%)",
-                        scale=alt.Scale(domain=[0, 100]),
-                    ),
-                    x2="Upper CI:Q",
-                    y=alt.Y("Complications:N", sort=None),
-                )
+            data_visualisation(
+                global_outcomes_dict,
+                op_average,
+                display=st.session_state.global_display_option,
             )
-
-            # 2. The Average Layer (A circle representing the population mean)
-            avg_point = (
-                alt.Chart(plot_df)
-                .mark_point(filled=True, color="black", size=100)
-                .encode(
-                    x="Average risk:Q",
-                    y="Complications:N",
-                    tooltip=["Complications", "Average risk", "Lower CI", "Upper CI"],
-                )
-            )
-
-            # 3. The Patient Risk Layer (A vertical tick that changes color)
-            # We use a conditional color: Red if > Avg, Green if <= Avg
-            patient_tick = (
-                alt.Chart(plot_df)
-                .mark_tick(thickness=4, size=30)  # Height of the tick
-                .encode(
-                    x="Risk percentage:Q",
-                    y="Complications:N",
-                    color=alt.condition(
-                        alt.datum["Risk percentage"] > alt.datum["Average risk"],
-                        alt.value("red"),  # Higher than average
-                        alt.value("green"),  # Lower than average
-                    ),
-                    tooltip=["Complications", "Risk percentage"],
-                )
-            )
-
-            # Combine layers
-            chart = (error_bars + avg_point + patient_tick).properties(
-                width=600, title="Patient Risk vs. Population Average (95% CI)"
-            )
-
-            st.altair_chart(chart)
 
         # Create complications layout
         st.subheader("Complications")
@@ -375,69 +324,18 @@ else:
             comp_lower = []
             comp_upper = []
 
-            for key in complications_dict.keys():
-                if st.session_state[key] and key != "COMPLICATIONS":
-                    comp_labels.append(complications_dict[key])
-                    comp_outcomes_proba.append(st.session_state.output_proba[key])
-                    comp_average.append(op_average[key][0] * 100)
-                    comp_lower.append(op_average[key][1] * 100)
-                    comp_upper.append(op_average[key][2] * 100)
-            plot_df = DataFrame(
-                {
-                    "Complications": comp_labels,
-                    "Risk percentage": comp_outcomes_proba,
-                    "Average risk": comp_average,
-                    "Lower CI": comp_lower,
-                    "Upper CI": comp_upper,
-                }
+            # Create the graph/table toggle
+            comp_display_option = st.pills(
+                "Display type",
+                key="comp_display_option",
+                options=display_options.keys(),
+                format_func=lambda option: display_options[option],
+                selection_mode="single",
+                default="graph",
             )
 
-            # 1. The Confidence Interval Layer (The horizontal "whisker")
-            error_bars = (
-                alt.Chart(plot_df)
-                .mark_errorbar()
-                .encode(
-                    x=alt.X(
-                        "Lower CI:Q",
-                        title="Risk percentage (%)",
-                        scale=alt.Scale(domain=[0, 100]),
-                    ),
-                    x2="Upper CI:Q",
-                    y=alt.Y("Complications:N", sort=None),
-                )
+            data_visualisation(
+                complications_dict,
+                op_average,
+                display=st.session_state.comp_display_option,
             )
-
-            # 2. The Average Layer (A circle representing the population mean)
-            avg_point = (
-                alt.Chart(plot_df)
-                .mark_point(filled=True, color="black", size=100)
-                .encode(
-                    x="Average risk:Q",
-                    y="Complications:N",
-                    tooltip=["Complications", "Average risk", "Lower CI", "Upper CI"],
-                )
-            )
-
-            # 3. The Patient Risk Layer (A vertical tick that changes color)
-            # We use a conditional color: Red if > Avg, Green if <= Avg
-            patient_tick = (
-                alt.Chart(plot_df)
-                .mark_tick(thickness=4, size=30)  # Height of the tick
-                .encode(
-                    x="Risk percentage:Q",
-                    y="Complications:N",
-                    color=alt.condition(
-                        alt.datum["Risk percentage"] > alt.datum["Average risk"],
-                        alt.value("red"),  # Higher than average
-                        alt.value("green"),  # Lower than average
-                    ),
-                    tooltip=["Complications", "Risk percentage"],
-                )
-            )
-
-            # Combine layers
-            chart = (error_bars + avg_point + patient_tick).properties(
-                width=600, title="Patient Risk vs. Population Average (95% CI)"
-            )
-
-            st.altair_chart(chart)
