@@ -235,6 +235,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             hide_index=True,
             width="stretch",
         )
+        st.info("Sort the table columns by clicking on the column name")
     else:
         st.altair_chart(chart)
         with st.expander("See graph interpretation"):
