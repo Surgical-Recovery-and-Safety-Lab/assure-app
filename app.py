@@ -1,86 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-streamlit_app.py
+app.py
 
 Streamlit NZ Risk Score app.
 """
 
 import altair as alt
-import joblib
 import streamlit as st
-from medpipe.models.core import load_pipeline
 from numpy import array, expand_dims
-from pandas import DataFrame, to_numeric
+from pandas import DataFrame
 
+from app_fn import (
+    app_load_averages,
+    app_load_pipeline,
+    convert_dtypes,
+    data_visualisation,
+    reset_app,
+    show_consent_page,
+    sync_complication_toggles,
+    sync_global_outcome_toggles,
+)
 from constants import AVERAGES, CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP, MODEL
-
-
-@st.cache_resource
-def app_load_pipeline():
-    """Load the pipeline"""
-    pipeline = load_pipeline(MODEL)
-    return pipeline
-
-
-@st.cache_resource
-def app_load_averages():
-    """Load operation averages"""
-    op_averages = joblib.load(AVERAGES)
-    return op_averages
-
-
-def convert_dtypes(data):
-    """Convert datatypes to fit requirements"""
-    for column in data.columns:
-        if column in ["AGE", "M3_SCORE", "OP_SEVERITY", "DEP18_ORIGINAL"]:
-            data[column] = to_numeric(data[column])
-        if column in ["PRIOR_CANCER", "TRAUMA"]:
-            data[column] = data[column].astype(bool)
-    return data
-
-
-def sync_global_outcome_toggles():
-    """Sync the global outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["GLOBAL_OUTCOMES"].keys():
-        st.session_state[key] = st.session_state.GLOBAL_OUTCOMES
-
-
-def sync_complication_toggles():
-    """Sync the complication toggles based on the all toggle"""
-    for key in LABEL_MAP["COMPLICATIONS"].keys():
-        st.session_state[key] = st.session_state.COMPLICATIONS
-
-
-def reset_app():
-    """Reset all session state variables"""
-    st.session_state.COMPLICATIONS = False
-    st.session_state.GLOBAL_OUTCOMES = False
-    st.session_state.consent = False
-    st.session_state.model_run = False
-
-    # Reset all toggles to False
-    sync_complication_toggles()
-    sync_global_outcome_toggles()
-
-
-def show_consent_page():
-    st.title("Data Usage & Model Consent")
-    st.warning("Please read the following carefully before proceeding.")
-
-    st.write("""
-    By using this tool, you agree to:
-    * The processing of your uploaded data by our AI model.
-    * Acknowledging that the model output is for informational purposes only.
-    """)
-    st.write("""
-    Your information is not stored and is deleted after the window is closed.
-    """)
-
-    if st.button("I Agree and Accept"):
-        st.session_state.consent = True
-        st.rerun()  # Rerun to immediately switch to the main app
-
 
 # Define session state variables
 if "model_run" not in st.session_state:
