@@ -229,3 +229,11 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
     else:
         st.altair_chart(chart)
+        with st.expander("See graph interpretation"):
+            st.write("""
+                     The chart above shows the current patient's risk relative to the
+                     average population risk for the selected operation. The black circle
+                     and horizontal bars represent the average population risk and 95% 
+                     confidence intervals. The vertical bars represent the current patient's
+                     risk. If the risk is lower than the population average the bars are green, otherwise, they are red.
+            """)
