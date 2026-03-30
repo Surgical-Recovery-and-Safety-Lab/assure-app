@@ -86,6 +86,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     """
     Visualise data in the web app.
 
+    Returing chart and table to be able to download them later.
+
     Parameters
     ----------
     complications_dict : dict[str: str]
@@ -97,8 +99,10 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     Returns
     -------
-    None
-        Nothing is returned.
+    chart : altair.Chart
+        Chart plotting the graph results.
+    table_to_display : pandas.DataFrame
+        Table displayed.
 
     """
     # Empty list to store complications to plot
@@ -198,31 +202,31 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         title="Patient risk vs. Population average (95% CI)"
     )
 
+    # Create table in column 2
+    st.write("**Risk summary**")
+    # Format the dataframe for display
+    display_df = plot_df.copy()
+
+    # Adding a 'Status' column for a quick visual cue
+    display_df["Status"] = display_df.apply(
+        lambda x: (
+            "⚠️ Higher"
+            if x["Risk percentage"] > x["Population average"]
+            else "✅ Lower"
+        ),
+        axis=1,
+    )
+
+    display_df["Population average"] = display_df.apply(
+        lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
+        axis=1,
+    )
+
+    table_to_display = display_df[
+        ["Complications", "Risk percentage", "Population average", "Status"]
+    ]
+
     if display == "table":
-        # Create table in column 2
-        st.write("**Risk summary**")
-        # Format the dataframe for display
-        display_df = plot_df.copy()
-
-        # Adding a 'Status' column for a quick visual cue
-        display_df["Status"] = display_df.apply(
-            lambda x: (
-                "⚠️ Higher"
-                if x["Risk percentage"] > x["Population average"]
-                else "✅ Lower"
-            ),
-            axis=1,
-        )
-
-        display_df["Population average"] = display_df.apply(
-            lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
-            axis=1,
-        )
-
-        table_to_display = display_df[
-            ["Complications", "Risk percentage", "Population average", "Status"]
-        ]
-
         # Use st.dataframe or st.table for a clean look
         st.dataframe(
             table_to_display.style.format({"Risk percentage": "{:.1f}%"}),
@@ -252,3 +256,5 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                      If the risk is lower than the population average the bars are green,
                      otherwise, they are red.
             """)
+
+    return chart, table_to_display

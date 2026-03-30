@@ -293,7 +293,7 @@ else:
                     default="graph",
                 )
 
-                data_visualisation(
+                global_chart, global_table = data_visualisation(
                     global_outcomes_dict,
                     op_average,
                     display=st.session_state.global_display_option,
@@ -345,7 +345,7 @@ else:
                     default="graph",
                 )
 
-                data_visualisation(
+                comp_chart, comp_table = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,
