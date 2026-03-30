@@ -235,5 +235,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                      average population risk for the selected operation. The black circle
                      and horizontal bars represent the average population risk and 95% 
                      confidence intervals. The vertical bars represent the current patient's
-                     risk. If the risk is lower than the population average the bars are green, otherwise, they are red.
+                     risk, with the exact value specified on the right side of the graph.
+                     If the risk is lower than the population average the bars are green,
+                     otherwise, they are red.
             """)
