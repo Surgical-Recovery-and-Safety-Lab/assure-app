@@ -234,7 +234,19 @@ else:
     if st.session_state.model_run:
         # If the model has been run
         st.header("Results", divider="rainbow")
+        with st.expander("See details"):
+            st.write("""Select one of the tabs to view the desired results.""")
+            st.write("""
+                     The outcomes can be toggled on and off using the switches. The All 
+                     button in each tab activates or deactivates all the outcomes within 
+                     that tab. The model does **not** need to be re-run to view different
+                     outcomes.
 
+                     """)
+            st.write("""
+                    The results can be viewed as a graph or as a table. Select the desired 
+                    visualisation by selecting the display type.
+                    """)
         op_average = averages[category_l2]
         display_options = {"graph": "Graph", "table": "Table"}
 
@@ -242,10 +254,6 @@ else:
 
         with global_tab:
             st.subheader("Global outcomes")
-            st.write(
-                "Please select the global outcomes to visualise. There is no need to re-run the model to view different outcomes."
-            )
-            # Get global outcome and complication dictionaries
             global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
             complications_dict = LABEL_MAP["COMPLICATIONS"]
 
@@ -296,10 +304,6 @@ else:
         with comp_tab:
             # Create complications layout
             st.subheader("Specific complications")
-            st.write(
-                "Please select the complications to visualise. There is no need to re-run the model to view different outcomes."
-            )
-
             all_toggle = st.toggle(
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
