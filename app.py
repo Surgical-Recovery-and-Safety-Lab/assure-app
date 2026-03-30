@@ -32,13 +32,6 @@ if "output_proba" not in st.session_state:
 if "consent" not in st.session_state:
     # Session state varible for consent
     st.session_state.consent = False
-if "GLOBAL_OUTCOMES" not in st.session_state:
-    # Session state variable for all global outcomes
-    st.session_state.GLOBAL_OUTCOMES = False
-if "COMPLICATIONS" not in st.session_state:
-    # Session state variable for all global outcomes
-    st.session_state.COMPLICATIONS = False
-
 
 if not st.session_state.consent:
     show_consent_page()
@@ -262,6 +255,7 @@ else:
                 global_outcomes_dict["GLOBAL_OUTCOMES"],
                 key="GLOBAL_OUTCOMES",
                 on_change=sync_global_outcome_toggles,
+                value=True,
             )
 
             with st.container():
@@ -276,7 +270,11 @@ else:
                         if key == "GLOBAL_OUTCOMES":
                             continue
                         else:
-                            toggle = st.toggle(global_outcomes_dict[key], key=key)
+                            toggle = st.toggle(
+                                global_outcomes_dict[key],
+                                key=key,
+                                value=True,
+                            )
 
                 # Empty list to store global outcomes to plot
                 global_labels = []
@@ -308,6 +306,7 @@ else:
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
                 on_change=sync_complication_toggles,
+                value=True,
             )
 
             with st.container():
@@ -325,7 +324,9 @@ else:
                         if key == "COMPLICATIONS":
                             continue
                         else:
-                            toggle = st.toggle(complications_dict[key], key=key)
+                            toggle = st.toggle(
+                                complications_dict[key], key=key, value=True
+                            )
 
                 # Empty list to store complications to plot
                 comp_labels = []

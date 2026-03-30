@@ -53,8 +53,8 @@ def sync_complication_toggles():
 
 def reset_app():
     """Reset all session state variables"""
-    st.session_state.COMPLICATIONS = False
-    st.session_state.GLOBAL_OUTCOMES = False
+    st.session_state.COMPLICATIONS = True
+    st.session_state.GLOBAL_OUTCOMES = True
     st.session_state.consent = False
     st.session_state.model_run = False
 
