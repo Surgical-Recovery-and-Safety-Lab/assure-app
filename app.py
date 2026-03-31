@@ -126,9 +126,19 @@ else:
     )
 
     # DEP slider
-    dep = st.slider(
-        "**NZDep**", min_value=1, max_value=10, step=1, help="NZ Index of Depravation"
-    )
+    dep_col1, dep_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with dep_col1:
+        dep = st.slider(
+            "**NZDep**",
+            min_value=1,
+            max_value=10,
+            step=1,
+        )
+    with dep_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("""New Zealand index of depravation""")
+            st.write("""Decile 1 represents areas with the least deprived scores.""")
+            st.write("""Decile 10 represents areas with the most deprived scores.""")
 
     # GCH selectbox
     gch = st.selectbox(
