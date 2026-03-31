@@ -180,11 +180,11 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         .mark_text(
             align="left",
             baseline="middle",
-            dx=10,  # Shifts text to the right of the anchor point
+            dx=10,
             fontWeight="bold",
         )
         .encode(
-            x=alt.value(500),  # Fixed pixel position
+            x=alt.datum(100),  # Fixed pixel position
             y=alt.Y("Complications:N", sort=None),
             text=alt.Text(
                 "Risk percentage:Q", format=".1f"
@@ -241,7 +241,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
         st.info("Sort the table columns by clicking on the column name")
     else:
-        st.altair_chart(chart)
+        st.altair_chart(chart, width=600)
         with st.expander("See graph interpretation"):
             st.write("""
                      The chart above shows the current patient's risk relative to the
