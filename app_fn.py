@@ -122,7 +122,7 @@ def main_page_layout():
     st.header("Data input", divider="rainbow")
 
     # Age input
-    age_col1, age_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    age_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with age_col1:
         age = st.number_input(
             "**Age**",
@@ -134,9 +134,7 @@ def main_page_layout():
         )
 
     # Ethnicity selectbox
-    ethnicity_col1, ethnicity_col2 = st.columns(
-        [3, 1], vertical_alignment="bottom", gap="medium"
-    )
+    ethnicity_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with ethnicity_col1:
         ethnicity = st.selectbox(
             "**Ethnicity**",
@@ -271,9 +269,7 @@ def main_page_layout():
             )
 
     # Category L1 selectbox
-    catl1_col1, catl1_col2 = st.columns(
-        [3, 1], vertical_alignment="bottom", gap="medium"
-    )
+    catl1_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
 
     with catl1_col1:
@@ -286,9 +282,7 @@ def main_page_layout():
         )
 
     # Category L2 selectbox (depends on L1)
-    catl2_col1, catl2_col2 = st.columns(
-        [3, 1], vertical_alignment="bottom", gap="medium"
-    )
+    catl2_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
 
     with catl2_col1:
         category_l2_disabled = True
