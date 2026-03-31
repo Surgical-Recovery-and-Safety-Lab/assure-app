@@ -17,12 +17,11 @@ from app_fn import (
     create_pdf_report,
     data_visualisation,
     main_page_layout,
-    reset_app,
     show_consent_page,
     sync_complication_toggles,
     sync_global_outcome_toggles,
 )
-from constants import AVERAGES, CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP, MODEL
+from constants import COLUMNS, LABEL_MAP
 
 # Define session state variables
 if "model_run" not in st.session_state:
