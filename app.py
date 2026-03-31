@@ -85,7 +85,7 @@ else:
                     The results can be viewed as a graph or as a table. Select the desired 
                     visualisation by selecting the display type.
                     """)
-        op_average = averages[category_l2]
+        op_average = averages[input_features[10]]
         display_options = {"graph": "Graph", "table": "Table"}
 
         global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
