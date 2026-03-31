@@ -616,3 +616,48 @@ def create_pdf_report(charts, tables):
             pdf.set_text_color(0, 0, 0)  # Reset to black
 
     return bytes(pdf.output())
+
+
+def footer():
+    st.markdown(
+        """
+        <style>
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #f0f2f6; /* Light grey background */
+            color: #31333f;
+            text-align: center;
+            padding: 15px 0;
+            border-top: 1px solid #dcdcdc;
+            z-index: 999;
+        }
+        .feedback-button {
+            background-color: #ff4b4b; /* Streamlit Red */
+            color: white !important;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: 0.3s;
+        }
+        .feedback-button:hover {
+            background-color: #d33636;
+            text-decoration: none;
+        }
+        </style>
+        
+        <div class="footer">
+            <span>2026 SARA calculator</span>
+            <a class="feedback-button" 
+               href="mailto:mathias.roesler@auckland.ac.nz?subject=SARA app%20feedback">
+               Send Feedback
+            </a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
