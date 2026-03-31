@@ -80,11 +80,11 @@ else:
     # Sex radio buttons
     sex_map = {"M": "Male", "F": "Female"}
     sex = st.radio(
-        "**Sex**",
+        "**Sex at birth**",
         options=sex_map.keys(),
         format_func=lambda x: sex_map[x],
         index=None,
-        help="Patient sex at birth",
+        help="Patient sex **at birth**",
         horizontal=True,
     )
 
