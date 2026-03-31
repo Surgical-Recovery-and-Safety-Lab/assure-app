@@ -316,7 +316,7 @@ else:
 
                 # Create the graph/table toggle
                 global_display_option = st.pills(
-                    "Display type",
+                    "**Display type**",
                     key="global_display_option",
                     options=display_options.keys(),
                     format_func=lambda option: display_options[option],
@@ -368,7 +368,7 @@ else:
 
                 # Create the graph/table toggle
                 comp_display_option = st.pills(
-                    "Display type",
+                    "**Display type**",
                     key="comp_display_option",
                     options=display_options.keys(),
                     format_func=lambda option: display_options[option],
