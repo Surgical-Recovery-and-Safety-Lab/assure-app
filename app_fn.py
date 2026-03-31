@@ -16,7 +16,7 @@ from fpdf import FPDF
 from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
-from constants import AVERAGES, LABEL_MAP, MODEL
+from constants import AVERAGES, CATEGORIES, ETHCNICITIES, GCH, LABEL_MAP, MODEL
 
 
 @st.cache_resource(show_spinner=False)
@@ -84,6 +84,264 @@ def show_consent_page():
     if st.button("I Agree and Accept"):
         st.session_state.consent = True
         st.rerun()  # Rerun to immediately switch to the main app
+
+
+def main_page_layout():
+    """
+    Main page layout for user input.
+
+    Parameters
+    ----------
+    None
+        No arguments are provided.
+
+    Returns
+    -------
+    input_features : list
+        List of the input features extracted from the user inputs.
+
+    """
+    st.title("Surgical AI Risk Assessement (SARA) calculator")
+    st.logo("assets/logo.png", size="large")
+
+    st.header("About the SARA calculator", divider="rainbow")
+    st.write("""The SARA calculator uses artificial intelligence to predict the risk of
+        mortality, readmission, and complications that may occur post-surgery.
+        """)
+    st.write("""
+        This tool is designed to inform clinicians and patients about the surgical risks.
+        The data is **not** collected to train models and is **not** saved anywhere.
+        """)
+    st.write("""
+        To use the calculator, input the patient information below and
+        click on 'Run model' to generate the results.
+    """)
+    st.warning("Click on the 'Reset' button below if you do not wish to continue.")
+    st.button("Reset", on_click=reset_app)
+
+    st.header("Data input", divider="rainbow")
+
+    # Age input
+    age_col1, age_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with age_col1:
+        age = st.number_input(
+            "**Age**",
+            min_value=18,
+            max_value=122,
+            step=1,
+            value=None,
+            placeholder="Age",
+        )
+
+    # Ethnicity selectbox
+    ethnicity_col1, ethnicity_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
+    )
+    with ethnicity_col1:
+        ethnicity = st.selectbox(
+            "**Ethnicity**",
+            ETHCNICITIES,
+            index=None,
+            placeholder="Select ethnicity",
+        )
+
+    # Sex radio buttons
+    sex_map = {"M": "Male", "F": "Female"}
+    sex = st.radio(
+        "**Sex at birth**",
+        options=sex_map.keys(),
+        format_func=lambda x: sex_map[x],
+        index=None,
+        help="Patient sex **at birth**",
+        horizontal=True,
+    )
+
+    # Cancer radio buttons
+    cancer = st.radio(
+        "**Prior cancer**",
+        options=[True, False],
+        format_func=lambda x: "Yes" if x else "No",
+        index=1,
+        help="Did the patient have cancer?",
+        horizontal=True,
+    )
+
+    # Acuity radio buttons
+    acuity = st.radio(
+        "**Admission acuity**",
+        ["Elective", "Acute"],
+        index=0,
+        help="Is the surgery elective or acute?",
+        horizontal=True,
+    )
+
+    # Source radio buttons
+    source = st.radio(
+        "**Admission source**",
+        ["Routine", "Transfer"],
+        index=0,
+        help="Is the patient transfered from another hospital?",
+        horizontal=True,
+    )
+
+    # Traum radio buttons
+    trauma = st.radio(
+        "**Trauma**",
+        index=1,
+        options=[True, False],
+        format_func=lambda x: "Yes" if x else "No",
+        horizontal=True,
+    )
+
+    # DEP slider
+    dep_col1, dep_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with dep_col1:
+        dep = st.slider(
+            "**NZDep**",
+            min_value=1,
+            max_value=10,
+            step=1,
+        )
+    with dep_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("""**New Zealand index of depravation**""")
+            st.write("""
+                Higher levels of socioeconomic deprivation are associated with
+                worse health.""")
+            st.write(
+                """Decile 1 represents areas with the least deprived scores and decile
+                10 represents areas with the most deprived scores.
+                """
+            )
+            st.page_link(
+                "https://www.ehinz.ac.nz/indicators/population-vulnerability/socioeconomic-deprivation-profile/",
+                label="More information",
+                icon=":material/info:",
+            )
+
+    # GCH selectbox
+    gch_col1, gch_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with gch_col1:
+        gch = st.select_slider(
+            "**GCH**",
+            options=GCH,
+        )
+    with gch_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("**New Zealand Geographical Classification of Health**")
+            st.write("""
+                The GCH is comprised of five categories, two urban and three rural,
+                that reflect degrees of reducing urban influence and increasing rurality.
+                U1 represents the most urban setting and R3 represents the most rural
+                setting
+                """)
+            st.page_link(
+                "https://www.otago.ac.nz/centre-for-rural-health/research/geographic-classification-for-health/about-the-gch",
+                label="More information",
+                icon=":material/info:",
+            )
+
+    # M3 score input
+    m3_col1, m3_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with m3_col1:
+        m3_score = st.number_input(
+            "**M3 score**",
+            min_value=0.0,
+            step=0.001,
+            format="%.3f",
+            value=None,
+            placeholder="M3 score",
+        )
+    with m3_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("**Multimorbidity index**")
+            st.write("""
+                The M3 score is a morbidity index for short-term mortality risk,
+                using chronic conditions identified from routine hospital admission
+                ICD-10 data. It was designed by James Stanley and Diana Sarfati.
+                """)
+            st.write("""
+                A score of 0.0 indicates no co-morbidities. There is no maximum value
+                however, greater scores are associated with higher risks.
+                """)
+            st.page_link(
+                "https://pubmed.ncbi.nlm.nih.gov/28844785/",
+                label="More information",
+                icon=":material/info:",
+            )
+
+    # Category L1 selectbox
+    catl1_col1, catl1_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
+    )
+    category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
+
+    with catl1_col1:
+        category_l1 = st.selectbox(
+            "**Surgical specialty**",
+            category_l1_options,
+            help="Surgical specialty of the operation",
+            index=None,
+            placeholder="Specialty",
+        )
+
+    # Category L2 selectbox (depends on L1)
+    catl2_col1, catl2_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
+    )
+
+    with catl2_col1:
+        category_l2_disabled = True
+        index = None
+        if category_l1:
+            category_l2_disabled = False
+            if len(CATEGORIES[category_l1]) == 1:
+                index = 0
+
+        category_l2 = st.selectbox(
+            "**Surgical sub-specialty**",
+            CATEGORIES[category_l1],
+            help="Surgical sub-specialty, select a specialty to see options",
+            index=index,
+            placeholder="Sub-specialty",
+            disabled=category_l2_disabled,
+        )
+
+    # Op severity slider
+    op_sev_col1, op_sev_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
+    )
+    with op_sev_col1:
+        op_severity = st.slider(
+            "**Operation severity**",
+            min_value=1,
+            max_value=5,
+            step=1,
+        )
+    with op_sev_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("**Operation severity**")
+            st.write("""
+                The operation severity score varies between 1 and 5.
+                1 represents operation that have a low severity score, while 5 represents
+                those with high severity.""")
+
+    input_features = [
+        age,
+        ethnicity,
+        sex,
+        dep,
+        gch,
+        m3_score,
+        cancer,
+        acuity,
+        source,
+        category_l1,
+        category_l2,
+        op_severity,
+        trauma,
+    ]
+    return input_features
 
 
 def data_visualisation(complications_dict, op_average, display="graph"):
