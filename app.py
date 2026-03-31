@@ -58,24 +58,28 @@ else:
     st.header("Data input", divider="rainbow")
 
     # Age input
-    age = st.number_input(
-        "**Age**",
-        min_value=18,
-        max_value=122,
-        step=1,
-        help="Patient age",
-        value=None,
-        placeholder="Age",
-    )
+    age_col1, age_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with age_col1:
+        age = st.number_input(
+            "**Age**",
+            min_value=18,
+            max_value=122,
+            step=1,
+            value=None,
+            placeholder="Age",
+        )
 
     # Ethnicity selectbox
-    ethnicity = st.selectbox(
-        "**Ethnicity**",
-        ETHCNICITIES,
-        help="Patient ethnicity",
-        index=None,
-        placeholder="Select ethnicity",
+    ethnicity_col1, ethnicity_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
     )
+    with ethnicity_col1:
+        ethnicity = st.selectbox(
+            "**Ethnicity**",
+            ETHCNICITIES,
+            index=None,
+            placeholder="Select ethnicity",
+        )
 
     # Sex radio buttons
     sex_map = {"M": "Male", "F": "Female"}
@@ -174,51 +178,89 @@ else:
             )
 
     # M3 score input
-    m3_score = st.number_input(
-        "**M3 score**",
-        min_value=0.0,
-        step=0.001,
-        help="Multimorbidity index",
-        format="%.3f",
-        value=None,
-        placeholder="M3 score",
-    )
+    m3_col1, m3_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with m3_col1:
+        m3_score = st.number_input(
+            "**M3 score**",
+            min_value=0.0,
+            step=0.001,
+            format="%.3f",
+            value=None,
+            placeholder="M3 score",
+        )
+    with m3_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("**Multimorbidity index**")
+            st.write("""
+                The M3 score is a morbidity index for short-term mortality risk,
+                using chronic conditions identified from routine hospital admission
+                ICD-10 data. It was designed by James Stanley and Diana Sarfati.
+                """)
+            st.write("""
+                A score of 0.0 indicates no co-morbidities. There is no maximum value
+                however, greater scores are associated with higher risks.
+                """)
+            st.page_link(
+                "https://pubmed.ncbi.nlm.nih.gov/28844785/",
+                label="More information",
+                icon=":material/info:",
+            )
 
     # Category L1 selectbox
-    category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
-    category_l1 = st.selectbox(
-        "**Surgical specialty**",
-        category_l1_options,
-        help="Surgical specialty of the operation",
-        index=None,
-        placeholder="Specialty",
+    catl1_col1, catl1_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
     )
+    category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
+
+    with catl1_col1:
+        category_l1 = st.selectbox(
+            "**Surgical specialty**",
+            category_l1_options,
+            help="Surgical specialty of the operation",
+            index=None,
+            placeholder="Specialty",
+        )
 
     # Category L2 selectbox (depends on L1)
-    category_l2_disabled = True
-    index = None
-    if category_l1:
-        category_l2_disabled = False
-        if len(CATEGORIES[category_l1]) == 1:
-            index = 0
-
-    category_l2 = st.selectbox(
-        "**Surgical sub-specialty**",
-        CATEGORIES[category_l1],
-        help="Surgical sub-specialty, select a specialty to see options",
-        index=index,
-        placeholder="Sub-specialty",
-        disabled=category_l2_disabled,
+    catl2_col1, catl2_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
     )
+
+    with catl2_col1:
+        category_l2_disabled = True
+        index = None
+        if category_l1:
+            category_l2_disabled = False
+            if len(CATEGORIES[category_l1]) == 1:
+                index = 0
+
+        category_l2 = st.selectbox(
+            "**Surgical sub-specialty**",
+            CATEGORIES[category_l1],
+            help="Surgical sub-specialty, select a specialty to see options",
+            index=index,
+            placeholder="Sub-specialty",
+            disabled=category_l2_disabled,
+        )
 
     # Op severity slider
-    op_severity = st.slider(
-        "**Operation severity**",
-        min_value=1,
-        max_value=5,
-        help="Operation severity, 1 is the lowest severity and 5 is the highest",
-        step=1,
+    op_sev_col1, op_sev_col2 = st.columns(
+        [3, 1], vertical_alignment="bottom", gap="medium"
     )
+    with op_sev_col1:
+        op_severity = st.slider(
+            "**Operation severity**",
+            min_value=1,
+            max_value=5,
+            step=1,
+        )
+    with op_sev_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("**Operation severity**")
+            st.write("""
+                The operation severity score varies between 1 and 5.
+                1 represents operation that have a low severity score, while 5 represents
+                those with high severity.""")
 
     input_features = [
         age,
