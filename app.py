@@ -16,6 +16,7 @@ from app_fn import (
     convert_dtypes,
     create_pdf_report,
     data_visualisation,
+    footer,
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
@@ -38,6 +39,7 @@ if not st.session_state.consent:
     show_consent_page()
 else:
     input_features = main_page_layout()
+    footer()
     is_ready = None not in input_features  # Define the is_ready flag
 
     with st.spinner("Loading model and data..."):
