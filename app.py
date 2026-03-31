@@ -143,11 +143,9 @@ else:
     # GCH selectbox
     gch_col1, gch_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with gch_col1:
-        gch = st.selectbox(
+        gch = st.select_slider(
             "**GCH**",
-            GCH,
-            index=None,
-            placeholder="Select GCH",
+            options=GCH,
         )
     with gch_col2:
         with st.popover("Help", type="tertiary", icon=":material/help:"):
