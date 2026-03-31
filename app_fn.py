@@ -207,12 +207,10 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # Format the dataframe for display
     display_df = plot_df.copy()
 
-    # Adding a 'Status' column for a quick visual cue
-    display_df["Status"] = display_df.apply(
+    # Adding a 'Risk status' column for a quick visual cue
+    display_df["Risk status"] = display_df.apply(
         lambda x: (
-            "⚠️ Higher"
-            if x["Risk percentage"] > x["Population average"]
-            else "✅ Lower"
+            "Higher" if x["Risk percentage"] > x["Population average"] else "Lower"
         ),
         axis=1,
     )
@@ -223,18 +221,20 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     )
 
     table_to_display = display_df[
-        ["Complications", "Risk percentage", "Population average", "Status"]
+        ["Complications", "Risk percentage", "Population average", "Risk status"]
     ]
 
     if display == "table":
         # Use st.dataframe or st.table for a clean look
         st.dataframe(
-            table_to_display.style.format({"Risk percentage": "{:.1f}%"}),
+            table_to_display.style.format({"Risk percentage": "{:.1f}%"}).apply(
+                highlight_medical_risk, axis=1
+            ),
             column_config={
                 "Complications": "Complications",
                 "Risk percentage": "Patient risk",
                 "Population average": "Population average (95% CI)",
-                "Status": "Status",
+                "Risk status": "Risk status",
             },
             hide_index=True,
             width="stretch",
@@ -258,3 +258,18 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             """)
 
     return chart, table_to_display
+
+
+def highlight_medical_risk(row):
+    """Highlight the risk status in red or green and bold font."""
+    # Create a list of styles for the whole row (defaulting to black)
+    styles = ["color: black"] * len(row)
+
+    risk_col_index = row.index.get_loc("Risk status")
+    if row["Risk status"] == "Higher":
+        # Find the index of the column you want to color
+        styles[risk_col_index] = "color: red; font-weight: bold"
+    else:
+        styles[risk_col_index] = "color: green; font-weight: bold"
+
+    return styles
