@@ -37,14 +37,22 @@ if "consent" not in st.session_state:
 if not st.session_state.consent:
     show_consent_page()
 else:
-    st.title("PAIRS ANZ")
+    st.title("Surgical AI Risk Assessement (SARA) calculator")
     st.logo("assets/logo.png", size="large")
 
-    st.header("Surgical risk score calculator", divider="rainbow")
-    st.write(
-        "The PAIRS ANZ (Patient AI Risk Score Aotearoa New Zealand) uses artificial intelligence to predict the risk of mortality and complications post-surgery. Input the patient information below and click on 'Run model' to generate the results."
-    )
-    st.write("Click on the 'Reset' button below if you do not want to continue.")
+    st.header("About the SARA calculator", divider="rainbow")
+    st.write("""The SARA calculator uses artificial intelligence to predict the risk of
+        mortality, readmission, and complications that may occur post-surgery.
+        """)
+    st.write("""
+        This tool is designed to inform clinicians and patients about the surgical risks.
+        The data is **not** collected to train models and is **not** saved anywhere.
+        """)
+    st.write("""
+        To use the calculator, input the patient information below and
+        click on 'Run model' to generate the results.
+    """)
+    st.warning("Click on the 'Reset' button below if you do not wish to continue.")
     st.button("Reset", on_click=reset_app)
 
     st.header("Data input", divider="rainbow")

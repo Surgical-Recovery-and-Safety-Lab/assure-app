@@ -74,8 +74,8 @@ def show_consent_page():
 
     st.write("""
     By using this tool, you agree to:
-    * The processing of your uploaded data by our AI model.
-    * Acknowledging that the model output is for informational purposes only.
+    * the processing of your uploaded data by our AI model.
+    * acknowledging that the model output is for informational purposes only.
     """)
     st.write("""
     Your information is not stored and is deleted after the window is closed.
