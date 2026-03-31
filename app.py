@@ -205,7 +205,7 @@ else:
         "**Operation severity**",
         min_value=1,
         max_value=5,
-        help="Operation severity",
+        help="Operation severity, 1 is the lowest severity and 5 is the highest",
         step=1,
     )
 
