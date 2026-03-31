@@ -136,9 +136,20 @@ else:
         )
     with dep_col2:
         with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("""New Zealand index of depravation""")
-            st.write("""Decile 1 represents areas with the least deprived scores.""")
-            st.write("""Decile 10 represents areas with the most deprived scores.""")
+            st.write("""**New Zealand index of depravation**""")
+            st.write("""
+                Higher levels of socioeconomic deprivation are associated with
+                worse health.""")
+            st.write(
+                """Decile 1 represents areas with the least deprived scores and decile
+                10 represents areas with the most deprived scores.
+                """
+            )
+            st.page_link(
+                "https://www.ehinz.ac.nz/indicators/population-vulnerability/socioeconomic-deprivation-profile/",
+                label="More information",
+                icon=":material/info:",
+            )
 
     # GCH selectbox
     gch_col1, gch_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
