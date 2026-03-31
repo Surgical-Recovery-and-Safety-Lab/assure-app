@@ -149,9 +149,18 @@ else:
         )
     with gch_col2:
         with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("New Zealand geographical classification of health")
-            st.write("U1 represents an urban setting")
-            st.write("R3 represents a very rural setting")
+            st.write("**New Zealand Geographical Classification of Health**")
+            st.write("""
+                The GCH is comprised of five categories, two urban and three rural,
+                that reflect degrees of reducing urban influence and increasing rurality.
+                U1 represents the most urban setting and R3 represents the most rural
+                setting
+                """)
+            st.page_link(
+                "https://www.otago.ac.nz/centre-for-rural-health/research/geographic-classification-for-health/about-the-gch",
+                label="More information",
+                icon=":material/info:",
+            )
 
     # M3 score input
     m3_score = st.number_input(
