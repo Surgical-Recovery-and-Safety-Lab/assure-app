@@ -120,7 +120,6 @@ else:
     trauma = st.radio(
         "**Trauma**",
         index=1,
-        help="Trauma",
         options=[True, False],
         format_func=lambda x: "Yes" if x else "No",
         horizontal=True,
