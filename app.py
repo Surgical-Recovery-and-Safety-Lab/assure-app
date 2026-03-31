@@ -141,13 +141,19 @@ else:
             st.write("""Decile 10 represents areas with the most deprived scores.""")
 
     # GCH selectbox
-    gch = st.selectbox(
-        "**GCH**",
-        GCH,
-        help="NZ Geographical Classification of Health",
-        index=None,
-        placeholder="Select GCH",
-    )
+    gch_col1, gch_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with gch_col1:
+        gch = st.selectbox(
+            "**GCH**",
+            GCH,
+            index=None,
+            placeholder="Select GCH",
+        )
+    with gch_col2:
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write("New Zealand geographical classification of health")
+            st.write("U1 represents an urban setting")
+            st.write("R3 represents a very rural setting")
 
     # M3 score input
     m3_score = st.number_input(
