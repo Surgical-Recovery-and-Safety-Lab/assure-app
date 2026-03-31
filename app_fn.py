@@ -6,9 +6,13 @@ app_fn.py
 Streamlit NZ Risk Score app helper functions.
 """
 
+from io import BytesIO
+
 import altair as alt
 import joblib
 import streamlit as st
+import vl_convert as vlc
+from fpdf import FPDF
 from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
@@ -273,3 +277,90 @@ def highlight_medical_risk(row):
         styles[risk_col_index] = "color: green; font-weight: bold"
 
     return styles
+
+
+def create_pdf_report(charts, tables):
+    """
+    Create a pdf report from the plots and tables.
+
+    Assumes the global chart and tables are first.
+
+    Parameters
+    ----------
+    charts : list[altair.Chart]
+        List of charts plotting the outcome graph results.
+    table : list[pandas.DataFrame]
+        List of tables displaying the outcomes.
+
+    Returns
+    -------
+    pdf : pdf bytes
+        Pdf report.
+
+    """
+    # Define some constant values
+    graph_headers = ["Global outcomes graph", "Specific complication graph"]
+    table_headers = ["Global outcomes table", "Specific complication table"]
+
+    pdf = FPDF()
+    pdf.add_font("DejaVu", "", "assets/fonts/DejaVuSans.ttf")
+    pdf.add_font("DejaVu", "B", "assets/fonts/DejaVuSans-Bold.ttf")
+    pdf.add_page()
+    pdf.set_font("DejaVu", "B", 16)
+
+    # --- Title ---
+    pdf.cell(0, 10, "Patient Risk Assessment Report", align="C")
+    pdf.ln(20)  # Line break
+
+    # --- Convert Altair Chart to PNG Bytes ---
+    # This turns the interactive web chart into a static image for the PDF
+    for i, chart in enumerate(charts):
+        png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
+        chart_img = BytesIO(png_data)
+
+        # --- Insert Chart ---
+        pdf.set_font("DejaVu", "B", 12)
+        pdf.cell(40, 10, graph_headers[i])
+        pdf.ln(10)
+        # image(source, x, y, width)
+        pdf.image(chart_img, x=10, y=None, w=180)
+        pdf.ln(10)
+
+    pdf.add_page()  # Add new page for table views
+
+    # --- Insert Table Data ---
+    for i, table in enumerate(tables):
+        pdf.set_font("DejaVu", "B", 12)
+        pdf.cell(40, 10, table_headers[i])
+        pdf.ln(10)
+
+        # Table Header
+        pdf.set_font("DejaVu", "B", 10)
+        pdf.cell(60, 10, "Complications", border=1, align="C")
+        pdf.cell(35, 10, "Patient risk", border=1, align="C")
+        pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
+        pdf.cell(35, 10, "Risk status", border=1, align="C")
+        pdf.ln()
+
+        # Table Rows
+        pdf.set_font("DejaVu", "", 10)  # Reset to normal font
+        for _, row in table.iterrows():
+            # Write first three columns in normal black font
+            pdf.cell(60, 10, str(row["Complications"]), border=1)
+            pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
+            pdf.cell(60, 10, f"{row['Population average']}", border=1)
+
+            # Set font and colour for Risk status
+            pdf.set_font("DejaVu", "B", 10)  # Set bold font
+            if row["Risk status"] == "Higher":
+                pdf.set_text_color(200, 0, 0)  # Red font
+            else:
+                pdf.set_text_color(0, 128, 0)  # Green font
+
+            pdf.cell(35, 10, f"{row['Risk status']}", border=1)
+            pdf.ln()
+
+            pdf.set_font("DejaVu", "", 10)  # Reset to normal font
+            pdf.set_text_color(0, 0, 0)  # Reset to black
+
+    return bytes(pdf.output())

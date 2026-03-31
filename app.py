@@ -14,6 +14,7 @@ from app_fn import (
     app_load_averages,
     app_load_pipeline,
     convert_dtypes,
+    create_pdf_report,
     data_visualisation,
     reset_app,
     show_consent_page,
@@ -350,3 +351,14 @@ else:
                     op_average,
                     display=st.session_state.comp_display_option,
                 )
+
+        pdf_bytes = create_pdf_report(
+            [global_chart, comp_chart], [global_table, comp_table]
+        )
+        st.download_button(
+            label="Download PDF report",
+            data=pdf_bytes,
+            file_name="patient_risk_report.pdf",
+            mime="application/octet-stream",
+            icon=":material/download:",
+        )
