@@ -1,2 +1,2 @@
 __pycache__/
-assets/*.joblib
+assets/models/*.joblib
