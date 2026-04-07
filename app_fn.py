@@ -16,7 +16,7 @@ from fpdf import FPDF
 from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
-from constants import AVERAGES, CATEGORIES, ETHCNICITIES, GCH, LABEL_MAP, MODEL
+from constants import AVERAGES, CATEGORIES, ETHCNICITIES, LABEL_MAP, MODEL
 
 
 @st.cache_resource(show_spinner=False)
@@ -36,7 +36,7 @@ def app_load_averages():
 def convert_dtypes(data):
     """Convert datatypes to fit requirements"""
     for column in data.columns:
-        if column in ["AGE", "M3_SCORE", "OP_SEVERITY", "DEP18_ORIGINAL"]:
+        if column in ["AGE", "ASA_SCORE", "OP_SEVERITY"]:
             data[column] = to_numeric(data[column])
         if column in ["PRIOR_CANCER", "TRAUMA"]:
             data[column] = data[column].astype(bool)
@@ -191,79 +191,28 @@ def main_page_layout():
         horizontal=True,
     )
 
-    # DEP slider
-    dep_col1, dep_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    with dep_col1:
-        dep = st.slider(
-            "**NZDep**",
-            min_value=1,
-            max_value=10,
-            step=1,
-        )
-    with dep_col2:
-        with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("""**New Zealand index of depravation**""")
-            st.write("""
-                Higher levels of socioeconomic deprivation are associated with
-                worse health.""")
-            st.write(
-                """Decile 1 represents areas with the least deprived scores and decile
-                10 represents areas with the most deprived scores.
-                """
-            )
-            st.page_link(
-                "https://www.ehinz.ac.nz/indicators/population-vulnerability/socioeconomic-deprivation-profile/",
-                label="More information",
-                icon=":material/info:",
-            )
-
-    # GCH selectbox
-    gch_col1, gch_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    with gch_col1:
-        gch = st.select_slider(
-            "**GCH**",
-            options=GCH,
-        )
-    with gch_col2:
-        with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("**New Zealand Geographical Classification of Health**")
-            st.write("""
-                The GCH is comprised of five categories, two urban and three rural,
-                that reflect degrees of reducing urban influence and increasing rurality.
-                U1 represents the most urban setting and R3 represents the most rural
-                setting
-                """)
-            st.page_link(
-                "https://www.otago.ac.nz/centre-for-rural-health/research/geographic-classification-for-health/about-the-gch",
-                label="More information",
-                icon=":material/info:",
-            )
-
     # M3 score input
-    m3_col1, m3_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    with m3_col1:
-        m3_score = st.number_input(
-            "**M3 score**",
-            min_value=0.0,
-            step=0.001,
-            format="%.3f",
-            value=None,
-            placeholder="M3 score",
+    asa_col1, asa_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    with asa_col1:
+        asa_score = st.slider(
+            "**ASA score**",
+            min_value=1,
+            max_value=5,
+            value=1,
         )
-    with m3_col2:
+    with asa_col2:
         with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("**Multimorbidity index**")
-            st.write("""
-                The M3 score is a morbidity index for short-term mortality risk,
-                using chronic conditions identified from routine hospital admission
-                ICD-10 data. It was designed by James Stanley and Diana Sarfati.
-                """)
-            st.write("""
-                A score of 0.0 indicates no co-morbidities. There is no maximum value
-                however, greater scores are associated with higher risks.
+            st.write("**Amercian Society of Anaesthesiology -- Physical Status Score**")
+            st.markdown("""
+                1. Normal healthy patient
+                2. Patient with mild systemic disease
+                3. Patient with severe systemic disease
+                4. Patient with severe systemic disease that is a constant threat to life
+                5. Patient who is moribund and not suspected to survive without
+                the operation
                 """)
             st.page_link(
-                "https://pubmed.ncbi.nlm.nih.gov/28844785/",
+                "https://www.openanesthesia.org/keywords/asa-physical-status-classification/",
                 label="More information",
                 icon=":material/info:",
             )
@@ -324,9 +273,7 @@ def main_page_layout():
         age,
         ethnicity,
         sex,
-        dep,
-        gch,
-        m3_score,
+        asa_score,
         cancer,
         acuity,
         source,
