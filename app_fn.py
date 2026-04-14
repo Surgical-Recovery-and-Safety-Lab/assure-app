@@ -26,6 +26,22 @@ def app_load_pipeline():
     return pipeline
 
 
+@st.cache_resource
+def load_model_from_gcs():
+    """Load model from Google Cloud Storage"""
+    client = storage.Client()
+
+    bucket = client.bucket(BUCKET)
+    blob = bucket.blob(MODEL_NAME)
+
+    # Download into memory as bytes
+    buffer = BytesIO()
+    blob.download_to_file(buffer)
+    buffer.seek(0)
+
+    return joblib.load(buffer)
+
+
 @st.cache_resource(show_spinner=False)
 def app_load_averages():
     """Load operation averages"""
