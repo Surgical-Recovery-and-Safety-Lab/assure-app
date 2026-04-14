@@ -71,7 +71,7 @@ else:
         else:
             st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run:
+    if st.session_state.model_run and input_features[8]:
         # If the model has been run
         st.header("Results", divider="rainbow")
         with st.expander("See details"):
@@ -157,13 +157,11 @@ else:
             )
 
             with st.container():
-                comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+                comp_col1, comp_col2, comp_col3 = st.columns(3)
                 for i, key in enumerate(complications_dict.keys()):
-                    if i >= 3 * len(complications_dict) / 4:
-                        col = comp_col4
-                    elif i >= 2 * len(complications_dict) / 4:
+                    if i >= 2 * len(complications_dict) / 3:
                         col = comp_col3
-                    elif i >= len(complications_dict) / 4:
+                    elif i >= len(complications_dict) / 3:
                         col = comp_col2
                     else:
                         col = comp_col1
