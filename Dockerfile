@@ -8,12 +8,6 @@ ENV PYTHONUNBUFFERED=1
 # Create and set the working directory
 WORKDIR /app
 
-# Install system dependencies (needed for some ML libraries)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
