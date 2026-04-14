@@ -36,12 +36,12 @@ def app_load_pipeline():
 
 
 @st.cache_resource
-def load_model_from_gcs():
-    """Load model from Google Cloud Storage"""
+def load_data_from_gcs(blob_name):
+    """Load model or op-averages from Google Cloud Storage"""
     client = storage.Client()
 
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(MODEL_NAME)
+    blob = bucket.blob(blob_name)
 
     # Download into memory as bytes
     buffer = BytesIO()
