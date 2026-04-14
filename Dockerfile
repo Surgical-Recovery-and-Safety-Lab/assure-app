@@ -20,4 +20,4 @@ ENV PORT=8080
 
 # Cloud Run uses the PORT env var, but Streamlit defaults to 8501. 
 # We force Streamlit to listen on the port Cloud Run provides.
-CMD ["sh", "-c", "streamlit run app.py --server.port=${PORT} --server.address=0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false""]
+CMD ["sh", "-c", "streamlit run app.py --server.port=${PORT} --server.address=0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false"]
