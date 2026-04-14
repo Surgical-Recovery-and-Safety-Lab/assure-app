@@ -1,69 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-streamlit_app.py
+app.py
 
 Streamlit NZ Risk Score app.
 """
 
-import altair as alt
 import streamlit as st
-from medpipe.models.core import load_pipeline
 from numpy import array, expand_dims
-from pandas import DataFrame, to_numeric
+from pandas import DataFrame
 
-from constants import CATEGORIES, COLUMNS, ETHCNICITIES, GCH, LABEL_MAP
-
-
-@st.cache_resource
-def app_load_pipeline():
-    """Load the pipeline"""
-    pipeline = load_pipeline("model/ai_risk_HGBc-v0.5.1.5-d.1.3.2.pkl")
-    return pipeline
-
-
-def convert_dtypes(data):
-    """Convert datatypes to fit requirements"""
-    for column in data.columns:
-        if column in ["AGE", "M3_SCORE", "OP_SEVERITY", "DEP18_ORIGINAL"]:
-            data[column] = to_numeric(data[column])
-        if column in ["PRIOR_CANCER", "TRAUMA"]:
-            data[column] = data[column].astype(bool)
-    return data
-
-
-def sync_toggles():
-    """Sync the toggles based on the all toggle"""
-    for key in LABEL_MAP.keys():
-        st.session_state[key] = st.session_state.ALL
-
-
-def reset_app():
-    """Reset all session state variables"""
-    for key in LABEL_MAP.keys():
-        st.session_state[key] = False
-
-    st.session_state.consent = False
-    st.session_state.model_run = False
-
-
-def show_consent_page():
-    st.title("Data Usage & Model Consent")
-    st.warning("Please read the following carefully before proceeding.")
-
-    st.write("""
-    By using this tool, you agree to:
-    * The processing of your uploaded data by our AI model.
-    * Acknowledging that the model output is for informational purposes only.
-    """)
-    st.write("""
-    Your information is not stored and is deleted after the window is closed.
-    """)
-
-    if st.button("I Agree and Accept"):
-        st.session_state.consent = True
-        st.rerun()  # Rerun to immediately switch to the main app
-
+from app_fn import (
+    app_load_averages,
+    app_load_pipeline,
+    convert_dtypes,
+    create_pdf_report,
+    data_visualisation,
+    footer,
+    main_page_layout,
+    show_consent_page,
+    sync_complication_toggles,
+    sync_global_outcome_toggles,
+)
+from constants import COLUMNS, LABEL_MAP
 
 # Define session state variables
 if "model_run" not in st.session_state:
@@ -79,164 +38,14 @@ if "consent" not in st.session_state:
 if not st.session_state.consent:
     show_consent_page()
 else:
-    st.title("PAIRS ANZ")
-    st.logo("assets/logo.png", size="large")
-
-    st.header("Surgical risk score calculator", divider="rainbow")
-    st.write(
-        "The PAIRS ANZ (Patient AI Risk Score Aotearoa New Zealand) uses artificial intelligence to predict the risk of mortality and complications post-surgery. Input the patient information below and click on 'Run model' to generate the results."
-    )
-    st.write("Click on the 'Reset' button below if you do not want to continue.")
-    st.button("Reset", on_click=reset_app)
-
-    st.header("Data input", divider="rainbow")
-
-    # Age input
-    age = st.number_input(
-        "**Age**",
-        min_value=18,
-        max_value=122,
-        step=1,
-        help="Patient age",
-        value=None,
-        placeholder="Age",
-    )
-
-    # Ethnicity selectbox
-    ethnicity = st.selectbox(
-        "**Ethnicity**",
-        ETHCNICITIES,
-        help="Patient ethnicity",
-        index=None,
-        placeholder="Select ethnicity",
-    )
-
-    # Sex radio buttons
-    sex_map = {"M": "Male", "F": "Female"}
-    sex = st.radio(
-        "**Sex**",
-        options=sex_map.keys(),
-        format_func=lambda x: sex_map[x],
-        index=None,
-        help="Patient sex at birth",
-        horizontal=True,
-    )
-
-    # Cancer radio buttons
-    cancer = st.radio(
-        "**Prior cancer**",
-        options=[True, False],
-        format_func=lambda x: "Yes" if x else "No",
-        index=1,
-        help="Did the patient have cancer?",
-        horizontal=True,
-    )
-
-    # Acuity radio buttons
-    acuity = st.radio(
-        "**Admission acuity**",
-        ["Elective", "Acute"],
-        index=0,
-        help="Is the surgery elective or acute?",
-        horizontal=True,
-    )
-
-    # Source radio buttons
-    source = st.radio(
-        "**Admission source**",
-        ["Routine", "Transfer"],
-        index=0,
-        help="Is the patient transfered from another hospital?",
-        horizontal=True,
-    )
-
-    # Traum radio buttons
-    trauma = st.radio(
-        "**Trauma**",
-        index=1,
-        help="Trauma",
-        options=[True, False],
-        format_func=lambda x: "Yes" if x else "No",
-        horizontal=True,
-    )
-
-    # DEP slider
-    dep = st.slider(
-        "**NZDep**", min_value=1, max_value=10, step=1, help="NZ Index of Depravation"
-    )
-
-    # GCH selectbox
-    gch = st.selectbox(
-        "**GCH**",
-        GCH,
-        help="NZ Geographical Classification of Health",
-        index=None,
-        placeholder="Select GCH",
-    )
-
-    # M3 score input
-    m3_score = st.number_input(
-        "**M3 score**",
-        min_value=0.0,
-        step=0.001,
-        help="Multimorbidity index",
-        format="%.3f",
-        value=None,
-        placeholder="M3 score",
-    )
-
-    # Category L1 selectbox
-    category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
-    category_l1 = st.selectbox(
-        "**Surgical specialty**",
-        category_l1_options,
-        help="Surgical specialty of the operation",
-        index=None,
-        placeholder="Specialty",
-    )
-
-    # Category L2 selectbox (depends on L1)
-    category_l2_disabled = True
-    index = None
-    if category_l1:
-        category_l2_disabled = False
-        if len(CATEGORIES[category_l1]) == 1:
-            index = 0
-
-    category_l2 = st.selectbox(
-        "**Surgical sub-specialty**",
-        CATEGORIES[category_l1],
-        help="Surgical sub-specialty, select a specialty to see options",
-        index=index,
-        placeholder="Sub-specialty",
-        disabled=category_l2_disabled,
-    )
-
-    # Op severity slider
-    op_severity = st.slider(
-        "**Operation severity**",
-        min_value=1,
-        max_value=5,
-        help="Operation severity",
-        step=1,
-    )
-
-    input_features = [
-        age,
-        ethnicity,
-        sex,
-        dep,
-        gch,
-        m3_score,
-        cancer,
-        acuity,
-        source,
-        category_l1,
-        category_l2,
-        op_severity,
-        trauma,
-    ]
+    input_features = main_page_layout()
+    footer()
     is_ready = None not in input_features  # Define the is_ready flag
+
+    with st.spinner("Loading model and data..."):
+        pipeline = app_load_pipeline()
+        averages = app_load_averages()
+    st.success("Model loaded successfully")
 
     run_model_col, run_info_col = st.columns(2, vertical_alignment="center")
     with run_model_col:
@@ -244,17 +53,17 @@ else:
     with run_info_col:
         if is_ready:
             if run:
-                # Your model code here
-                pipeline = app_load_pipeline()
                 label_list = pipeline.label_list
                 data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
                 input_data = pipeline.transform(convert_dtypes(data))
                 output_proba = pipeline.predict_proba(
                     input_data, label_list="all", model_type="predictor"
                 )
-                st.session_state.output_proba = (
-                    100 * array(output_proba)[:, 0, 1]
-                )  # Reshape to only get positives
+                st.session_state.output_proba = {
+                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(label_list))
+                }
+                # Reshape to create dictionary with only positive probas
                 st.session_state.model_run = True
             st.info(
                 "To generate results with new data, please click on 'Run model' again."
@@ -263,67 +72,139 @@ else:
             st.info("Please fill out all fields to enable the 'Run model' button.")
 
     if st.session_state.model_run:
+        # If the model has been run
         st.header("Results", divider="rainbow")
-        st.subheader("Outcomes")
-        st.write(
-            "Please select the outcomes to visualise. There is no need to re-run the model to view different outcomes."
+        with st.expander("See details"):
+            st.write("""Select one of the tabs to view the desired results.""")
+            st.write("""
+                     The outcomes can be toggled on and off using the switches. The All 
+                     button in each tab activates or deactivates all the outcomes within 
+                     that tab. The model does **not** need to be re-run to view different
+                     outcomes.
+
+                     """)
+            st.write("""
+                    The results can be viewed as a graph or as a table. Select the desired 
+                    visualisation by selecting the display type.
+                    """)
+        op_average = averages[input_features[8]]
+        display_options = {"graph": "Graph", "table": "Table"}
+
+        global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
+
+        with global_tab:
+            st.subheader("Global outcomes")
+            global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
+            complications_dict = LABEL_MAP["COMPLICATIONS"]
+
+            # Create global outcomes layout
+            all_toggle = st.toggle(
+                global_outcomes_dict["GLOBAL_OUTCOMES"],
+                key="GLOBAL_OUTCOMES",
+                on_change=sync_global_outcome_toggles,
+                value=True,
+            )
+
+            with st.container():
+                global_outcomes_col1, global_outcomes_col2 = st.columns(2)
+                for i, key in enumerate(global_outcomes_dict.keys()):
+                    if i >= len(global_outcomes_dict) / 2:
+                        col = global_outcomes_col2
+                    else:
+                        col = global_outcomes_col1
+
+                    with col:
+                        if key == "GLOBAL_OUTCOMES":
+                            continue
+                        else:
+                            toggle = st.toggle(
+                                global_outcomes_dict[key],
+                                key=key,
+                                value=True,
+                            )
+
+                # Empty list to store global outcomes to plot
+                global_labels = []
+                global_outcomes_proba = []
+                global_average = []
+                global_lower = []
+                global_upper = []
+
+                # Create the graph/table toggle
+                global_display_option = st.pills(
+                    "**Display type**",
+                    key="global_display_option",
+                    options=display_options.keys(),
+                    format_func=lambda option: display_options[option],
+                    selection_mode="single",
+                    default="graph",
+                )
+
+                global_chart, global_table = data_visualisation(
+                    global_outcomes_dict,
+                    op_average,
+                    display=st.session_state.global_display_option,
+                )
+
+        with comp_tab:
+            # Create complications layout
+            st.subheader("Specific complications")
+            all_toggle = st.toggle(
+                complications_dict["COMPLICATIONS"],
+                key="COMPLICATIONS",
+                on_change=sync_complication_toggles,
+                value=True,
+            )
+
+            with st.container():
+                comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+                for i, key in enumerate(complications_dict.keys()):
+                    if i >= 3 * len(complications_dict) / 4:
+                        col = comp_col4
+                    elif i >= 2 * len(complications_dict) / 4:
+                        col = comp_col3
+                    elif i >= len(complications_dict) / 4:
+                        col = comp_col2
+                    else:
+                        col = comp_col1
+                    with col:
+                        if key == "COMPLICATIONS":
+                            continue
+                        else:
+                            toggle = st.toggle(
+                                complications_dict[key], key=key, value=True
+                            )
+
+                # Empty list to store complications to plot
+                comp_labels = []
+                comp_outcomes_proba = []
+                comp_average = []
+                comp_lower = []
+                comp_upper = []
+
+                # Create the graph/table toggle
+                comp_display_option = st.pills(
+                    "**Display type**",
+                    key="comp_display_option",
+                    options=display_options.keys(),
+                    format_func=lambda option: display_options[option],
+                    selection_mode="single",
+                    default="graph",
+                )
+
+                comp_chart, comp_table = data_visualisation(
+                    complications_dict,
+                    op_average,
+                    display=st.session_state.comp_display_option,
+                )
+
+        pdf_bytes = create_pdf_report(
+            [global_chart, comp_chart], [global_table, comp_table]
         )
-        col1, col2, col3 = st.columns(3)
-        selected_labels = []
-        with col1:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= len(LABEL_MAP) / 3:
-                    # Break after passing the first third
-                    break
-
-                if key == "ALL":
-                    toggle = st.toggle(LABEL_MAP[key], key=key, on_change=sync_toggles)
-                else:
-                    toggle = st.toggle(LABEL_MAP[key], key=key)
-                selected_labels.append(toggle)
-        with col2:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= 2 * len(LABEL_MAP) / 3:
-                    # Break after passing the second third
-                    break
-
-                if i >= len(LABEL_MAP) / 3:
-                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
-        with col3:
-            for i, key in enumerate(LABEL_MAP.keys()):
-                if i >= 2 * len(LABEL_MAP) / 3:
-                    selected_labels.append(st.toggle(LABEL_MAP[key], key=key))
-
-        with st.container():
-            labels = [
-                LABEL_MAP[key]
-                for key in LABEL_MAP.keys()
-                if st.session_state[key] and key != "ALL"
-            ]
-            probabilities = st.session_state.output_proba[selected_labels[1:]]
-            plot_df = DataFrame(
-                {"Predicted outcomes": labels, "Risk percentage": probabilities}
-            )
-
-            base = alt.Chart(plot_df).encode(
-                x=alt.X("Risk percentage:Q", scale=alt.Scale(domain=[0, 100])),
-                y=alt.Y("Predicted outcomes:N", sort="-x"),
-                tooltip=["Predicted outcomes", "Risk percentage"],
-            )
-
-            bars = base.mark_bar().encode(
-                color=alt.Color("Risk percentage:Q", scale=alt.Scale(scheme="cividis"))
-            )
-
-            text = base.mark_text(
-                align="left",
-                baseline="middle",
-                dx=3,  # Shifts the text slightly to the right of the bar
-            ).encode(
-                text=alt.Text(
-                    "Risk percentage:Q", format=".1f"
-                )  # Rounds to 1 decimal place
-            )
-
-            chart = (bars + text).properties(width=600)
-            st.altair_chart(chart)
+        st.download_button(
+            label="Download PDF report",
+            data=pdf_bytes,
+            file_name="patient_risk_report.pdf",
+            mime="application/octet-stream",
+            icon=":material/download:",
+        )
