@@ -11,7 +11,6 @@ from numpy import array, expand_dims
 from pandas import DataFrame
 
 from app_fn import (
-    app_load_averages,
     convert_dtypes,
     create_pdf_report,
     data_visualisation,
