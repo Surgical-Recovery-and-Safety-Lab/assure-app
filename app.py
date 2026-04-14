@@ -71,7 +71,7 @@ else:
         else:
             st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run:
+    if st.session_state.model_run and input_features[8]:
         # If the model has been run
         st.header("Results", divider="rainbow")
         with st.expander("See details"):
