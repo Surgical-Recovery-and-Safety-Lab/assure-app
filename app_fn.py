@@ -13,10 +13,19 @@ import joblib
 import streamlit as st
 import vl_convert as vlc
 from fpdf import FPDF
+from google.cloud import storage
 from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
-from constants import AVERAGES, CATEGORIES, ETHCNICITIES, LABEL_MAP, MODEL
+from constants import (
+    AVERAGES,
+    BUCKET,
+    CATEGORIES,
+    ETHCNICITIES,
+    LABEL_MAP,
+    MODEL,
+    MODEL_NAME,
+)
 
 
 @st.cache_resource(show_spinner=False)
