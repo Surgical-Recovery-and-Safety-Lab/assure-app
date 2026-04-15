@@ -2,8 +2,6 @@ altair==6.0.0
 fpdf2==2.8.7
 joblib==1.5.3
 medpipe==0.1.1
-numpy>=2.4.2
-pandas==3.0.2
 protobuf==7.34.1
 streamlit==1.54.0
 vl-convert-python==1.9.0.post1
