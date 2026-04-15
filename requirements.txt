@@ -6,3 +6,4 @@ numpy==2.4.4
 pandas==3.0.2
 protobuf==7.34.1
 streamlit==1.54.0
+vl-convert-python==1.9.0.post1
