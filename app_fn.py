@@ -35,7 +35,7 @@ def app_load_pipeline():
     return pipeline
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def load_data_from_gcs(blob_name):
     """Load model or op-averages from Google Cloud Storage"""
     client = storage.Client()
