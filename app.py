@@ -23,6 +23,8 @@ from app_fn import (
 )
 from constants import AVERAGES_NAME, COLUMNS, LABEL_MAP, MODEL_NAME
 
+st.set_page_config(page_title="SARA calculator")
+
 # Define session state variables
 if "model_run" not in st.session_state:
     # Session state flag to check if model has run at least once
