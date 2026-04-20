@@ -3,7 +3,7 @@
 """
 app.py
 
-Streamlit NZ Risk Score app.
+Streamlit ASSuRE app.
 """
 
 import streamlit as st
@@ -24,7 +24,7 @@ from app_fn import (
 )
 from constants import COLUMNS, LABEL_MAP
 
-st.set_page_config(page_title="SARA calculator")
+st.set_page_config(page_title="ASSuRE")
 
 # Define session state variables
 if "model_run" not in st.session_state:

@@ -3,7 +3,7 @@
 """
 app_fn.py
 
-Streamlit NZ Risk Score app helper functions.
+Streamlit ASSuRE helper functions.
 """
 
 from io import BytesIO
@@ -100,11 +100,11 @@ def main_page_layout():
         List of the input features extracted from the user inputs.
 
     """
-    st.title("Surgical AI Risk Assessement (SARA) calculator")
+    st.title("Aotearoa's Smart Surgical Risk Estimator")
     st.logo("assets/logo.png", size="large")
 
-    st.header("About the SARA calculator", divider="rainbow")
-    st.write("""The SARA calculator uses artificial intelligence to predict the risk of
+    st.header("About ASSuRE", divider="rainbow")
+    st.write("""ASSuRE uses artificial intelligence to predict the risk of
         mortality, readmission, and complications that may occur post-surgery.
         """)
     st.write("""
@@ -598,7 +598,7 @@ def footer():
         </style>
         
         <div class="footer">
-            <span>2026 SARA calculator</span>
+            <span>2026 ASSuRE</span>
             <a class="feedback-button" 
                href="mailto:mathias.roesler@auckland.ac.nz?subject=SARA app%20feedback">
                Send Feedback
