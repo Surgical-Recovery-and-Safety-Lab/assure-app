@@ -15,7 +15,7 @@ import vl_convert as vlc
 from fpdf import FPDF
 from pandas import DataFrame, to_numeric
 
-from constants import AVERAGES, CATEGORIES, ETHCNICITIES, LABEL_MAP, MODEL
+from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL
 
 
 @st.cache_resource(show_spinner=False)
@@ -133,11 +133,19 @@ def main_page_layout():
         )
 
     # Ethnicity selectbox
+    ethnicity_map = {
+        "Asian": "Asian",
+        "European": "NZ European",
+        "Māori": "Māori",
+        "MELAA/Other": "MELAA/Other",
+        "Pacific peoples": "Pacific",
+    }
     ethnicity_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with ethnicity_col1:
         ethnicity = st.selectbox(
             "**Ethnicity**",
-            ETHCNICITIES,
+            options=ethnicity_map.keys(),
+            format_func=lambda x: ethnicity_map[x],
             index=None,
             placeholder="Select ethnicity",
         )
