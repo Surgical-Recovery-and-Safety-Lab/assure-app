@@ -332,6 +332,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             "Upper CI": comp_upper,
         }
     )
+    x_max = plot_df.max(numeric_only=True).max()
+
     st.markdown(  # Hide table view and zoom options
         """
         <style>
@@ -350,7 +352,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             x=alt.X(
                 "Lower CI:Q",
                 title="Risk percentage (%)",
-                scale=alt.Scale(domain=[0, 95]),
+                scale=alt.Scale(domain=[0, x_max]),
             ),
             x2="Upper CI:Q",
             y=alt.Y("Complications:N", sort=None),
@@ -360,7 +362,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # 2. The Average Layer (A circle representing the population mean)
     avg_point = (
         alt.Chart(plot_df)
-        .mark_point(filled=True, color="black", size=100)
+        .mark_point(filled=True, color="black", size=50)
         .encode(
             x="Population average:Q",
             y="Complications:N",
@@ -395,7 +397,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             fontWeight="bold",
         )
         .encode(
-            x=alt.datum(100),  # Fixed pixel position
+            x=alt.datum(x_max + 0.5),  # Fixed pixel position
             y=alt.Y("Complications:N", sort=None),
             text=alt.Text(
                 "Risk percentage:Q", format=".1f"
