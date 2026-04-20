@@ -8,7 +8,6 @@ Constants for the app.
 
 MODEL_NAME = "ai_risk_HGBc-v0.5.1.0-a.1.3.0.joblib"
 MODEL = "assets/models/" + MODEL_NAME
-BUCKET = "nz-risk-score-bucket"
 AVERAGES_NAME = "op-averages.joblib"
 AVERAGES = "assets/models/" + AVERAGES_NAME
 ETHCNICITIES = ["Asian", "European", "Māori", "MELAA/Other", "Pacific Peoples"]

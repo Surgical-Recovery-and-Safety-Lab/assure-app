@@ -13,49 +13,23 @@ import joblib
 import streamlit as st
 import vl_convert as vlc
 from fpdf import FPDF
-from google.cloud import storage
-from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
-from constants import (
-    AVERAGES,
-    BUCKET,
-    CATEGORIES,
-    ETHCNICITIES,
-    LABEL_MAP,
-    MODEL,
-    MODEL_NAME,
-)
+from constants import AVERAGES, CATEGORIES, ETHCNICITIES, LABEL_MAP, MODEL
 
 
 @st.cache_resource(show_spinner=False)
-def app_load_pipeline():
-    """Load the pipeline"""
-    pipeline = load_pipeline(MODEL)
-    return pipeline
+def load_pipeline():
+    """Load pipeline"""
+
+    return joblib.load(MODEL)
 
 
 @st.cache_resource(show_spinner=False)
-def load_data_from_gcs(blob_name):
-    """Load model or op-averages from Google Cloud Storage"""
-    client = storage.Client()
-
-    bucket = client.bucket(BUCKET)
-    blob = bucket.blob(blob_name)
-
-    # Download into memory as bytes
-    buffer = BytesIO()
-    blob.download_to_file(buffer)
-    buffer.seek(0)
-
-    return joblib.load(buffer)
-
-
-@st.cache_resource(show_spinner=False)
-def app_load_averages():
+def load_averages():
     """Load operation averages"""
-    op_averages = joblib.load(AVERAGES)
-    return op_averages
+
+    return joblib.load(AVERAGES)
 
 
 def convert_dtypes(data):

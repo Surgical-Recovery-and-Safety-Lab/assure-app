@@ -15,13 +15,14 @@ from app_fn import (
     create_pdf_report,
     data_visualisation,
     footer,
-    load_data_from_gcs,
+    load_averages,
+    load_pipeline,
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
     sync_global_outcome_toggles,
 )
-from constants import AVERAGES_NAME, COLUMNS, LABEL_MAP, MODEL_NAME
+from constants import COLUMNS, LABEL_MAP
 
 st.set_page_config(page_title="SARA calculator")
 
@@ -44,9 +45,8 @@ else:
     is_ready = None not in input_features  # Define the is_ready flag
 
     with st.spinner("Loading model and data..."):
-        pipeline = load_data_from_gcs(MODEL_NAME)
-        averages = load_data_from_gcs(AVERAGES_NAME)
-    st.success("Model loaded successfully")
+        pipeline = load_pipeline()
+        averages = load_averages()
 
     run_model_col, run_info_col = st.columns(2, vertical_alignment="center")
     with run_model_col:
