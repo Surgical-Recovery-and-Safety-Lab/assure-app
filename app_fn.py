@@ -332,7 +332,16 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             "Upper CI": comp_upper,
         }
     )
-
+    st.markdown(  # Hide table view and zoom options
+        """
+        <style>
+        [data-testid="stElementToolbar"] {
+            display: none !important;
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
     # 1. The Confidence Interval Layer (The horizontal "whisker")
     error_bars = (
         alt.Chart(plot_df)
