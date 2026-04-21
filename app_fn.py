@@ -103,18 +103,6 @@ def main_page_layout():
     st.title("Aotearoa's Smart Surgical Risk Estimator")
     st.logo("assets/logo.png", size="large")
 
-    st.header("About ASSuRE", divider="rainbow")
-    st.write("""ASSuRE uses artificial intelligence to predict the risk of
-        mortality, readmission, and complications that may occur post-surgery.
-        """)
-    st.write("""
-        This tool is designed to inform clinicians and patients about the surgical risks.
-        The data is **not** collected to train models and is **not** saved anywhere.
-        """)
-    st.write("""
-        To use the calculator, input the patient information below and
-        click on 'Run model' to generate the results.
-    """)
     st.warning("Click on the 'Reset' button below if you do not wish to continue.")
     st.button("Reset", on_click=reset_app)
 
