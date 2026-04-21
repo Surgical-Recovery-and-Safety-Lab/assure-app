@@ -24,7 +24,7 @@ if "consent" not in st.session_state:
 
 st.logo("assets/logo.png", size="large")
 home_page = st.Page("home_page.py", title="Home", icon="🏠")
-about_page = st.Page("about_page.py", title="About")
+about_page = st.Page("about_page.py", title="About", icon="📖")
 calc_page = st.Page("main_page.py", title="Calculator", icon="🎯")
 pg = st.navigation([home_page, about_page, calc_page])
 pg.run()
