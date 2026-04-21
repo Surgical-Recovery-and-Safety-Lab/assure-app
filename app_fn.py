@@ -106,9 +106,6 @@ def main_page_layout():
     """
     st.title("Aotearoa's Smart Surgical Risk Estimator")
 
-    st.warning("Click on the 'Reset' button below if you do not wish to continue.")
-    st.button("Reset", on_click=reset_app)
-
     st.header("Data input", divider="rainbow")
 
     # Age input
