@@ -35,4 +35,6 @@ container.link_button(
     label="Our projects",
     icon="📁",
 )
-container.button("Contact us", type="secondary", icon="📤")
+contact = container.button("Contact us", type="secondary", icon="📤")
+if contact:
+    st.switch_page("contact_page.py")
