@@ -68,18 +68,22 @@ def reset_app():
 
 def show_consent_page():
     """Show consent page to user"""
-    st.title("Data Usage & Model Consent")
+    st.header("Disclaimer", divider="rainbow")
     st.warning("Please read the following carefully before proceeding.")
 
     st.write("""
-    By using this tool, you agree to:
-    * the processing of your uploaded data by our AI model.
-    * acknowledging that the model output is for informational purposes only.
+    By using this tool, you agree to having your data uploaded and processed by our
+    AI model. Your information is not stored and is deleted after the window is closed.
     """)
     st.write("""
-    Your information is not stored and is deleted after the window is closed.
+    The model outputs are for informational purposes only and should not be used in
+    isolation to make clinical decisions.
     """)
-
+    st.write("""
+    ASSuRE and the Surgical Recovery and Safety Lab are not responsible for decisions
+    made by health care professionals or patients based on the information provided by
+    this tool.
+    """)
     if st.button("I Agree and Accept"):
         st.session_state.consent = True
         st.rerun()  # Rerun to immediately switch to the main app
