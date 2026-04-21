@@ -22,6 +22,7 @@ if "consent" not in st.session_state:
     # Session state varible for consent
     st.session_state.consent = False
 
+st.logo("assets/logo.png", size="large")
 home_page = st.Page("home_page.py", title="Home", icon="🏠")
 about_page = st.Page("about_page.py", title="About")
 calc_page = st.Page("main_page.py", title="Calculator", icon="🎯")
