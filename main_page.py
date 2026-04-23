@@ -33,28 +33,28 @@ else:
         pipeline = load_pipeline()
         averages = load_averages()
 
-    run_model_col, run_info_col = st.columns(2, vertical_alignment="center")
-    with run_model_col:
-        run = st.button("Run model", disabled=not is_ready)
-    with run_info_col:
-        if is_ready:
-            if run:
-                label_list = pipeline.label_list
-                data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-                input_data = pipeline.transform(convert_dtypes(data))
-                output_proba = pipeline.predict_proba(
-                    input_data, label_list="all", model_type="predictor"
-                )
-                st.session_state.output_proba = {
-                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
-                    for i in range(len(label_list))
-                }
-                # Reshape to create dictionary with only positive probas
-                st.session_state.model_run = True
+    run = st.button("Run model", disabled=not is_ready)
+    info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+    if is_ready:
+        if run:
+            label_list = pipeline.label_list
+            data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
+            input_data = pipeline.transform(convert_dtypes(data))
+            output_proba = pipeline.predict_proba(
+                input_data, label_list="all", model_type="predictor"
+            )
+            st.session_state.output_proba = {
+                label_list[i]: 100 * array(output_proba)[i, 0, 1]
+                for i in range(len(label_list))
+            }
+            # Reshape to create dictionary with only positive probas
+            st.session_state.model_run = True
+        with info_col:
             st.info(
                 "To generate results with new data, please click on 'Run model' again."
             )
-        else:
+    else:
+        with info_col:
             st.info("Please fill out all fields to enable the 'Run model' button.")
 
     if st.session_state.model_run and input_features[8]:
