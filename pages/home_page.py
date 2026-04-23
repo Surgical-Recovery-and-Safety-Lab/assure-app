@@ -22,4 +22,4 @@ st.write("""
 
 button = st.button(type="primary", label="Calculate", icon="🎯")
 if button:
-    st.switch_page("main_page.py")
+    st.switch_page("pages/main_page.py")

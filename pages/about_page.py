@@ -20,7 +20,7 @@ st.write("""
 
 button = st.button(type="primary", label="Calculate", icon="🎯")
 if button:
-    st.switch_page("main_page.py")
+    st.switch_page("pages/main_page.py")
 
 st.header("About the SRS Lab", divider="rainbow")
 st.write("""The Surigical Recovery and Safety (SRS) Lab is part of the Department of 
@@ -37,4 +37,4 @@ container.link_button(
 )
 contact = container.button("Contact us", type="secondary", icon="📤")
 if contact:
-    st.switch_page("contact_page.py")
+    st.switch_page("pages/contact_page.py")
