@@ -3,34 +3,34 @@
 """
 app_fn.py
 
-Streamlit NZ Risk Score app helper functions.
+Streamlit ASSuRE helper functions.
 """
 
 from io import BytesIO
 
 import altair as alt
 import joblib
+import requests
 import streamlit as st
 import vl_convert as vlc
 from fpdf import FPDF
-from medpipe.models.core import load_pipeline
 from pandas import DataFrame, to_numeric
 
-from constants import AVERAGES, CATEGORIES, ETHCNICITIES, LABEL_MAP, MODEL
+from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL
 
 
 @st.cache_resource(show_spinner=False)
-def app_load_pipeline():
-    """Load the pipeline"""
-    pipeline = load_pipeline(MODEL)
-    return pipeline
+def load_pipeline():
+    """Load pipeline"""
+
+    return joblib.load(MODEL)
 
 
 @st.cache_resource(show_spinner=False)
-def app_load_averages():
+def load_averages():
     """Load operation averages"""
-    op_averages = joblib.load(AVERAGES)
-    return op_averages
+
+    return joblib.load(AVERAGES)
 
 
 def convert_dtypes(data):
@@ -69,18 +69,22 @@ def reset_app():
 
 def show_consent_page():
     """Show consent page to user"""
-    st.title("Data Usage & Model Consent")
+    st.header("Disclaimer", divider="rainbow")
     st.warning("Please read the following carefully before proceeding.")
 
     st.write("""
-    By using this tool, you agree to:
-    * the processing of your uploaded data by our AI model.
-    * acknowledging that the model output is for informational purposes only.
+    By using this tool, you agree to having your data uploaded and processed by our
+    AI model. Your information is not stored and is deleted after the window is closed.
     """)
     st.write("""
-    Your information is not stored and is deleted after the window is closed.
+    The model outputs are for informational purposes only and should not be used in
+    isolation to make clinical decisions.
     """)
-
+    st.write("""
+    ASSuRE and the Surgical Recovery and Safety Lab are not responsible for decisions
+    made by health care professionals or patients based on the information provided by
+    this tool.
+    """)
     if st.button("I Agree and Accept"):
         st.session_state.consent = True
         st.rerun()  # Rerun to immediately switch to the main app
@@ -101,23 +105,7 @@ def main_page_layout():
         List of the input features extracted from the user inputs.
 
     """
-    st.title("Surgical AI Risk Assessement (SARA) calculator")
-    st.logo("assets/logo.png", size="large")
-
-    st.header("About the SARA calculator", divider="rainbow")
-    st.write("""The SARA calculator uses artificial intelligence to predict the risk of
-        mortality, readmission, and complications that may occur post-surgery.
-        """)
-    st.write("""
-        This tool is designed to inform clinicians and patients about the surgical risks.
-        The data is **not** collected to train models and is **not** saved anywhere.
-        """)
-    st.write("""
-        To use the calculator, input the patient information below and
-        click on 'Run model' to generate the results.
-    """)
-    st.warning("Click on the 'Reset' button below if you do not wish to continue.")
-    st.button("Reset", on_click=reset_app)
+    st.header("Aotearoa's Smart Surgical Risk Estimator")
 
     st.header("Data input", divider="rainbow")
 
@@ -134,11 +122,19 @@ def main_page_layout():
         )
 
     # Ethnicity selectbox
+    ethnicity_map = {
+        "Asian": "Asian",
+        "European": "NZ European",
+        "Māori": "Māori",
+        "MELAA/Other": "MELAA/Other",
+        "Pacific peoples": "Pacific",
+    }
     ethnicity_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with ethnicity_col1:
         ethnicity = st.selectbox(
             "**Ethnicity**",
-            ETHCNICITIES,
+            options=ethnicity_map.keys(),
+            format_func=lambda x: ethnicity_map[x],
             index=None,
             placeholder="Select ethnicity",
         )
@@ -333,7 +329,18 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             "Upper CI": comp_upper,
         }
     )
+    x_max = plot_df.max(numeric_only=True).max()
 
+    st.markdown(  # Hide table view and zoom options
+        """
+        <style>
+        [data-testid="stElementToolbar"] {
+            display: none !important;
+        }
+        </style>
+    """,
+        unsafe_allow_html=True,
+    )
     # 1. The Confidence Interval Layer (The horizontal "whisker")
     error_bars = (
         alt.Chart(plot_df)
@@ -342,7 +349,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             x=alt.X(
                 "Lower CI:Q",
                 title="Risk percentage (%)",
-                scale=alt.Scale(domain=[0, 95]),
+                scale=alt.Scale(domain=[0, x_max]),
             ),
             x2="Upper CI:Q",
             y=alt.Y("Complications:N", sort=None),
@@ -352,7 +359,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # 2. The Average Layer (A circle representing the population mean)
     avg_point = (
         alt.Chart(plot_df)
-        .mark_point(filled=True, color="black", size=100)
+        .mark_point(filled=True, color="black", size=50)
         .encode(
             x="Population average:Q",
             y="Complications:N",
@@ -387,7 +394,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             fontWeight="bold",
         )
         .encode(
-            x=alt.datum(100),  # Fixed pixel position
+            x=alt.datum(x_max + 0.5),  # Fixed pixel position
             y=alt.Y("Complications:N", sort=None),
             text=alt.Text(
                 "Risk percentage:Q", format=".1f"
@@ -565,46 +572,9 @@ def create_pdf_report(charts, tables):
     return bytes(pdf.output())
 
 
-def footer():
-    st.markdown(
-        """
-        <style>
-        .footer {
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            background-color: #f0f2f6; /* Light grey background */
-            color: #31333f;
-            text-align: center;
-            padding: 15px 0;
-            border-top: 1px solid #dcdcdc;
-            z-index: 999;
-        }
-        .feedback-button {
-            background-color: #ff4b4b; /* Streamlit Red */
-            color: white !important;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            margin-left: 10px;
-            transition: 0.3s;
-        }
-        .feedback-button:hover {
-            background-color: #d33636;
-            text-decoration: none;
-        }
-        </style>
-        
-        <div class="footer">
-            <span>2026 SARA calculator</span>
-            <a class="feedback-button" 
-               href="mailto:mathias.roesler@auckland.ac.nz?subject=SARA app%20feedback">
-               Send Feedback
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def send_email(sender_email, subject, message) -> bool:
+    """Send email from user feedback"""
+    url = st.secrets["url"]
+    data = {"email": sender_email, "subject": subject, "message": message}
+    response = requests.post(url, data=data)
+    return response.status_code == 200
