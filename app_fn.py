@@ -10,6 +10,7 @@ from io import BytesIO
 
 import altair as alt
 import joblib
+import requests
 import streamlit as st
 import vl_convert as vlc
 from fpdf import FPDF
@@ -104,7 +105,7 @@ def main_page_layout():
         List of the input features extracted from the user inputs.
 
     """
-    st.title("Aotearoa's Smart Surgical Risk Estimator")
+    st.header("Aotearoa's Smart Surgical Risk Estimator")
 
     st.header("Data input", divider="rainbow")
 
@@ -569,6 +570,14 @@ def create_pdf_report(charts, tables):
             pdf.set_text_color(0, 0, 0)  # Reset to black
 
     return bytes(pdf.output())
+
+
+def send_email(sender_email, subject, message) -> bool:
+    """Send email from user feedback"""
+    url = st.secrets["url"]
+    data = {"email": sender_email, "subject": subject, "message": message}
+    response = requests.post(url, data=data)
+    return response.status_code == 200
 
 
 def footer():
