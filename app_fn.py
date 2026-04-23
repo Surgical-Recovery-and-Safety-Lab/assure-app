@@ -73,8 +73,9 @@ def show_consent_page():
     st.warning("Please read the following carefully before proceeding.")
 
     st.write("""
-    By using this tool, you agree to having your data uploaded and processed by our
-    AI model. Your information is not stored and is deleted after the window is closed.
+    By using this tool, you agree to having the data you enter into the calculator
+    processed by our AI model. Your information is not stored and is deleted after
+    the window is closed.
     """)
     st.write("""
     The model outputs are for informational purposes only and should not be used in
