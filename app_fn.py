@@ -380,7 +380,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # We use a conditional color: Red if > Avg, Green if <= Avg
     patient_bars = (
         alt.Chart(plot_df)
-        .mark_bar(cornerRadius=25, opacity=0.5)  # Bar graph
+        .mark_bar(cornerRadiusEnd=25, opacity=0.5)  # Bar graph
         .encode(
             x="Risk percentage:Q",
             y="Complications:N",
