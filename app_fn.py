@@ -477,20 +477,19 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         st.info("Sort the table columns by clicking on the column name")
     else:
         st.altair_chart(chart, width=600)
-        with st.expander("See graph interpretation"):
-            st.write("""
-                     The chart above shows the current patient's risk relative to the
-                     average population risk for the selected operation.
-                     """)
-            st.write("""The black circle
-                     and horizontal bars represent the average population risk and 95% 
-                     confidence intervals.
-                     """)
-            st.write("""The vertical bars represent the current patient's
-                     risk, with the exact value specified on the right side of the graph.
-                     If the risk is lower than the population average the bars are green,
-                     otherwise, they are red.
-            """)
+        st.write("""
+                 The chart above shows the current patient's risk relative to the
+                 average population risk for the selected operation.
+                 """)
+        st.write("""The black circle and horizontal bars
+                 represent the average population risk and 95% 
+                 confidence intervals.
+                 """)
+        st.write("""The red / green bars represent the current patient's
+                 risk, with the exact value specified on the right side of the graph.
+                 If the risk is lower than the population average the bars are green,
+                 otherwise, they are red.
+        """)
 
     return chart, table_to_display
 
