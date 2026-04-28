@@ -370,9 +370,9 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     # 3. The Patient Risk Layer (A vertical tick that changes color)
     # We use a conditional color: Red if > Avg, Green if <= Avg
-    patient_tick = (
+    patient_bars = (
         alt.Chart(plot_df)
-        .mark_tick(thickness=3, size=12)  # Height of the tick
+        .mark_bar(cornerRadius=25, opacity=0.5)  # Bar graph
         .encode(
             x="Risk percentage:Q",
             y="Complications:N",
@@ -409,8 +409,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     )
 
     # Combine layers
-    chart = (error_bars + avg_point + patient_tick + text_labels).properties(
-        title="Patient risk vs. Population average (95% CI)"
+    chart = (patient_bars + error_bars + avg_point + text_labels).properties(
+        title="Patient risk vs. Population average (95% CI)",
     )
 
     # Create table in column 2
