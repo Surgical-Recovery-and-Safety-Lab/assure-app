@@ -332,6 +332,14 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     )
     x_max = plot_df.max(numeric_only=True).max()
 
+    # Adding a 'Risk status' column for a quick visual cue
+    plot_df["Risk status"] = plot_df.apply(
+        lambda x: (
+            "Higher" if x["Risk percentage"] > x["Population average"] else "Lower"
+        ),
+        axis=1,
+    )
+
     st.markdown(  # Hide table view and zoom options
         """
         <style>
@@ -417,14 +425,6 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     st.write("**Risk summary**")
     # Format the dataframe for display
     display_df = plot_df.copy()
-
-    # Adding a 'Risk status' column for a quick visual cue
-    display_df["Risk status"] = display_df.apply(
-        lambda x: (
-            "Higher" if x["Risk percentage"] > x["Population average"] else "Lower"
-        ),
-        axis=1,
-    )
 
     display_df["Population average"] = display_df.apply(
         lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
