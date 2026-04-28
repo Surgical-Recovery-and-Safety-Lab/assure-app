@@ -60,19 +60,18 @@ else:
     if st.session_state.model_run and input_features[8]:
         # If the model has been run
         st.header("Results", divider="rainbow")
-        with st.expander("See details"):
-            st.write("""Select one of the tabs to view the desired results.""")
-            st.write("""
-                     The outcomes can be toggled on and off using the switches. The All 
-                     button in each tab activates or deactivates all the outcomes within 
-                     that tab. The model does **not** need to be re-run to view different
-                     outcomes.
+        st.write("""Select one of the tabs to view the desired results.""")
+        st.write("""
+                 The outcomes can be toggled on and off using the switches. The All 
+                 button in each tab activates or deactivates all the outcomes within 
+                 that tab. The model does **not** need to be re-run to view different
+                 outcomes.
 
-                     """)
-            st.write("""
-                    The results can be viewed as a graph or as a table. Select the desired 
-                    visualisation by selecting the display type.
-                    """)
+                 """)
+        st.write("""
+                The results can be viewed as a graph or as a table. Select the desired 
+                visualisation by selecting the display type.
+                """)
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
 
