@@ -416,8 +416,32 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
     )
 
+    status_text = (
+        alt.Chart(plot_df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=40,
+            fontWeight="bold",
+        )
+        .encode(
+            y=alt.Y("Complications:N", sort=None),
+            x=alt.datum(
+                x_max + 0.5
+            ),  # Anchored to the same spot, but shifted right via dx
+            text="Risk status:N",
+            color=alt.condition(
+                alt.datum["Risk percentage"] > alt.datum["Population average"],
+                alt.value("red"),
+                alt.value("green"),
+            ),
+        )
+    )
+
     # Combine layers
-    chart = (patient_bars + error_bars + avg_point + text_labels).properties(
+    chart = (
+        patient_bars + error_bars + avg_point + text_labels + status_text
+    ).properties(
         title="Patient risk vs. Population average (95% CI)",
     )
 
