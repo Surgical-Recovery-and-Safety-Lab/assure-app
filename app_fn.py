@@ -274,7 +274,7 @@ def main_page_layout():
         age,
         ethnicity,
         sex,
-        asa_score,
+        int(asa_score),
         cancer,
         acuity,
         source,
