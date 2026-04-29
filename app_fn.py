@@ -46,12 +46,16 @@ def convert_dtypes(data):
 def sync_global_outcome_toggles():
     """Sync the global outcome toggles based on the all toggle"""
     for key in LABEL_MAP["GLOBAL_OUTCOMES"].keys():
+        if key == "GLOBAL_OUTCOMES":
+            continue
         st.session_state[key] = st.session_state.GLOBAL_OUTCOMES
 
 
 def sync_complication_toggles():
     """Sync the complication toggles based on the all toggle"""
     for key in LABEL_MAP["COMPLICATIONS"].keys():
+        if key == "COMPLICATIONS":
+            continue
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
