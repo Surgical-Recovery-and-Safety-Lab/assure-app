@@ -3,7 +3,7 @@
 """
 app_fn.py
 
-Streamlit ASSuRE helper functions.
+Streamlit ASSURE helper functions.
 """
 
 from io import BytesIO
@@ -46,25 +46,29 @@ def convert_dtypes(data):
 def sync_global_outcome_toggles():
     """Sync the global outcome toggles based on the all toggle"""
     for key in LABEL_MAP["GLOBAL_OUTCOMES"].keys():
+        if key == "GLOBAL_OUTCOMES":
+            continue
         st.session_state[key] = st.session_state.GLOBAL_OUTCOMES
 
 
 def sync_complication_toggles():
     """Sync the complication toggles based on the all toggle"""
     for key in LABEL_MAP["COMPLICATIONS"].keys():
+        if key == "COMPLICATIONS":
+            continue
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
-def reset_app():
-    """Reset all session state variables"""
-    st.session_state.COMPLICATIONS = True
-    st.session_state.GLOBAL_OUTCOMES = True
-    st.session_state.consent = False
-    st.session_state.model_run = False
+def init_outcome_toggles():
+    """Initialise the keys used for the outcome toggles"""
+    for master_key in ["GLOBAL_OUTCOMES", "COMPLICATIONS"]:
+        if master_key not in st.session_state:
+            st.session_state[master_key] = True
 
-    # Reset all toggles to False
-    sync_complication_toggles()
-    sync_global_outcome_toggles()
+        # Initialize all SUB-TOGGLES in that group to True as well
+        for sub_key in LABEL_MAP[master_key].keys():
+            if sub_key not in st.session_state:
+                st.session_state[sub_key] = True
 
 
 def show_consent_page():
@@ -73,15 +77,16 @@ def show_consent_page():
     st.warning("Please read the following carefully before proceeding.")
 
     st.write("""
-    By using this tool, you agree to having your data uploaded and processed by our
-    AI model. Your information is not stored and is deleted after the window is closed.
+    By using this tool, you agree to having the data you enter into the calculator
+    processed by our AI model. Your information is not stored and is deleted after
+    the window is closed.
     """)
     st.write("""
     The model outputs are for informational purposes only and should not be used in
     isolation to make clinical decisions.
     """)
     st.write("""
-    ASSuRE and the Surgical Recovery and Safety Lab are not responsible for decisions
+    ASSURE and the Surgical Recovery and Safety Lab are not responsible for decisions
     made by health care professionals or patients based on the information provided by
     this tool.
     """)
@@ -105,7 +110,7 @@ def main_page_layout():
         List of the input features extracted from the user inputs.
 
     """
-    st.header("Aotearoa's Smart Surgical Risk Estimator")
+    st.header("Aotearoa's Smart SUrgical Risk Estimator")
 
     st.header("Data input", divider="rainbow")
 
@@ -320,6 +325,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             comp_average.append(op_average[key][0] * 100)
             comp_lower.append(op_average[key][1] * 100)
             comp_upper.append(op_average[key][2] * 100)
+
     plot_df = DataFrame(
         {
             "Complications": comp_labels,
@@ -329,7 +335,20 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             "Upper CI": comp_upper,
         }
     )
+
+    if plot_df.empty:
+        # If all labels are unticked
+        return alt.Chart(plot_df), plot_df
+
     x_max = plot_df.max(numeric_only=True).max()
+
+    # Adding a 'Risk status' column for a quick visual cue
+    plot_df["Risk status"] = plot_df.apply(
+        lambda x: (
+            "Higher" if x["Risk percentage"] > x["Population average"] else "Lower"
+        ),
+        axis=1,
+    )
 
     st.markdown(  # Hide table view and zoom options
         """
@@ -369,9 +388,9 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     # 3. The Patient Risk Layer (A vertical tick that changes color)
     # We use a conditional color: Red if > Avg, Green if <= Avg
-    patient_tick = (
+    patient_bars = (
         alt.Chart(plot_df)
-        .mark_tick(thickness=3, size=12)  # Height of the tick
+        .mark_bar(cornerRadiusEnd=25, opacity=0.5)  # Bar graph
         .encode(
             x="Risk percentage:Q",
             y="Complications:N",
@@ -407,23 +426,39 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
     )
 
+    status_text = (
+        alt.Chart(plot_df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=40,
+            fontWeight="bold",
+        )
+        .encode(
+            y=alt.Y("Complications:N", sort=None),
+            x=alt.datum(
+                x_max + 0.5
+            ),  # Anchored to the same spot, but shifted right via dx
+            text="Risk status:N",
+            color=alt.condition(
+                alt.datum["Risk percentage"] > alt.datum["Population average"],
+                alt.value("red"),
+                alt.value("green"),
+            ),
+        )
+    )
+
     # Combine layers
-    chart = (error_bars + avg_point + patient_tick + text_labels).properties(
-        title="Patient risk vs. Population average (95% CI)"
+    chart = (
+        patient_bars + error_bars + avg_point + text_labels + status_text
+    ).properties(
+        title="Patient risk vs. Population average (95% CI)",
     )
 
     # Create table in column 2
     st.write("**Risk summary**")
     # Format the dataframe for display
     display_df = plot_df.copy()
-
-    # Adding a 'Risk status' column for a quick visual cue
-    display_df["Risk status"] = display_df.apply(
-        lambda x: (
-            "Higher" if x["Risk percentage"] > x["Population average"] else "Lower"
-        ),
-        axis=1,
-    )
 
     display_df["Population average"] = display_df.apply(
         lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
@@ -452,20 +487,19 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         st.info("Sort the table columns by clicking on the column name")
     else:
         st.altair_chart(chart, width=600)
-        with st.expander("See graph interpretation"):
-            st.write("""
-                     The chart above shows the current patient's risk relative to the
-                     average population risk for the selected operation.
-                     """)
-            st.write("""The black circle
-                     and horizontal bars represent the average population risk and 95% 
-                     confidence intervals.
-                     """)
-            st.write("""The vertical bars represent the current patient's
-                     risk, with the exact value specified on the right side of the graph.
-                     If the risk is lower than the population average the bars are green,
-                     otherwise, they are red.
-            """)
+        st.write("""
+                 The chart above shows the current patient's risk relative to the
+                 average population risk for the selected operation.
+                 """)
+        st.write("""The black circle and horizontal bars
+                 represent the average population risk and 95% 
+                 confidence intervals.
+                 """)
+        st.write("""The red / green bars represent the current patient's
+                 risk, with the exact value specified on the right side of the graph.
+                 If the risk is lower than the population average the bars are green,
+                 otherwise, they are red.
+        """)
 
     return chart, table_to_display
 
@@ -521,53 +555,55 @@ def create_pdf_report(charts, tables):
     # --- Convert Altair Chart to PNG Bytes ---
     # This turns the interactive web chart into a static image for the PDF
     for i, chart in enumerate(charts):
-        png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
-        chart_img = BytesIO(png_data)
+        if not chart.data.empty:
+            png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
+            chart_img = BytesIO(png_data)
 
-        # --- Insert Chart ---
-        pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(40, 10, graph_headers[i])
-        pdf.ln(10)
-        # image(source, x, y, width)
-        pdf.image(chart_img, x=10, y=None, w=180)
-        pdf.ln(10)
+            # --- Insert Chart ---
+            pdf.set_font("DejaVu", "B", 12)
+            pdf.cell(40, 10, graph_headers[i])
+            pdf.ln(10)
+            # image(source, x, y, width)
+            pdf.image(chart_img, x=10, y=None, w=180)
+            pdf.ln(10)
 
     pdf.add_page()  # Add new page for table views
 
     # --- Insert Table Data ---
     for i, table in enumerate(tables):
-        pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(40, 10, table_headers[i])
-        pdf.ln(10)
+        if not table.empty:
+            pdf.set_font("DejaVu", "B", 12)
+            pdf.cell(40, 10, table_headers[i])
+            pdf.ln(10)
 
-        # Table Header
-        pdf.set_font("DejaVu", "B", 10)
-        pdf.cell(60, 10, "Complications", border=1, align="C")
-        pdf.cell(35, 10, "Patient risk", border=1, align="C")
-        pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
-        pdf.cell(35, 10, "Risk status", border=1, align="C")
-        pdf.ln()
-
-        # Table Rows
-        pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-        for _, row in table.iterrows():
-            # Write first three columns in normal black font
-            pdf.cell(60, 10, str(row["Complications"]), border=1)
-            pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
-            pdf.cell(60, 10, f"{row['Population average']}", border=1)
-
-            # Set font and colour for Risk status
-            pdf.set_font("DejaVu", "B", 10)  # Set bold font
-            if row["Risk status"] == "Higher":
-                pdf.set_text_color(200, 0, 0)  # Red font
-            else:
-                pdf.set_text_color(0, 128, 0)  # Green font
-
-            pdf.cell(35, 10, f"{row['Risk status']}", border=1)
+            # Table Header
+            pdf.set_font("DejaVu", "B", 10)
+            pdf.cell(60, 10, "Complications", border=1, align="C")
+            pdf.cell(35, 10, "Patient risk", border=1, align="C")
+            pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
+            pdf.cell(35, 10, "Risk status", border=1, align="C")
             pdf.ln()
 
+            # Table Rows
             pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-            pdf.set_text_color(0, 0, 0)  # Reset to black
+            for _, row in table.iterrows():
+                # Write first three columns in normal black font
+                pdf.cell(60, 10, str(row["Complications"]), border=1)
+                pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
+                pdf.cell(60, 10, f"{row['Population average']}", border=1)
+
+                # Set font and colour for Risk status
+                pdf.set_font("DejaVu", "B", 10)  # Set bold font
+                if row["Risk status"] == "Higher":
+                    pdf.set_text_color(200, 0, 0)  # Red font
+                else:
+                    pdf.set_text_color(0, 128, 0)  # Green font
+
+                pdf.cell(35, 10, f"{row['Risk status']}", border=1)
+                pdf.ln()
+
+                pdf.set_font("DejaVu", "", 10)  # Reset to normal font
+                pdf.set_text_color(0, 0, 0)  # Reset to black
 
     return bytes(pdf.output())
 

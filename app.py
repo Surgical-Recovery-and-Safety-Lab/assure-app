@@ -3,13 +3,13 @@
 """
 app.py
 
-Streamlit ASSuRE app.
+Streamlit ASSURE app.
 """
 
 import streamlit as st
 from numpy import array
 
-st.set_page_config(page_title="ASSuRE")
+st.set_page_config(page_title="ASSURE")
 
 # Define session state variables
 if "model_run" not in st.session_state:

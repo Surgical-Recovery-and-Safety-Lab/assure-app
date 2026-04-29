@@ -3,7 +3,7 @@
 """
 main_page.py
 
-Streamlit ASSuRE app main page.
+Streamlit ASSURE app main page.
 """
 
 import streamlit as st
@@ -14,6 +14,7 @@ from app_fn import (
     convert_dtypes,
     create_pdf_report,
     data_visualisation,
+    init_outcome_toggles,
     load_averages,
     load_pipeline,
     main_page_layout,
@@ -60,22 +61,21 @@ else:
     if st.session_state.model_run and input_features[8]:
         # If the model has been run
         st.header("Results", divider="rainbow")
-        with st.expander("See details"):
-            st.write("""Select one of the tabs to view the desired results.""")
-            st.write("""
-                     The outcomes can be toggled on and off using the switches. The All 
-                     button in each tab activates or deactivates all the outcomes within 
-                     that tab. The model does **not** need to be re-run to view different
-                     outcomes.
+        st.write("""Select one of the tabs to view the desired results.""")
+        st.write("""
+                 The outcomes can be toggled on and off using the switches. The All 
+                 button in each tab activates or deactivates all the outcomes within 
+                 that tab. The model does **not** need to be re-run to view different
+                 outcomes.
 
-                     """)
-            st.write("""
-                    The results can be viewed as a graph or as a table. Select the desired 
-                    visualisation by selecting the display type.
-                    """)
+                 """)
+        st.write("""
+                The results can be viewed as a graph or as a table. Select the desired 
+                visualisation by selecting the display type.
+                """)
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
-
+        init_outcome_toggles()
         global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
 
         with global_tab:
@@ -88,7 +88,6 @@ else:
                 global_outcomes_dict["GLOBAL_OUTCOMES"],
                 key="GLOBAL_OUTCOMES",
                 on_change=sync_global_outcome_toggles,
-                value=True,
             )
 
             with st.container():
@@ -106,7 +105,6 @@ else:
                             toggle = st.toggle(
                                 global_outcomes_dict[key],
                                 key=key,
-                                value=True,
                             )
 
                 # Empty list to store global outcomes to plot
@@ -139,7 +137,6 @@ else:
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
                 on_change=sync_complication_toggles,
-                value=True,
             )
 
             with st.container():
@@ -156,7 +153,8 @@ else:
                             continue
                         else:
                             toggle = st.toggle(
-                                complications_dict[key], key=key, value=True
+                                complications_dict[key],
+                                key=key,
                             )
 
                 # Empty list to store complications to plot

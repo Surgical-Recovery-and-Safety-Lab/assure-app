@@ -3,13 +3,13 @@
 """
 about_page.py
 
-Streamlit ASSuRE app about page.
+Streamlit ASSURE app about page.
 """
 
 import streamlit as st
 
-st.header("About ASSuRE", divider="rainbow")
-st.write("""Aotearoa's Smart Surgical Risk Estimator (ASSuRE) uses artificial
+st.header("About ASSURE", divider="rainbow")
+st.write("""Aotearoa's Smart SUrgical Risk Estimator (ASSURE) uses artificial
     intelligence to predict the risk of mortality, readmission, and
     complications that may occur post-surgery.
     """)

@@ -3,14 +3,14 @@
 """
 home_page.py
 
-Streamlit ASSuRE app home page.
+Streamlit ASSURE app home page.
 """
 
 import streamlit as st
 
-st.header("Welcome to ASSuRE", divider="rainbow")
+st.header("Welcome to ASSURE", divider="rainbow")
 st.write(
-    """Aotearoa's Smart Surgical Risk Estimator (ASSuRE) uses artificial intelligence
+    """Aotearoa's Smart SUrgical Risk Estimator (ASSURE) uses artificial intelligence
     to predict the risk of mortality, readmission, and complications that may occur 
     post-surgery.
     """
