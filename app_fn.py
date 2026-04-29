@@ -55,6 +55,18 @@ def sync_complication_toggles():
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
+def init_outcome_toggles():
+    """Initialise the keys used for the outcome toggles"""
+    for master_key in ["GLOBAL_OUTCOMES", "COMPLICATIONS"]:
+        if master_key not in st.session_state:
+            st.session_state[master_key] = True
+
+        # Initialize all SUB-TOGGLES in that group to True as well
+        for sub_key in LABEL_MAP[master_key].keys():
+            if sub_key not in st.session_state:
+                st.session_state[sub_key] = True
+
+
 def show_consent_page():
     """Show consent page to user"""
     st.header("Disclaimer", divider="rainbow")
@@ -309,6 +321,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             comp_average.append(op_average[key][0] * 100)
             comp_lower.append(op_average[key][1] * 100)
             comp_upper.append(op_average[key][2] * 100)
+
     plot_df = DataFrame(
         {
             "Complications": comp_labels,
