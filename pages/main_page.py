@@ -14,6 +14,7 @@ from app_fn import (
     convert_dtypes,
     create_pdf_report,
     data_visualisation,
+    init_outcome_toggles,
     load_averages,
     load_pipeline,
     main_page_layout,
@@ -74,7 +75,7 @@ else:
                 """)
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
-
+        init_outcome_toggles()
         global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
 
         with global_tab:
@@ -87,7 +88,6 @@ else:
                 global_outcomes_dict["GLOBAL_OUTCOMES"],
                 key="GLOBAL_OUTCOMES",
                 on_change=sync_global_outcome_toggles,
-                value=True,
             )
 
             with st.container():
@@ -105,7 +105,6 @@ else:
                             toggle = st.toggle(
                                 global_outcomes_dict[key],
                                 key=key,
-                                value=True,
                             )
 
                 # Empty list to store global outcomes to plot
@@ -138,7 +137,6 @@ else:
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
                 on_change=sync_complication_toggles,
-                value=True,
             )
 
             with st.container():
@@ -155,7 +153,8 @@ else:
                             continue
                         else:
                             toggle = st.toggle(
-                                complications_dict[key], key=key, value=True
+                                complications_dict[key],
+                                key=key,
                             )
 
                 # Empty list to store complications to plot
