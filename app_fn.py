@@ -36,10 +36,15 @@ def load_averages():
 def convert_dtypes(data):
     """Convert datatypes to fit requirements"""
     for column in data.columns:
-        if column in ["AGE", "ASA_SCORE", "OP_SEVERITY"]:
-            data[column] = to_numeric(data[column])
-        if column in ["PRIOR_CANCER", "TRAUMA"]:
-            data[column] = data[column].astype(bool)
+        if column in [
+            "AGE",
+            "ASA",
+            "OP_SEVERITY",
+            "PRIOR_CANCER",
+            "TRAUMA",
+            "OP_SEVERITY",
+        ]:
+            data[column] = to_numeric(data[column], downcast="unsigned")
     return data
 
 
