@@ -3,7 +3,7 @@
 """
 contact_page.py
 
-Streamlit ASSuRE app contact page.
+Streamlit ASSURE app contact page.
 """
 
 import streamlit as st

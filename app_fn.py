@@ -3,7 +3,7 @@
 """
 app_fn.py
 
-Streamlit ASSuRE helper functions.
+Streamlit ASSURE helper functions.
 """
 
 from io import BytesIO
@@ -86,7 +86,7 @@ def show_consent_page():
     isolation to make clinical decisions.
     """)
     st.write("""
-    ASSuRE and the Surgical Recovery and Safety Lab are not responsible for decisions
+    ASSURE and the Surgical Recovery and Safety Lab are not responsible for decisions
     made by health care professionals or patients based on the information provided by
     this tool.
     """)
@@ -110,7 +110,7 @@ def main_page_layout():
         List of the input features extracted from the user inputs.
 
     """
-    st.header("Aotearoa's Smart Surgical Risk Estimator")
+    st.header("Aotearoa's Smart SUrgical Risk Estimator")
 
     st.header("Data input", divider="rainbow")
 

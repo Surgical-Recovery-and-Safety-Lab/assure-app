@@ -3,7 +3,7 @@
 """
 main_page.py
 
-Streamlit ASSuRE app main page.
+Streamlit ASSURE app main page.
 """
 
 import streamlit as st
