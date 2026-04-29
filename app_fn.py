@@ -55,18 +55,6 @@ def sync_complication_toggles():
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
-def reset_app():
-    """Reset all session state variables"""
-    st.session_state.COMPLICATIONS = True
-    st.session_state.GLOBAL_OUTCOMES = True
-    st.session_state.consent = False
-    st.session_state.model_run = False
-
-    # Reset all toggles to False
-    sync_complication_toggles()
-    sync_global_outcome_toggles()
-
-
 def show_consent_page():
     """Show consent page to user"""
     st.header("Disclaimer", divider="rainbow")
