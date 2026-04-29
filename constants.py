@@ -43,7 +43,7 @@ CATEGORIES = {
         "Ovarian & Adnexal",
         "Pelvic Floor & Prolapse",
     ],
-    "Ophthalmology": ["Opthalmology"],
+    "Ophthalmology": ["Ophthalmology"],
     "Oral & Maxillofacial": ["Oral & Maxillofacial"],
     "Orthopaedics": [
         "Amputations",
