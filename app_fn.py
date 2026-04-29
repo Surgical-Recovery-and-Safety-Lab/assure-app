@@ -158,7 +158,7 @@ def main_page_layout():
     # Cancer radio buttons
     cancer = st.radio(
         "**Prior cancer**",
-        options=[True, False],
+        options=[1, 0],
         format_func=lambda x: "Yes" if x else "No",
         index=1,
         help="Did the patient have cancer?",
@@ -187,7 +187,7 @@ def main_page_layout():
     trauma = st.radio(
         "**Trauma**",
         index=1,
-        options=[True, False],
+        options=[1, 0],
         format_func=lambda x: "Yes" if x else "No",
         horizontal=True,
     )
@@ -274,7 +274,7 @@ def main_page_layout():
         age,
         ethnicity,
         sex,
-        int(asa_score),
+        asa_score,
         cancer,
         acuity,
         source,
