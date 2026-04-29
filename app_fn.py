@@ -330,6 +330,11 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             "Upper CI": comp_upper,
         }
     )
+
+    if plot_df.empty:
+        # If all labels are unticked
+        return alt.Chart(plot_df), plot_df
+
     x_max = plot_df.max(numeric_only=True).max()
 
     # Adding a 'Risk status' column for a quick visual cue
@@ -545,53 +550,55 @@ def create_pdf_report(charts, tables):
     # --- Convert Altair Chart to PNG Bytes ---
     # This turns the interactive web chart into a static image for the PDF
     for i, chart in enumerate(charts):
-        png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
-        chart_img = BytesIO(png_data)
+        if not chart.data.empty:
+            png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
+            chart_img = BytesIO(png_data)
 
-        # --- Insert Chart ---
-        pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(40, 10, graph_headers[i])
-        pdf.ln(10)
-        # image(source, x, y, width)
-        pdf.image(chart_img, x=10, y=None, w=180)
-        pdf.ln(10)
+            # --- Insert Chart ---
+            pdf.set_font("DejaVu", "B", 12)
+            pdf.cell(40, 10, graph_headers[i])
+            pdf.ln(10)
+            # image(source, x, y, width)
+            pdf.image(chart_img, x=10, y=None, w=180)
+            pdf.ln(10)
 
     pdf.add_page()  # Add new page for table views
 
     # --- Insert Table Data ---
     for i, table in enumerate(tables):
-        pdf.set_font("DejaVu", "B", 12)
-        pdf.cell(40, 10, table_headers[i])
-        pdf.ln(10)
+        if not table.empty:
+            pdf.set_font("DejaVu", "B", 12)
+            pdf.cell(40, 10, table_headers[i])
+            pdf.ln(10)
 
-        # Table Header
-        pdf.set_font("DejaVu", "B", 10)
-        pdf.cell(60, 10, "Complications", border=1, align="C")
-        pdf.cell(35, 10, "Patient risk", border=1, align="C")
-        pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
-        pdf.cell(35, 10, "Risk status", border=1, align="C")
-        pdf.ln()
-
-        # Table Rows
-        pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-        for _, row in table.iterrows():
-            # Write first three columns in normal black font
-            pdf.cell(60, 10, str(row["Complications"]), border=1)
-            pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
-            pdf.cell(60, 10, f"{row['Population average']}", border=1)
-
-            # Set font and colour for Risk status
-            pdf.set_font("DejaVu", "B", 10)  # Set bold font
-            if row["Risk status"] == "Higher":
-                pdf.set_text_color(200, 0, 0)  # Red font
-            else:
-                pdf.set_text_color(0, 128, 0)  # Green font
-
-            pdf.cell(35, 10, f"{row['Risk status']}", border=1)
+            # Table Header
+            pdf.set_font("DejaVu", "B", 10)
+            pdf.cell(60, 10, "Complications", border=1, align="C")
+            pdf.cell(35, 10, "Patient risk", border=1, align="C")
+            pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
+            pdf.cell(35, 10, "Risk status", border=1, align="C")
             pdf.ln()
 
+            # Table Rows
             pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-            pdf.set_text_color(0, 0, 0)  # Reset to black
+            for _, row in table.iterrows():
+                # Write first three columns in normal black font
+                pdf.cell(60, 10, str(row["Complications"]), border=1)
+                pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
+                pdf.cell(60, 10, f"{row['Population average']}", border=1)
+
+                # Set font and colour for Risk status
+                pdf.set_font("DejaVu", "B", 10)  # Set bold font
+                if row["Risk status"] == "Higher":
+                    pdf.set_text_color(200, 0, 0)  # Red font
+                else:
+                    pdf.set_text_color(0, 128, 0)  # Green font
+
+                pdf.cell(35, 10, f"{row['Risk status']}", border=1)
+                pdf.ln()
+
+                pdf.set_font("DejaVu", "", 10)  # Reset to normal font
+                pdf.set_text_color(0, 0, 0)  # Reset to black
 
     return bytes(pdf.output())
 
