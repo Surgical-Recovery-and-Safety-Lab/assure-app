@@ -10,12 +10,12 @@ import streamlit as st
 
 st.header("About ASSURE", divider="rainbow")
 st.write("""Aotearoa's Smart SUrgical Risk Estimator (ASSURE) uses artificial
-    intelligence to predict the risk of mortality, readmission, and
-    complications that may occur post-surgery.
+    intelligence to predict an individual's risk of mortality, readmission, and 
+    complications after surgery.
     """)
 st.write("""
     This tool is designed to inform clinicians and patients about the surgical risks.
-    The data is **not** collected to train models and is **not** saved anywhere.
+    No data is **not** collected to train models and is **not** saved anywhere.
     """)
 
 button = st.button(type="primary", label="Calculate", icon="🎯")
@@ -24,8 +24,8 @@ if button:
 
 st.header("About the SRS Lab", divider="rainbow")
 st.write("""The Surigical Recovery and Safety (SRS) Lab is part of the Department of 
-    Surgery at the University of Auckland. Started in 2025, the lab focuses on reducing
-    complications after surgery and improving post-operative care.
+    Surgery at the University of Auckland. Started in 2025, the lab focuses on improving 
+    recovery after surgery and improving post-operative outcomes.
     """)
 st.write("""Check out our other projects or get in touch with us!""")
 container = st.container(horizontal=True)

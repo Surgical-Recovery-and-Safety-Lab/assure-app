@@ -10,9 +10,9 @@ import streamlit as st
 
 st.header("Welcome to ASSURE", divider="rainbow")
 st.write(
-    """Aotearoa's Smart SUrgical Risk Estimator (ASSURE) uses artificial intelligence
-    to predict the risk of mortality, readmission, and complications that may occur 
-    post-surgery.
+    """Aotearoa's Smart SUrgical Risk Estimator (ASSURE) uses artificial
+    intelligence to predict an individual's risk of mortality, readmission, and 
+    complications after surgery.
     """
 )
 st.write("""
