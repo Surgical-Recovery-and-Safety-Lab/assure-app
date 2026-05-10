@@ -131,6 +131,17 @@ def main_page_layout():
             placeholder="Age",
         )
 
+    # Sex radio buttons
+    sex_map = {"M": "Male", "F": "Female"}
+    sex = st.radio(
+        "**Sex at birth**",
+        options=sex_map.keys(),
+        format_func=lambda x: sex_map[x],
+        index=None,
+        help="Patient sex **at birth**",
+        horizontal=True,
+    )
+
     # Ethnicity selectbox
     ethnicity_map = {
         "Asian": "Asian",
@@ -148,17 +159,6 @@ def main_page_layout():
             index=None,
             placeholder="Select ethnicity",
         )
-
-    # Sex radio buttons
-    sex_map = {"M": "Male", "F": "Female"}
-    sex = st.radio(
-        "**Sex at birth**",
-        options=sex_map.keys(),
-        format_func=lambda x: sex_map[x],
-        index=None,
-        help="Patient sex **at birth**",
-        horizontal=True,
-    )
 
     # Cancer radio buttons
     cancer = st.radio(
