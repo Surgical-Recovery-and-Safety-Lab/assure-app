@@ -40,7 +40,7 @@ else:
         if run:
             label_list = pipeline.label_list
             data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-            input_data = pipeline.transform(convert_dtypes(data))
+            input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
             output_proba = pipeline.predict_proba(
                 input_data, label_list="all", model_type="predictor"
             )

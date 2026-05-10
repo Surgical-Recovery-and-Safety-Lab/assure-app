@@ -36,10 +36,15 @@ def load_averages():
 def convert_dtypes(data):
     """Convert datatypes to fit requirements"""
     for column in data.columns:
-        if column in ["AGE", "ASA_SCORE", "OP_SEVERITY"]:
-            data[column] = to_numeric(data[column])
-        if column in ["PRIOR_CANCER", "TRAUMA"]:
-            data[column] = data[column].astype(bool)
+        if column in [
+            "AGE",
+            "ASA",
+            "OP_SEVERITY",
+            "PRIOR_CANCER",
+            "TRAUMA",
+            "OP_SEVERITY",
+        ]:
+            data[column] = to_numeric(data[column], downcast="unsigned")
     return data
 
 
@@ -158,7 +163,7 @@ def main_page_layout():
     # Cancer radio buttons
     cancer = st.radio(
         "**Prior cancer**",
-        options=[True, False],
+        options=[1, 0],
         format_func=lambda x: "Yes" if x else "No",
         index=1,
         help="Did the patient have cancer?",
@@ -187,7 +192,7 @@ def main_page_layout():
     trauma = st.radio(
         "**Trauma**",
         index=1,
-        options=[True, False],
+        options=[1, 0],
         format_func=lambda x: "Yes" if x else "No",
         horizontal=True,
     )
