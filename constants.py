@@ -109,7 +109,7 @@ LABEL_MAP = {
         "ANY_COMP": "Any complication",
     },
     "COMPLICATIONS": {
-        "COMPLICATIONS": "All complications",
+        "COMPLICATIONS": "Show all complications",
         "AKI": "AKI",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",
