@@ -99,8 +99,8 @@ COLUMNS = [
     "TRAUMA",
 ]
 LABEL_MAP = {
-    "GLOBAL_OUTCOMES": {
-        "GLOBAL_OUTCOMES": "All global outcomes",
+    "GENERAL_OUTCOMES": {
+        "GENERAL_OUTCOMES": "All general outcomes",
         "MORTALITY_30D": "30-day mortality",
         "MORTALITY_90D": "90-day mortality",
         "MORTALITY_1Y": "1-year mortality",
