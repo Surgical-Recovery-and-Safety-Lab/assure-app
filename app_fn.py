@@ -48,12 +48,20 @@ def convert_dtypes(data):
     return data
 
 
-def sync_global_outcome_toggles():
-    """Sync the global outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["GLOBAL_OUTCOMES"].keys():
-        if key == "GLOBAL_OUTCOMES":
+def sync_mortality_outcome_toggles():
+    """Sync the mortality outcome toggles based on the all toggle"""
+    for key in LABEL_MAP["MORTALITY_OUTCOMES"].keys():
+        if key == "MORTALITY_OUTCOMES":
             continue
-        st.session_state[key] = st.session_state.GLOBAL_OUTCOMES
+        st.session_state[key] = st.session_state.MORTALITY_OUTCOMES
+
+
+def sync_health_outcome_toggles():
+    """Sync the health service outcome toggles based on the all toggle"""
+    for key in LABEL_MAP["HEALTH_OUTCOMES"].keys():
+        if key in ["HEALTH_OUTCOMES", "FTR", "LOS", "DAOH"]:
+            continue
+        st.session_state[key] = st.session_state.HEALTH_OUTCOMES
 
 
 def sync_complication_toggles():
@@ -66,13 +74,15 @@ def sync_complication_toggles():
 
 def init_outcome_toggles():
     """Initialise the keys used for the outcome toggles"""
-    for master_key in ["GLOBAL_OUTCOMES", "COMPLICATIONS"]:
+    for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS", "HEALTH_OUTCOMES"]:
         if master_key not in st.session_state:
             st.session_state[master_key] = True
 
         # Initialize all SUB-TOGGLES in that group to True as well
         for sub_key in LABEL_MAP[master_key].keys():
             if sub_key not in st.session_state:
+                if sub_key in ["FTR", "DAOH", "LOS"]:
+                    continue
                 st.session_state[sub_key] = True
 
 
@@ -131,6 +141,17 @@ def main_page_layout():
             placeholder="Age",
         )
 
+    # Sex radio buttons
+    sex_map = {"M": "Male", "F": "Female"}
+    sex = st.radio(
+        "**Sex at birth**",
+        options=sex_map.keys(),
+        format_func=lambda x: sex_map[x],
+        index=None,
+        help="Patient sex **at birth**",
+        horizontal=True,
+    )
+
     # Ethnicity selectbox
     ethnicity_map = {
         "Asian": "Asian",
@@ -148,17 +169,6 @@ def main_page_layout():
             index=None,
             placeholder="Select ethnicity",
         )
-
-    # Sex radio buttons
-    sex_map = {"M": "Male", "F": "Female"}
-    sex = st.radio(
-        "**Sex at birth**",
-        options=sex_map.keys(),
-        format_func=lambda x: sex_map[x],
-        index=None,
-        help="Patient sex **at birth**",
-        horizontal=True,
-    )
 
     # Cancer radio buttons
     cancer = st.radio(
@@ -323,7 +333,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     for key in complications_dict.keys():
         if st.session_state[key]:
-            if key == "COMPLICATIONS" or key == "GLOBAL_OUTCOMES":
+            if key in ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]:
                 continue
             comp_labels.append(complications_dict[key])
             comp_outcomes_proba.append(st.session_state.output_proba[key])
@@ -481,7 +491,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                 highlight_medical_risk, axis=1
             ),
             column_config={
-                "Complications": "Complications",
+                "Complications": "Complication",
                 "Risk percentage": "Patient risk",
                 "Population average": "Population average (95% CI)",
                 "Risk status": "Risk status",
@@ -528,7 +538,7 @@ def create_pdf_report(charts, tables):
     """
     Create a pdf report from the plots and tables.
 
-    Assumes the global chart and tables are first.
+    Assumes the mortality chart and tables are first.
 
     Parameters
     ----------
@@ -544,8 +554,16 @@ def create_pdf_report(charts, tables):
 
     """
     # Define some constant values
-    graph_headers = ["Global outcomes graph", "Specific complication graph"]
-    table_headers = ["Global outcomes table", "Specific complication table"]
+    graph_headers = [
+        "Mortality outcomes graph",
+        "Complication graph",
+        "Health Service use graph",
+    ]
+    table_headers = [
+        "Mortality outcomes table",
+        "Complication table",
+        "Health Service use table",
+    ]
 
     pdf = FPDF()
     pdf.add_font("DejaVu", "", "assets/fonts/DejaVuSans.ttf")

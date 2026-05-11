@@ -1,0 +1,21 @@
+name: Test deploy to Nectar
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NECTAR_IP }}
+          username: ${{ secrets.NECTAR_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd assure-test/
+            git pull origin main
+            source ~/venv/assure-test/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart assure-test.service
