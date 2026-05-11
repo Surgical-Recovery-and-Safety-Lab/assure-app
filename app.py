@@ -9,7 +9,7 @@ Streamlit ASSURE app.
 import streamlit as st
 from numpy import array
 
-st.set_page_config(page_title="ASSURE")
+st.set_page_config(page_title="ASSURE", layout="wide")
 
 # Define session state variables
 if "model_run" not in st.session_state:
