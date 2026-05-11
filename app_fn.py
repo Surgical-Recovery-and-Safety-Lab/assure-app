@@ -355,7 +355,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         # If all labels are unticked
         return alt.Chart(plot_df), plot_df
 
-    x_max = plot_df.max(numeric_only=True).max()
+    x_max = plot_df.max(numeric_only=True).max() * 1.1
 
     # Adding a 'Risk status' column for a quick visual cue
     plot_df["Risk status"] = plot_df.apply(
@@ -426,9 +426,10 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             baseline="middle",
             dx=10,
             fontWeight="bold",
+            clip=False,
         )
         .encode(
-            x=alt.datum(x_max + 0.5),  # Fixed pixel position
+            x=alt.datum(x_max),  # Fixed pixel position
             y=alt.Y("Complications:N", sort=None),
             text=alt.Text(
                 "Risk percentage:Q", format=".1f"
@@ -448,12 +449,11 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             baseline="middle",
             dx=40,
             fontWeight="bold",
+            clip=False,
         )
         .encode(
             y=alt.Y("Complications:N", sort=None),
-            x=alt.datum(
-                x_max + 0.5
-            ),  # Anchored to the same spot, but shifted right via dx
+            x=alt.datum(x_max),  # Anchored to the same spot, but shifted right via dx
             text="Risk status:N",
             color=alt.condition(
                 alt.datum["Risk percentage"] > alt.datum["Population average"],
@@ -465,9 +465,18 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     # Combine layers
     chart = (
-        patient_bars + error_bars + avg_point + text_labels + status_text
-    ).properties(
-        title="Patient risk vs. Population average (95% CI)",
+        (patient_bars + error_bars + avg_point + text_labels + status_text)
+        .properties(
+            height=alt.Step(30),  # Gives every row consistent breathing room
+            title="Patient risk vs. Population average (95% CI)",
+        )
+        .configure_axis(
+            grid=False,  # Remove distracting lines
+            domain=False,  # Remove the 'L' shape axis lines
+            labelFontSize=12,
+        )
+        .configure_view(strokeWidth=0)  # Remove the border box
+        .configure_title(fontSize=16, anchor="middle")
     )
 
     # Create table in column 2
@@ -501,7 +510,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
         st.info("Sort the table columns by clicking on the column name")
     else:
-        st.altair_chart(chart, width=600)
+        st.altair_chart(chart)
         st.write("""
                  The chart above shows the current patient's risk relative to the
                  average population risk for the selected operation.
