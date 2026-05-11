@@ -48,12 +48,12 @@ def convert_dtypes(data):
     return data
 
 
-def sync_global_outcome_toggles():
-    """Sync the global outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["GENERAL_OUTCOMES"].keys():
-        if key == "GENERAL_OUTCOMES":
+def sync_mortality_outcome_toggles():
+    """Sync the mortality outcome toggles based on the all toggle"""
+    for key in LABEL_MAP["MORTALITY_OUTCOMES"].keys():
+        if key == "MORTALITY_OUTCOMES":
             continue
-        st.session_state[key] = st.session_state.GENERAL_OUTCOMES
+        st.session_state[key] = st.session_state.MORTALITY_OUTCOMES
 
 
 def sync_complication_toggles():
@@ -66,7 +66,7 @@ def sync_complication_toggles():
 
 def init_outcome_toggles():
     """Initialise the keys used for the outcome toggles"""
-    for master_key in ["GENERAL_OUTCOMES", "COMPLICATIONS"]:
+    for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS"]:
         if master_key not in st.session_state:
             st.session_state[master_key] = True
 
@@ -323,7 +323,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     for key in complications_dict.keys():
         if st.session_state[key]:
-            if key == "COMPLICATIONS" or key == "GENERAL_OUTCOMES":
+            if key == "COMPLICATIONS" or key == "MORTALITY_OUTCOMES":
                 continue
             comp_labels.append(complications_dict[key])
             comp_outcomes_proba.append(st.session_state.output_proba[key])
@@ -528,7 +528,7 @@ def create_pdf_report(charts, tables):
     """
     Create a pdf report from the plots and tables.
 
-    Assumes the global chart and tables are first.
+    Assumes the mortality chart and tables are first.
 
     Parameters
     ----------
@@ -544,8 +544,8 @@ def create_pdf_report(charts, tables):
 
     """
     # Define some constant values
-    graph_headers = ["General outcomes graph", "Specific complication graph"]
-    table_headers = ["General outcomes table", "Specific complication table"]
+    graph_headers = ["Mortality outcomes graph", "Specific complication graph"]
+    table_headers = ["Mortality outcomes table", "Specific complication table"]
 
     pdf = FPDF()
     pdf.add_font("DejaVu", "", "assets/fonts/DejaVuSans.ttf")

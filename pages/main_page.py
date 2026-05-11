@@ -20,7 +20,7 @@ from app_fn import (
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
-    sync_global_outcome_toggles,
+    sync_mortality_outcome_toggles,
 )
 from constants import COLUMNS, LABEL_MAP
 
@@ -76,58 +76,58 @@ else:
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
-        global_tab, comp_tab = st.tabs(["General outcomes", "Specific complications"])
+        mortality_tab, comp_tab = st.tabs(["Mortality", "Postoperative complications"])
 
-        with global_tab:
-            st.subheader("General outcomes")
-            global_outcomes_dict = LABEL_MAP["GENERAL_OUTCOMES"]
+        with mortality_tab:
+            st.subheader("Mortality outcomes")
+            mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
             complications_dict = LABEL_MAP["COMPLICATIONS"]
 
-            # Create global outcomes layout
+            # Create mortality outcomes layout
             all_toggle = st.toggle(
-                global_outcomes_dict["GENERAL_OUTCOMES"],
-                key="GENERAL_OUTCOMES",
-                on_change=sync_global_outcome_toggles,
+                mortality_outcomes_dict["MORTALITY_OUTCOMES"],
+                key="MORTALITY_OUTCOMES",
+                on_change=sync_mortality_outcome_toggles,
             )
 
             with st.container():
-                global_outcomes_col1, global_outcomes_col2 = st.columns(2)
-                for i, key in enumerate(global_outcomes_dict.keys()):
-                    if i >= len(global_outcomes_dict) / 2:
-                        col = global_outcomes_col2
+                mortality_outcomes_col1, mortality_outcomes_col2 = st.columns(2)
+                for i, key in enumerate(mortality_outcomes_dict.keys()):
+                    if i >= len(mortality_outcomes_dict) / 2:
+                        col = mortality_outcomes_col2
                     else:
-                        col = global_outcomes_col1
+                        col = mortality_outcomes_col1
 
                     with col:
-                        if key == "GENERAL_OUTCOMES":
+                        if key == "MORTALITY_OUTCOMES":
                             continue
                         else:
                             toggle = st.toggle(
-                                global_outcomes_dict[key],
+                                mortality_outcomes_dict[key],
                                 key=key,
                             )
 
-                # Empty list to store global outcomes to plot
-                global_labels = []
-                global_outcomes_proba = []
-                global_average = []
-                global_lower = []
-                global_upper = []
+                # Empty list to store mortality outcomes to plot
+                mortality_labels = []
+                mortality_outcomes_proba = []
+                mortality_average = []
+                mortality_lower = []
+                mortality_upper = []
 
                 # Create the graph/table toggle
-                global_display_option = st.pills(
+                mortality_display_option = st.pills(
                     "**Display type**",
-                    key="global_display_option",
+                    key="mortality_display_option",
                     options=display_options.keys(),
                     format_func=lambda option: display_options[option],
                     selection_mode="single",
                     default="graph",
                 )
 
-                global_chart, global_table = data_visualisation(
-                    global_outcomes_dict,
+                mortality_chart, mortality_table = data_visualisation(
+                    mortality_outcomes_dict,
                     op_average,
-                    display=st.session_state.global_display_option,
+                    display=st.session_state.mortality_display_option,
                 )
 
         with comp_tab:
@@ -181,7 +181,7 @@ else:
                 )
 
         pdf_bytes = create_pdf_report(
-            [global_chart, comp_chart], [global_table, comp_table]
+            [mortality_chart, comp_chart], [mortality_table, comp_table]
         )
         st.download_button(
             label="Download PDF report",
