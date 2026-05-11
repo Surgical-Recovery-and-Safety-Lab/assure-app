@@ -94,45 +94,37 @@ else:
                 on_change=sync_mortality_outcome_toggles,
             )
 
-            with st.container():
-                mortality_outcomes_col1, mortality_outcomes_col2 = st.columns(2)
-                for i, key in enumerate(mortality_outcomes_dict.keys()):
-                    if i >= len(mortality_outcomes_dict) / 2:
-                        col = mortality_outcomes_col2
-                    else:
-                        col = mortality_outcomes_col1
+            with st.container(horizontal=True):
+                for key in mortality_outcomes_dict.keys():
+                    if key == "MORTALITY_OUTCOMES":
+                        continue
+                    toggle = st.toggle(
+                        mortality_outcomes_dict[key],
+                        key=key,
+                    )
 
-                    with col:
-                        if key == "MORTALITY_OUTCOMES":
-                            continue
-                        else:
-                            toggle = st.toggle(
-                                mortality_outcomes_dict[key],
-                                key=key,
-                            )
+            # Empty list to store mortality outcomes to plot
+            mortality_labels = []
+            mortality_outcomes_proba = []
+            mortality_average = []
+            mortality_lower = []
+            mortality_upper = []
 
-                # Empty list to store mortality outcomes to plot
-                mortality_labels = []
-                mortality_outcomes_proba = []
-                mortality_average = []
-                mortality_lower = []
-                mortality_upper = []
+            # Create the graph/table toggle
+            mortality_display_option = st.pills(
+                "**Display type**",
+                key="mortality_display_option",
+                options=display_options.keys(),
+                format_func=lambda option: display_options[option],
+                selection_mode="single",
+                default="graph",
+            )
 
-                # Create the graph/table toggle
-                mortality_display_option = st.pills(
-                    "**Display type**",
-                    key="mortality_display_option",
-                    options=display_options.keys(),
-                    format_func=lambda option: display_options[option],
-                    selection_mode="single",
-                    default="graph",
-                )
-
-                mortality_chart, mortality_table = data_visualisation(
-                    mortality_outcomes_dict,
-                    op_average,
-                    display=st.session_state.mortality_display_option,
-                )
+            mortality_chart, mortality_table = data_visualisation(
+                mortality_outcomes_dict,
+                op_average,
+                display=st.session_state.mortality_display_option,
+            )
 
         with comp_tab:
             # Create complications layout
