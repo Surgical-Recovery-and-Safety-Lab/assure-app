@@ -6,7 +6,7 @@ constants.py
 Constants for the app.
 """
 
-MODEL_NAME = "ai_risk_HGBc-v0.5.1.2-a.1.3.0.joblib"
+MODEL_NAME = "ai_risk_HGBc-v0.5.0.2-a.1.3.0.joblib"
 MODEL = "assets/models/" + MODEL_NAME
 AVERAGES_NAME = "op-averages.joblib"
 AVERAGES = "assets/models/" + AVERAGES_NAME
@@ -43,7 +43,7 @@ CATEGORIES = {
         "Ovarian & Adnexal",
         "Pelvic Floor & Prolapse",
     ],
-    "Ophthalmology": ["Opthalmology"],
+    "Ophthalmology": ["Ophthalmology"],
     "Oral & Maxillofacial": ["Oral & Maxillofacial"],
     "Orthopaedics": [
         "Amputations",
@@ -99,8 +99,8 @@ COLUMNS = [
     "TRAUMA",
 ]
 LABEL_MAP = {
-    "GLOBAL_OUTCOMES": {
-        "GLOBAL_OUTCOMES": "All global outcomes",
+    "GENERAL_OUTCOMES": {
+        "GENERAL_OUTCOMES": "All general outcomes",
         "MORTALITY_30D": "30-day mortality",
         "MORTALITY_90D": "90-day mortality",
         "MORTALITY_1Y": "1-year mortality",
@@ -109,7 +109,7 @@ LABEL_MAP = {
         "ANY_COMP": "Any complication",
     },
     "COMPLICATIONS": {
-        "COMPLICATIONS": "All complications",
+        "COMPLICATIONS": "Show all complications",
         "AKI": "AKI",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",

@@ -40,7 +40,7 @@ else:
         if run:
             label_list = pipeline.label_list
             data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-            input_data = pipeline.transform(convert_dtypes(data))
+            input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
             output_proba = pipeline.predict_proba(
                 input_data, label_list="all", model_type="predictor"
             )
@@ -76,17 +76,17 @@ else:
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
-        global_tab, comp_tab = st.tabs(["Global outcomes", "Specific complications"])
+        global_tab, comp_tab = st.tabs(["General outcomes", "Specific complications"])
 
         with global_tab:
-            st.subheader("Global outcomes")
-            global_outcomes_dict = LABEL_MAP["GLOBAL_OUTCOMES"]
+            st.subheader("General outcomes")
+            global_outcomes_dict = LABEL_MAP["GENERAL_OUTCOMES"]
             complications_dict = LABEL_MAP["COMPLICATIONS"]
 
             # Create global outcomes layout
             all_toggle = st.toggle(
-                global_outcomes_dict["GLOBAL_OUTCOMES"],
-                key="GLOBAL_OUTCOMES",
+                global_outcomes_dict["GENERAL_OUTCOMES"],
+                key="GENERAL_OUTCOMES",
                 on_change=sync_global_outcome_toggles,
             )
 
@@ -99,7 +99,7 @@ else:
                         col = global_outcomes_col1
 
                     with col:
-                        if key == "GLOBAL_OUTCOMES":
+                        if key == "GENERAL_OUTCOMES":
                             continue
                         else:
                             toggle = st.toggle(
