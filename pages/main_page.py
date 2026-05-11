@@ -64,9 +64,8 @@ else:
         st.header("Results", divider="rainbow")
         st.write("""Select one of the tabs to view the desired results.""")
         st.write("""
-                 The outcomes can be toggled on and off using the switches. The All 
-                 button in each tab activates or deactivates all the outcomes within 
-                 that tab. The model does **not** need to be re-run to view different
+                 The outcomes can be toggled on and off using the switches. The
+                 model does **not** need to be re-run to view different
                  outcomes.
 
                  """)
@@ -81,9 +80,12 @@ else:
             ["Mortality", "Postoperative complications", "Health service use"]
         )
 
+        mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
+        complications_dict = LABEL_MAP["COMPLICATIONS"]
+        health_outcomes_dict = LABEL_MAP["HEALTH_SERVICE"]
+
         with mortality_tab:
             st.subheader("Mortality outcomes")
-            mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
 
             # Create mortality outcomes layout
             all_toggle = st.toggle(
@@ -134,8 +136,7 @@ else:
 
         with comp_tab:
             # Create complications layout
-            st.subheader("Specific complications")
-            complications_dict = LABEL_MAP["COMPLICATIONS"]
+            st.subheader("Postoperative complications")
 
             all_toggle = st.toggle(
                 complications_dict["COMPLICATIONS"],
@@ -186,7 +187,6 @@ else:
 
         with health_tab:
             st.subheader("Health Service use")
-            health_outcomes_dict = LABEL_MAP["HEALTH_SERVICE"]
 
             # Create health outcomes layout
             all_toggle = st.toggle(
