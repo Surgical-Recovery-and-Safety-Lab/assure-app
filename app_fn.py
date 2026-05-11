@@ -491,7 +491,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                 highlight_medical_risk, axis=1
             ),
             column_config={
-                "Complications": "Complication",
+                "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
                 "Population average": "Population average (95% CI)",
                 "Risk status": "Risk status",
