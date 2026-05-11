@@ -25,39 +25,42 @@ from app_fn import (
 )
 from constants import COLUMNS, LABEL_MAP
 
-if not st.session_state.consent:
-    show_consent_page()
-else:
-    input_features = main_page_layout()
-    is_ready = None not in input_features  # Define the is_ready flag
+main_col1, _ = st.columns([0.7, 0.3])
 
-    with st.spinner("Loading model and data..."):
-        pipeline = load_pipeline()
-        averages = load_averages()
-
-    run = st.button("Run model", disabled=not is_ready)
-    info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    if is_ready:
-        if run:
-            label_list = pipeline.label_list
-            data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-            input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
-            output_proba = pipeline.predict_proba(
-                input_data, label_list="all", model_type="predictor"
-            )
-            st.session_state.output_proba = {
-                label_list[i]: 100 * array(output_proba)[i, 0, 1]
-                for i in range(len(label_list))
-            }
-            # Reshape to create dictionary with only positive probas
-            st.session_state.model_run = True
-        with info_col:
-            st.info(
-                "To generate results with new data, please click on 'Run model' again."
-            )
+with main_col1:
+    if not st.session_state.consent:
+        show_consent_page()
     else:
-        with info_col:
-            st.info("Please fill out all fields to enable the 'Run model' button.")
+        input_features = main_page_layout()
+        is_ready = None not in input_features  # Define the is_ready flag
+
+        with st.spinner("Loading model and data..."):
+            pipeline = load_pipeline()
+            averages = load_averages()
+
+        run = st.button("Run model", disabled=not is_ready)
+        info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+        if is_ready:
+            if run:
+                label_list = pipeline.label_list
+                data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
+                input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
+                output_proba = pipeline.predict_proba(
+                    input_data, label_list="all", model_type="predictor"
+                )
+                st.session_state.output_proba = {
+                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(label_list))
+                }
+                # Reshape to create dictionary with only positive probas
+                st.session_state.model_run = True
+            with info_col:
+                st.info(
+                    "To generate results with new data, please click on 'Run model' again."
+                )
+        else:
+            with info_col:
+                st.info("Please fill out all fields to enable the 'Run model' button.")
 
     if st.session_state.model_run and input_features[8]:
         # If the model has been run
