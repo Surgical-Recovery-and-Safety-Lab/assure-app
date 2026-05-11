@@ -477,7 +477,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             labelFontSize=12,
         )
         .configure_view(strokeWidth=0)  # Remove the border box
-        .configure_title(fontSize=16, anchor="middle")
+        .configure_title(anchor="middle")
     )
 
     # Create table in column 2
