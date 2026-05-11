@@ -6,15 +6,16 @@ app_fn.py
 Streamlit ASSURE helper functions.
 """
 
-from io import BytesIO
+import base64
+from datetime import datetime
 
 import altair as alt
 import joblib
 import requests
 import streamlit as st
 import vl_convert as vlc
-from fpdf import FPDF
 from pandas import DataFrame, to_numeric
+from weasyprint import HTML
 
 from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL
 
@@ -562,82 +563,83 @@ def create_pdf_report(charts, tables):
         Pdf report.
 
     """
-    # Define some constant values
-    graph_headers = [
-        "Mortality outcomes graph",
-        "Complication graph",
-        "Health Service use graph",
-    ]
-    table_headers = [
-        "Mortality outcomes table",
-        "Complication table",
-        "Health Service use table",
-    ]
+    # Headers aligned with the indices of charts/tables
+    section_titles = ["Mortality outcomes", "Complications", "Health Service use"]
 
-    pdf = FPDF()
-    pdf.add_font("DejaVu", "", "assets/fonts/DejaVuSans.ttf")
-    pdf.add_font("DejaVu", "B", "assets/fonts/DejaVuSans-Bold.ttf")
-    pdf.add_page()
-    pdf.set_font("DejaVu", "B", 16)
+    # --- Generate the Sections Dynamically ---
+    sections_html = ""
 
-    # --- Title ---
-    pdf.cell(0, 10, "Patient Risk Assessment Report", align="C")
-    pdf.ln(20)  # Line break
+    # We zip everything together to iterate in one go
+    for title, chart, df in zip(section_titles, charts, tables):
+        png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
+        chart_b64 = base64.b64encode(png_data).decode("utf-8")
 
-    # --- Convert Altair Chart to PNG Bytes ---
-    # This turns the interactive web chart into a static image for the PDF
-    for i, chart in enumerate(charts):
-        if not chart.data.empty:
-            png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
-            chart_img = BytesIO(png_data)
+        # Build the table rows for this specific dataframe
+        table_rows = "".join([f"""
+            <tr>
+                <td>{r.get("Complications", r.get("Outcome", "N/A"))}</td>
+                <td>{r["Risk percentage"]:.1f}</td>
+                <td>{r["Population average"]}</td>
+                <td class="status-{"higher" if r["Risk status"] == "Higher" else "lower"}">{r["Risk status"]}</td>
+            </tr>
+        """ for _, r in df.iterrows()])
 
-            # --- Insert Chart ---
-            pdf.set_font("DejaVu", "B", 12)
-            pdf.cell(40, 10, graph_headers[i])
-            pdf.ln(10)
-            # image(source, x, y, width)
-            pdf.image(chart_img, x=10, y=None, w=180)
-            pdf.ln(10)
+        # Create the HTML block for this section
+        sections_html += f"""
+        <div class="report-section" style="page-break-inside: avoid;">
+            <div class="section-title">{title}</div>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="data:image/png;base64,{chart_b64}" style="width: 100%; max-width: 650px;">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Outcome</th>
+                        <th>Patient Risk (%)</th>
+                        <th>Population Avg (%)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                </tbody>
+            </table>
+        </div>
+        <hr style="border: 1px solid #eee; margin: 40px 0;">
+        """
 
-    pdf.add_page()  # Add new page for table views
+    date = datetime.now().strftime("%B %d, %Y")
 
-    # --- Insert Table Data ---
-    for i, table in enumerate(tables):
-        if not table.empty:
-            pdf.set_font("DejaVu", "B", 12)
-            pdf.cell(40, 10, table_headers[i])
-            pdf.ln(10)
+    # --- Final HTML Assembly ---
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        @page {{ size: A4; margin: 15mm; }}
+        body {{ font-family: 'Segoe UI', sans-serif; color: #2c3e50; }}
+        .report-header {{ border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }}
+        .section-title {{ font-size: 16pt; color: #2980b9; border-left: 5px solid #3498db; padding-left: 10px; margin: 20px 0; }}
+        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+        th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
+        td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
+        tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        .status-higher {{ color: #e74c3c; font-weight: bold; }}
+        .status-lower {{ color: #27ae60; font-weight: bold; }}
+    </style>
+    </head>
+    <body>
+        <div class="report-header">
+            <h1>Clinical Risk Assessment Report</h1>
+            <p><strong>Comprehensive Patient Summary</strong> | Date: {date}</p>
+        </div>
+        {sections_html}
+    </body>
+    </html>
+    """
 
-            # Table Header
-            pdf.set_font("DejaVu", "B", 10)
-            pdf.cell(60, 10, "Complications", border=1, align="C")
-            pdf.cell(35, 10, "Patient risk", border=1, align="C")
-            pdf.cell(60, 10, "Population average (95% CI)", border=1, align="C")
-            pdf.cell(35, 10, "Risk status", border=1, align="C")
-            pdf.ln()
-
-            # Table Rows
-            pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-            for _, row in table.iterrows():
-                # Write first three columns in normal black font
-                pdf.cell(60, 10, str(row["Complications"]), border=1)
-                pdf.cell(35, 10, f"{row['Risk percentage']:.1f}%", border=1)
-                pdf.cell(60, 10, f"{row['Population average']}", border=1)
-
-                # Set font and colour for Risk status
-                pdf.set_font("DejaVu", "B", 10)  # Set bold font
-                if row["Risk status"] == "Higher":
-                    pdf.set_text_color(200, 0, 0)  # Red font
-                else:
-                    pdf.set_text_color(0, 128, 0)  # Green font
-
-                pdf.cell(35, 10, f"{row['Risk status']}", border=1)
-                pdf.ln()
-
-                pdf.set_font("DejaVu", "", 10)  # Reset to normal font
-                pdf.set_text_color(0, 0, 0)  # Reset to black
-
-    return bytes(pdf.output())
+    # Return the PDF as bytes
+    return HTML(string=html_content).write_pdf()
 
 
 def send_email(sender_email, subject, message) -> bool:
