@@ -1,0 +1,21 @@
+name: Production deploy to Nectar
+on:
+  push:
+    branches: [ deploy ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Production deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NECTAR_IP }}
+          username: ${{ secrets.NECTAR_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd assure-app/
+            git pull origin main
+            source ~/venv/assure-app/bin/activate
+            pip install -r requirements.txt
+            sudo systemctl restart assure.service
