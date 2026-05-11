@@ -82,7 +82,7 @@ else:
 
         mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
         complications_dict = LABEL_MAP["COMPLICATIONS"]
-        health_outcomes_dict = LABEL_MAP["HEALTH_SERVICE"]
+        health_outcomes_dict = LABEL_MAP["HEALTH_OUTCOMES"]
 
         with mortality_tab:
             st.subheader("Mortality outcomes")

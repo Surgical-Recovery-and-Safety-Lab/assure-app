@@ -58,7 +58,7 @@ def sync_mortality_outcome_toggles():
 
 def sync_health_outcome_toggles():
     """Sync the health service outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["HEALTH_SERVICE"].keys():
+    for key in LABEL_MAP["HEALTH_OUTCOMES"].keys():
         if key in ["HEALTH_OUTCOMES", "FTR", "LOS", "DAOH"]:
             continue
         st.session_state[key] = st.session_state.HEALTH_OUTCOMES
@@ -74,13 +74,15 @@ def sync_complication_toggles():
 
 def init_outcome_toggles():
     """Initialise the keys used for the outcome toggles"""
-    for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS"]:
+    for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS", "HEALTH_OUTCOMES"]:
         if master_key not in st.session_state:
             st.session_state[master_key] = True
 
         # Initialize all SUB-TOGGLES in that group to True as well
         for sub_key in LABEL_MAP[master_key].keys():
             if sub_key not in st.session_state:
+                if sub_key in ["FTR", "DAOH", "LOS"]:
+                    continue
                 st.session_state[sub_key] = True
 
 
