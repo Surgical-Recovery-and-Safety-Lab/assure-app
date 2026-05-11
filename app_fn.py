@@ -525,7 +525,6 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                  If the risk is lower than the population average the bars are green,
                  otherwise, they are red.
         """)
-
     return chart, table_to_display
 
 
@@ -571,6 +570,18 @@ def create_pdf_report(charts, tables):
 
     # We zip everything together to iterate in one go
     for title, chart, df in zip(section_titles, charts, tables):
+        if df.empty:
+            sections_html += f"""
+            <div class="report-section" style="page-break-inside: avoid;">
+                <div class="section-title">{title}</div>
+                <div class="box">
+                    <strong>No outcomes were selected</strong>
+                </div>
+           </div>
+            <hr style="border: 1px solid #eee; margin: 40px 0;">
+            """
+            continue
+
         png_data = vlc.vegalite_to_png(chart.to_dict(), scale=2)
         chart_b64 = base64.b64encode(png_data).decode("utf-8")
 
@@ -626,6 +637,13 @@ def create_pdf_report(charts, tables):
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         .status-higher {{ color: #e74c3c; font-weight: bold; }}
         .status-lower {{ color: #27ae60; font-weight: bold; }}
+        .box {{
+        background-color: #e8f4fd;
+        border-radius: 5px;
+        padding: 15px;
+        font-size: 10pt;
+        margin-top: 30px;
+        }}
     </style>
     </head>
     <body>
