@@ -25,39 +25,42 @@ from app_fn import (
 )
 from constants import COLUMNS, LABEL_MAP
 
-if not st.session_state.consent:
-    show_consent_page()
-else:
-    input_features = main_page_layout()
-    is_ready = None not in input_features  # Define the is_ready flag
+main_col1, _ = st.columns([0.7, 0.3])
 
-    with st.spinner("Loading model and data..."):
-        pipeline = load_pipeline()
-        averages = load_averages()
-
-    run = st.button("Run model", disabled=not is_ready)
-    info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    if is_ready:
-        if run:
-            label_list = pipeline.label_list
-            data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-            input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
-            output_proba = pipeline.predict_proba(
-                input_data, label_list="all", model_type="predictor"
-            )
-            st.session_state.output_proba = {
-                label_list[i]: 100 * array(output_proba)[i, 0, 1]
-                for i in range(len(label_list))
-            }
-            # Reshape to create dictionary with only positive probas
-            st.session_state.model_run = True
-        with info_col:
-            st.info(
-                "To generate results with new data, please click on 'Run model' again."
-            )
+with main_col1:
+    if not st.session_state.consent:
+        show_consent_page()
     else:
-        with info_col:
-            st.info("Please fill out all fields to enable the 'Run model' button.")
+        input_features = main_page_layout()
+        is_ready = None not in input_features  # Define the is_ready flag
+
+        with st.spinner("Loading model and data..."):
+            pipeline = load_pipeline()
+            averages = load_averages()
+
+        run = st.button("Run model", disabled=not is_ready)
+        info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+        if is_ready:
+            if run:
+                label_list = pipeline.label_list
+                data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
+                input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
+                output_proba = pipeline.predict_proba(
+                    input_data, label_list="all", model_type="predictor"
+                )
+                st.session_state.output_proba = {
+                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(label_list))
+                }
+                # Reshape to create dictionary with only positive probas
+                st.session_state.model_run = True
+            with info_col:
+                st.info(
+                    "To generate results with new data, please click on 'Run model' again."
+                )
+        else:
+            with info_col:
+                st.info("Please fill out all fields to enable the 'Run model' button.")
 
     if st.session_state.model_run and input_features[8]:
         # If the model has been run
@@ -94,45 +97,37 @@ else:
                 on_change=sync_mortality_outcome_toggles,
             )
 
-            with st.container():
-                mortality_outcomes_col1, mortality_outcomes_col2 = st.columns(2)
-                for i, key in enumerate(mortality_outcomes_dict.keys()):
-                    if i >= len(mortality_outcomes_dict) / 2:
-                        col = mortality_outcomes_col2
-                    else:
-                        col = mortality_outcomes_col1
+            with st.container(horizontal=True):
+                for key in mortality_outcomes_dict.keys():
+                    if key == "MORTALITY_OUTCOMES":
+                        continue
+                    toggle = st.toggle(
+                        mortality_outcomes_dict[key],
+                        key=key,
+                    )
 
-                    with col:
-                        if key == "MORTALITY_OUTCOMES":
-                            continue
-                        else:
-                            toggle = st.toggle(
-                                mortality_outcomes_dict[key],
-                                key=key,
-                            )
+            # Empty list to store mortality outcomes to plot
+            mortality_labels = []
+            mortality_outcomes_proba = []
+            mortality_average = []
+            mortality_lower = []
+            mortality_upper = []
 
-                # Empty list to store mortality outcomes to plot
-                mortality_labels = []
-                mortality_outcomes_proba = []
-                mortality_average = []
-                mortality_lower = []
-                mortality_upper = []
+            # Create the graph/table toggle
+            mortality_display_option = st.pills(
+                "**Display type**",
+                key="mortality_display_option",
+                options=display_options.keys(),
+                format_func=lambda option: display_options[option],
+                selection_mode="single",
+                default="graph",
+            )
 
-                # Create the graph/table toggle
-                mortality_display_option = st.pills(
-                    "**Display type**",
-                    key="mortality_display_option",
-                    options=display_options.keys(),
-                    format_func=lambda option: display_options[option],
-                    selection_mode="single",
-                    default="graph",
-                )
-
-                mortality_chart, mortality_table = data_visualisation(
-                    mortality_outcomes_dict,
-                    op_average,
-                    display=st.session_state.mortality_display_option,
-                )
+            mortality_chart, mortality_table = data_visualisation(
+                mortality_outcomes_dict,
+                op_average,
+                display=st.session_state.mortality_display_option,
+            )
 
         with comp_tab:
             # Create complications layout
@@ -145,11 +140,14 @@ else:
             )
 
             with st.container():
-                comp_col1, comp_col2, comp_col3 = st.columns(3)
+                comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+                comp_len = len(complications_dict)
                 for i, key in enumerate(complications_dict.keys()):
-                    if i >= 2 * len(complications_dict) / 3:
+                    if i >= 3 * comp_len / 4:
+                        col = comp_col4
+                    elif i >= 2 * comp_len / 4:
                         col = comp_col3
-                    elif i >= len(complications_dict) / 3:
+                    elif i >= comp_len / 4:
                         col = comp_col2
                     else:
                         col = comp_col1

@@ -104,7 +104,6 @@ LABEL_MAP = {
         "MORTALITY_30D": "30-day mortality",
         "MORTALITY_90D": "90-day mortality",
         "MORTALITY_1Y": "1-year mortality",
-        "ANY_COMP": "Any complication",
     },
     "HEALTH_OUTCOMES": {
         "HEALTH_OUTCOMES": "Toggle all",
@@ -117,6 +116,7 @@ LABEL_MAP = {
     "COMPLICATIONS": {
         "COMPLICATIONS": "Toggle all complications",
         "AKI": "AKI",
+        "ANY_COMP": "Any complication",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",
         "GI_BLEEDING": "GI bleeding",
