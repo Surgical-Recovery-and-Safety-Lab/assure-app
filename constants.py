@@ -100,7 +100,7 @@ COLUMNS = [
 ]
 LABEL_MAP = {
     "GENERAL_OUTCOMES": {
-        "GENERAL_OUTCOMES": "All general outcomes",
+        "GENERAL_OUTCOMES": "Toggle all mortality outcomes",
         "MORTALITY_30D": "30-day mortality",
         "MORTALITY_90D": "90-day mortality",
         "MORTALITY_1Y": "1-year mortality",
@@ -109,7 +109,7 @@ LABEL_MAP = {
         "ANY_COMP": "Any complication",
     },
     "COMPLICATIONS": {
-        "COMPLICATIONS": "Show all complications",
+        "COMPLICATIONS": "Toggle all complications",
         "AKI": "AKI",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",
