@@ -137,11 +137,14 @@ else:
             )
 
             with st.container():
-                comp_col1, comp_col2, comp_col3 = st.columns(3)
+                comp_col1, comp_col2, comp_col3, comp_col4 = st.columns(4)
+                comp_len = len(complications_dict)
                 for i, key in enumerate(complications_dict.keys()):
-                    if i >= 2 * len(complications_dict) / 3:
+                    if i >= 3 * comp_len / 4:
+                        col = comp_col4
+                    elif i >= 2 * comp_len / 4:
                         col = comp_col3
-                    elif i >= len(complications_dict) / 3:
+                    elif i >= comp_len / 4:
                         col = comp_col2
                     else:
                         col = comp_col1
