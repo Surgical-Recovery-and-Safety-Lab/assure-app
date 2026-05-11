@@ -20,6 +20,7 @@ from app_fn import (
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
+    sync_health_outcome_toggles,
     sync_mortality_outcome_toggles,
 )
 from constants import COLUMNS, LABEL_MAP
@@ -76,12 +77,13 @@ else:
         op_average = averages[input_features[8]]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
-        mortality_tab, comp_tab = st.tabs(["Mortality", "Postoperative complications"])
+        mortality_tab, comp_tab, health_tab = st.tabs(
+            ["Mortality", "Postoperative complications", "Health service use"]
+        )
 
         with mortality_tab:
             st.subheader("Mortality outcomes")
             mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
-            complications_dict = LABEL_MAP["COMPLICATIONS"]
 
             # Create mortality outcomes layout
             all_toggle = st.toggle(
@@ -133,6 +135,8 @@ else:
         with comp_tab:
             # Create complications layout
             st.subheader("Specific complications")
+            complications_dict = LABEL_MAP["COMPLICATIONS"]
+
             all_toggle = st.toggle(
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
@@ -180,8 +184,64 @@ else:
                     display=st.session_state.comp_display_option,
                 )
 
+        with health_tab:
+            st.subheader("Health Service use")
+            health_outcomes_dict = LABEL_MAP["HEALTH_SERVICE"]
+
+            # Create health outcomes layout
+            all_toggle = st.toggle(
+                health_outcomes_dict["HEALTH_OUTCOMES"],
+                key="HEALTH_OUTCOMES",
+                on_change=sync_health_outcome_toggles,
+            )
+
+            with st.container():
+                health_outcomes_col1, health_outcomes_col2 = st.columns(2)
+                for i, key in enumerate(health_outcomes_dict.keys()):
+                    if i >= len(health_outcomes_dict) / 2:
+                        col = health_outcomes_col2
+                    else:
+                        col = health_outcomes_col1
+
+                    with col:
+                        if key == "HEALTH_OUTCOMES":
+                            continue
+                        if key in ["DAOH", "LOS", "FTR"]:
+                            toggle = st.toggle(  # Disable because coming soon
+                                health_outcomes_dict[key], key=key, disabled=True
+                            )
+                        else:
+                            toggle = st.toggle(
+                                health_outcomes_dict[key],
+                                key=key,
+                            )
+
+                # Empty list to store health outcomes to plot
+                health_labels = []
+                health_outcomes_proba = []
+                health_average = []
+                health_lower = []
+                health_upper = []
+
+                # Create the graph/table toggle
+                health_display_option = st.pills(
+                    "**Display type**",
+                    key="health_display_option",
+                    options=display_options.keys(),
+                    format_func=lambda option: display_options[option],
+                    selection_mode="single",
+                    default="graph",
+                )
+
+                health_chart, health_table = data_visualisation(
+                    health_outcomes_dict,
+                    op_average,
+                    display=st.session_state.health_display_option,
+                )
+
         pdf_bytes = create_pdf_report(
-            [mortality_chart, comp_chart], [mortality_table, comp_table]
+            [mortality_chart, comp_chart, health_chart],
+            [mortality_table, comp_table, health_table],
         )
         st.download_button(
             label="Download PDF report",

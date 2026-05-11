@@ -104,9 +104,15 @@ LABEL_MAP = {
         "MORTALITY_30D": "30-day mortality",
         "MORTALITY_90D": "90-day mortality",
         "MORTALITY_1Y": "1-year mortality",
+        "ANY_COMP": "Any complication",
+    },
+    "HEALTH_SERVICE": {
+        "HEALTH_OUTCOMES": "Toggle all",
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
-        "ANY_COMP": "Any complication",
+        "FTR": "Failure to rescue (coming soon)",
+        "DAOH": "DAOH (coming soon)",
+        "LOS": "Length of stay (coming soon)",
     },
     "COMPLICATIONS": {
         "COMPLICATIONS": "Toggle all complications",
