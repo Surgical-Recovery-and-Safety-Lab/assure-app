@@ -9,6 +9,7 @@ Constants for the app.
 MODEL_NAME = "ai_risk_HGBc-v0.5.0.2-a.1.3.0.joblib"
 MODEL = "assets/models/" + MODEL_NAME
 AVERAGES_NAME = "op-averages.joblib"
+OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
 CATEGORIES = {
     None: "Placeholder",
