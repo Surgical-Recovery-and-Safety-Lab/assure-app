@@ -14,10 +14,10 @@ import joblib
 import requests
 import streamlit as st
 import vl_convert as vlc
-from pandas import DataFrame, to_numeric
+from pandas import DataFrame, read_csv, to_numeric
 from weasyprint import HTML
 
-from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL
+from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL, OPERATIONS
 
 
 @st.cache_resource(show_spinner=False)
@@ -32,6 +32,13 @@ def load_averages():
     """Load operation averages"""
 
     return joblib.load(AVERAGES)
+
+
+@st.cache_resource(show_spinner=False)
+def load_operations():
+    """Load operation list"""
+
+    return read_csv(OPERATIONS)
 
 
 def convert_dtypes(data):
