@@ -35,6 +35,12 @@ with about_col1:
     st.write("""Check out our other projects or get in touch with us!""")
     container = st.container(horizontal=True)
     container.link_button(
+        url="https://srslab.auckland.ac.nz",
+        type="secondary",
+        label="Our lab",
+        icon="📚",
+    )
+    container.link_button(
         url="https://github.com/Surgical-Recovery-and-Safety-Lab?view_as=public",
         type="secondary",
         label="Our projects",
