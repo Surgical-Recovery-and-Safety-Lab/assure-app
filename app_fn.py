@@ -14,10 +14,10 @@ import joblib
 import requests
 import streamlit as st
 import vl_convert as vlc
-from pandas import DataFrame, to_numeric
+from pandas import DataFrame, read_csv, to_numeric
 from weasyprint import HTML
 
-from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL
+from constants import AVERAGES, LABEL_MAP, MODEL, OPERATIONS
 
 
 @st.cache_resource(show_spinner=False)
@@ -32,6 +32,13 @@ def load_averages():
     """Load operation averages"""
 
     return joblib.load(AVERAGES)
+
+
+@st.cache_resource(show_spinner=False)
+def load_operations():
+    """Load operation DataFrame"""
+
+    return read_csv(OPERATIONS)
 
 
 def convert_dtypes(data):
@@ -234,57 +241,55 @@ def main_page_layout():
                 icon=":material/info:",
             )
 
-    # Category L1 selectbox
-    catl1_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-    category_l1_options = [key for key in CATEGORIES.keys() if key is not None]
+    operations_df = load_operations()  # Load operations dataframe
 
-    with catl1_col1:
-        category_l1 = st.selectbox(
-            "**Surgical specialty**",
-            category_l1_options,
-            help="Surgical specialty of the operation",
+    # Define placeholder values to avoid error
+    category_l1 = ""
+    category_l2 = ""
+    op_severity = 0
+
+    search_options = operations_df["OP_DESC"].tolist()
+
+    op_col1, op_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+
+    with op_col1:
+        selected_operation = st.selectbox(
+            "**Operation**",
+            options=search_options,
             index=None,
-            placeholder="Specialty",
+            placeholder="Type to search...",
         )
 
-    # Category L2 selectbox (depends on L1)
-    catl2_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
+        if selected_operation:
+            row = operations_df[operations_df["OP_DESC"] == selected_operation].iloc[0]
 
-    with catl2_col1:
-        category_l2_disabled = True
-        index = None
-        if category_l1:
-            category_l2_disabled = False
-            if len(CATEGORIES[category_l1]) == 1:
-                index = 0
+            # Extract specialty, sub-specialty, and severity
+            category_l1 = row["CATEGORY_LEVEL_1"]
+            category_l2 = row["CATEGORY_LEVEL_2"]
+            op_severity = row["OP_SEVERITY"]
 
-        category_l2 = st.selectbox(
-            "**Surgical sub-specialty**",
-            CATEGORIES[category_l1],
-            help="Surgical sub-specialty, select a specialty to see options",
-            index=index,
-            placeholder="Sub-specialty",
-            disabled=category_l2_disabled,
-        )
-
-    # Op severity slider
-    op_sev_col1, op_sev_col2 = st.columns(
-        [3, 1], vertical_alignment="bottom", gap="medium"
-    )
-    with op_sev_col1:
-        op_severity = st.slider(
-            "**Operation severity**",
-            min_value=1,
-            max_value=5,
-            step=1,
-        )
-    with op_sev_col2:
+    with op_col2:
         with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("**Operation severity**")
+            st.write("**Operation search bar**")
             st.write("""
-                The operation severity score varies between 1 and 5.
-                1 represents operation that have a low severity score, while 5 represents
-                those with high severity.""")
+                Start typing the operation name or description in the search bar to filter
+                the operation list. Once the correct operation is find select it from the
+                list. The surgical specialty, sub-specialty, and the operation severity
+                will be automatically filled for you.""")
+
+    col1, col2, col3, _ = st.columns(4)
+
+    with col1:
+        st.markdown("**Surgical Specialty**")
+        st.markdown(f"{category_l1}")
+    with col2:
+        st.markdown("**Sub-specialty**")
+        st.markdown(f"{category_l2}")
+    with col3:
+        st.markdown("**Operation severity**")
+        st.markdown(f"{op_severity}")
+
+    st.markdown("---")
 
     input_features = [
         age,
