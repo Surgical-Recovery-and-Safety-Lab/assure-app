@@ -9,7 +9,7 @@ Streamlit ASSURE app.
 import streamlit as st
 from numpy import array
 
-st.set_page_config(page_title="ASSURE", layout="wide")
+st.set_page_config(page_title="ASSURE", page_icon="assets/srs-mark.svg", layout="wide")
 
 # Define session state variables
 if "model_run" not in st.session_state:
@@ -22,7 +22,7 @@ if "consent" not in st.session_state:
     # Session state varible for consent
     st.session_state.consent = False
 
-st.logo("assets/logo.png", size="large")
+st.logo("assets/srs-logo.svg", size="large", icon_image="assets/srs-mark.svg")
 home_page = st.Page("pages/home_page.py", title="Home", icon="🏠")
 about_page = st.Page("pages/about_page.py", title="About", icon="📖")
 calc_page = st.Page("pages/main_page.py", title="Calculator", icon="🎯")
