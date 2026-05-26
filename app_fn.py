@@ -277,6 +277,20 @@ def main_page_layout():
                 list. The surgical specialty, sub-specialty, and the operation severity
                 will be automatically filled for you.""")
 
+    col1, col2, col3, _ = st.columns(4)
+
+    with col1:
+        st.markdown("**Surgical Specialty**")
+        st.markdown(f"{category_l1}")
+    with col2:
+        st.markdown("**Sub-specialty**")
+        st.markdown(f"{category_l2}")
+    with col3:
+        st.markdown("**Operation severity**")
+        st.markdown(f"{op_severity}")
+
+    st.markdown("---")
+
     input_features = [
         age,
         ethnicity,
