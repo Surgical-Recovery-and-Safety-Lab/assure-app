@@ -17,7 +17,7 @@ import vl_convert as vlc
 from pandas import DataFrame, read_csv, to_numeric
 from weasyprint import HTML
 
-from constants import AVERAGES, CATEGORIES, LABEL_MAP, MODEL, OPERATIONS
+from constants import AVERAGES, LABEL_MAP, MODEL, OPERATIONS
 
 
 @st.cache_resource(show_spinner=False)
