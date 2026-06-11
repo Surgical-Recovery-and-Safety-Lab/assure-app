@@ -7,7 +7,7 @@ Streamlit ASSURE app main page.
 """
 
 import streamlit as st
-from numpy import array, expand_dims
+from numpy import array, expand_dims, zeros
 from pandas import DataFrame
 
 from app_fn import (
@@ -23,7 +23,7 @@ from app_fn import (
     sync_health_outcome_toggles,
     sync_mortality_outcome_toggles,
 )
-from constants import COLUMNS, LABEL_MAP
+from constants import COLUMNS, LABEL_MAP, MODEL_MAP
 
 main_col1, _ = st.columns([0.7, 0.3])
 
@@ -45,9 +45,11 @@ with main_col1:
                 label_list = pipeline.label_list
                 data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
                 input_data = pipeline.transform(convert_dtypes(data)).to_numpy()
-                output_proba = pipeline.predict_proba(
-                    input_data, label_list="all", model_type="predictor"
-                )
+                output_proba = zeros((len(label_list), 1, 2))
+                for i, label in enumerate(label_list):
+                    output_proba[i, :, :] = pipeline.predict_proba(
+                        input_data, label_list=label, model_type=MODEL_MAP[label]
+                    )
                 st.session_state.output_proba = {
                     label_list[i]: 100 * array(output_proba)[i, 0, 1]
                     for i in range(len(label_list))
