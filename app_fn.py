@@ -275,7 +275,11 @@ def main_page_layout():
                 Start typing the operation name or description in the search bar to filter
                 the operation list. Once the correct operation is find select it from the
                 list. The surgical specialty, sub-specialty, and the operation severity
-                will be automatically filled for you.""")
+                will be automatically filled for you.
+                
+                If the operation name is too long leaving the cursor hovering over it
+                will display the entire operation description.
+                """)
 
     st.markdown("**Selected operation**")
     st.markdown(f"{selected_operation}")
