@@ -277,6 +277,8 @@ def main_page_layout():
                 list. The surgical specialty, sub-specialty, and the operation severity
                 will be automatically filled for you.""")
 
+    st.markdown("**Selected operation**")
+    st.markdown(f"{selected_operation}")
     col1, col2, col3, _ = st.columns(4)
 
     with col1:
