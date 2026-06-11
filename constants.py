@@ -6,7 +6,7 @@ constants.py
 Constants for the app.
 """
 
-MODEL_NAME = "ai_risk_HGBc-v0.5.0.2-a.1.3.0.joblib"
+MODEL_NAME = "ai_risk_HGBc-v0.5.1.2-a.1.3.2.joblib"
 MODEL = "assets/models/" + MODEL_NAME
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
@@ -58,4 +58,27 @@ LABEL_MAP = {
         "UTI": "UTI",
         "VTE": "VTE",
     },
+}
+MODEL_MAP = {
+    "MORTALITY_30D": "calibrator",
+    "MORTALITY_90D": "predictor",
+    "MORTALITY_1Y": "calibrator",
+    "READMIT_ACUTE_30D": "predictor",
+    "READMIT_ACUTE_90D": "predictor",
+    "ANY_COMP": "predictor",
+    "SSI": "predictor",
+    "VTE": "predictor",
+    "SEPSIS": "predictor",
+    "RESPIRATORY_FAILURE": "calibrator",
+    "SHOCK": "predictor",
+    "STROKE": "calibrator",
+    "AKI": "predictor",
+    "CARDIAC_ARRHYTHMIA": "predictor",
+    "DELIRIUM": "predictor",
+    "GI_BLEEDING": "predictor",
+    "HAEMORRHAGE": "calibrator",
+    "IMPLANT_GRAFT": "predictor",
+    "MYOCARDIAL_EVENT": "predictor",
+    "PNEUMONIA": "predictor",
+    "UTI": "calibrator",
 }
