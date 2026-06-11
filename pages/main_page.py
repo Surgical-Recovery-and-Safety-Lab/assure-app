@@ -65,7 +65,7 @@ with main_col1:
     if st.session_state.model_run and input_features[8]:
         # If the model has been run
         st.header("Results", divider="rainbow")
-        st.write("""Select one of the tabs to view the desired results.""")
+        st.write("""Select one of the tabs below to view the desired results.""")
         st.write("""
                  The outcomes can be toggled on and off using the switches. The
                  model does **not** need to be re-run to view different
@@ -80,7 +80,11 @@ with main_col1:
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
-            ["Mortality", "Postoperative complications", "Health service use"]
+            [
+                "**Mortality**",
+                "**Postoperative complications**",
+                "**Health service use**",
+            ]
         )
 
         mortality_outcomes_dict = LABEL_MAP["MORTALITY_OUTCOMES"]
