@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [Unreleased]
+## [1.3.1] 2026-07-28
 
 ### Changed
 * Updated the workflow to test the app on the Nectar server
 * Updated the workflow to deploy the app on the Nectar server
+* Changed layout of the mortality buttons from horizontal to vertical
+* Fixed visual bug between chart and graph
 
 ## [1.3.0] 2026-07-27
 
