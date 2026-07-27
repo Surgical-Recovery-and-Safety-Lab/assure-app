@@ -2,6 +2,7 @@ name: Test deploy to Nectar
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -16,6 +17,6 @@ jobs:
           script: |
             cd assure-test/
             git pull origin main
-            source ~/venv/assure-test/bin/activate
+            source ~/.venv/assure-test/bin/activate
             pip install -r requirements.txt
             sudo systemctl restart assure-test.service

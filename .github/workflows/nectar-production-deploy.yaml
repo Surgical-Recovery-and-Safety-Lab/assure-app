@@ -2,6 +2,7 @@ name: Production deploy to Nectar
 on:
   push:
     branches: [ deploy ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -15,7 +16,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd assure-app/
-            git pull origin main
-            source ~/venv/assure-app/bin/activate
+            git pull origin deploy
+            source ~/.venv/assure-app/bin/activate
             pip install -r requirements.txt
-            sudo systemctl restart assure.service
+            cp -r /home/$USER/assure-test/assets/. /home/$USER/assure-app/assets/
+            sudo systemctl restart assure-app.service
