@@ -408,7 +408,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         .mark_point(filled=True, color="black", size=50)
         .encode(
             x="Population average:Q",
-            y="Complications:N",
+            y=alt.Y("Complications:N", sort=None),
             tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
         )
     )
@@ -420,7 +420,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         .mark_bar(cornerRadiusEnd=25, opacity=0.5)  # Bar graph
         .encode(
             x="Risk percentage:Q",
-            y="Complications:N",
+            y=alt.Y("Complications:N", sort=None),
             color=alt.condition(
                 alt.datum["Risk percentage"] > alt.datum["Population average"],
                 alt.value("red"),  # Higher than average
