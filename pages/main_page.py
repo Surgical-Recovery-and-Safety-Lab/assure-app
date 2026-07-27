@@ -102,7 +102,7 @@ with main_col1:
                 on_change=sync_mortality_outcome_toggles,
             )
 
-            with st.container(horizontal=True):
+            with st.container(horizontal=False):
                 for key in mortality_outcomes_dict.keys():
                     if key == "MORTALITY_OUTCOMES":
                         continue
