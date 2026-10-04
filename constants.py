@@ -58,3 +58,6 @@ LABEL_MAP = {
         "VTE": "VTE",
     },
 }
+LEGEND_AVERAGE = "Population average (95% CI)"
+LEGEND_LOWER = "Patient risk (lower)"
+LEGEND_HIGHER = "Patient risk (higher)"
