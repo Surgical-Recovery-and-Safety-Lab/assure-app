@@ -18,7 +18,7 @@ from medpipe import MedpipeClassifier, MedpipeRegressor
 from pandas import DataFrame, Series, read_csv
 from weasyprint import HTML
 
-from constants import (
+from .constants import (
     AVERAGES,
     CLASSIFIER,
     COLUMNS,
