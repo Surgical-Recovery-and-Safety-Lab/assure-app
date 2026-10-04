@@ -9,14 +9,15 @@ import time
 
 import altair as alt
 import joblib
+import numpy as np
 import requests
 import streamlit as st
 import vl_convert as vlc
 from medpipe import MedpipeClassifier
-from pandas import DataFrame, read_csv, to_numeric
+from pandas import DataFrame, Series, read_csv, to_numeric
 from weasyprint import HTML
 
-from constants import AVERAGES, LABEL_MAP, MODEL, OPERATIONS
+from constants import AVERAGES, COLUMNS, LABEL_MAP, MODEL, OPERATIONS
 
 
 @st.cache_resource(show_spinner=False)
@@ -291,7 +292,29 @@ def main_page_layout():
         op_severity,
         trauma,
     ]
-    return input_features
+    return convert_input_features(input_features)
+
+
+def convert_input_features(input_features: list) -> DataFrame:
+    """Convert the input feature list to a data frame with correct types.
+
+    Parameters
+    ----------
+    input_features : list
+        List of input features from the user.
+
+    Return
+    ------
+    DataFrame
+        Converted features into a data frame with correct typings.
+
+    """
+    data = DataFrame(np.expand_dims(input_features, 1).T, columns=Series(COLUMNS))
+    data["ASA"] = data["ASA"].astype(float)
+    data["TRAUMA"] = data["TRAUMA"].astype(bool)
+    data["PRIOR_CANCER"] = data["PRIOR_CANCER"].astype(bool)
+
+    return data
 
 
 def data_visualisation(complications_dict, op_average, display="graph"):
