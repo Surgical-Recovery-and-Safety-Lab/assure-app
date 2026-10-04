@@ -39,21 +39,6 @@ def load_operations():
     return read_csv(OPERATIONS)
 
 
-def convert_dtypes(data):
-    """Convert datatypes to fit requirements"""
-    for column in data.columns:
-        if column in [
-            "AGE",
-            "ASA",
-            "OP_SEVERITY",
-            "PRIOR_CANCER",
-            "TRAUMA",
-            "OP_SEVERITY",
-        ]:
-            data[column] = to_numeric(data[column], downcast="unsigned")
-    return data
-
-
 def sync_mortality_outcome_toggles():
     """Sync the mortality outcome toggles based on the all toggle"""
     for key in LABEL_MAP["MORTALITY_OUTCOMES"]:
