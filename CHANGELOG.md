@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [1.3.1] 2026-07-28
+## [Unreleased]
+
+### Changed
+* Bumped medpipe version from 0.3.1 to 0.4.0.dev2
+
+## [1.3.1] - 2026-07-28
 
 ### Changed
 * Updated the workflow to test the app on the Nectar server
@@ -13,7 +18,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Changed layout of the mortality buttons from horizontal to vertical
 * Fixed visual bug between chart and graph
 
-## [1.3.0] 2026-07-27
+## [1.3.0] - 2026-07-27
 
 ### Added
 * Added CHANGELOG.md
@@ -23,13 +28,13 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Minor tweaks to adapt to API changes in medpipe
 * Changed model created using medpipe v0.3.1
 
-## [1.2.4] 2026-06-11
+## [1.2.4] - 2026-06-11
 
 ### Changed
 * Made the tabs bold font
 * Updated model version
 
-## [1.2.3] 2026-05-26
+## [1.2.3] - 2026-05-26
 
 ### Added
 * Search bar to identify category level 1 and 2, and operation severity
@@ -38,7 +43,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * New logos
 * Minor change to README.md
 
-## [1.2.1] 2026-05-11
+## [1.2.1] - 2026-05-11
 
 ### Added
 * Created a health service use tab with readmission outcomes
@@ -49,7 +54,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Minor verbiage change in the webapp text
 * Updated model version
 
-## [1.2.0] 2026-04-29
+## [1.2.0] - 2026-04-29
 
 ### Changed
 * Minor issues fixed
@@ -58,7 +63,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Improved graphical visualisation of results
 * Changed medpipe version
 
-## [1.1.0] 2026-04-23
+## [1.1.0] - 2026-04-23
 
 ### Added
 * Added pages and navigation side bar
@@ -68,20 +73,33 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Updated graph views
 * Small adjustments to make navigation easier
 
-## [1.0.1] 2026-04-15
+## [1.0.1] - 2026-04-15
 
 ### Changed
 * Minor bug fixes
 * UI changes to fit new number of complications
 
-## [1.0.0] 2026-04-15
+## [1.0.0] - 2026-04-15
 
 ### Changed
 * New interface
 * Reduced number of input parameters
 * Improved visulisation of results
 
-## [0.0.1] 2026-02-23
+## [0.0.1] - 2026-02-23
 
 ### Added
 * First version
+
+
+[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.4...v1.3.0
+[1.2.4]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.3...v1.2.4
+[1.2.3]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.1...v1.2.3
+[1.2.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v.1.1.0...v1.2.0
+[1.1.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.0.1...v.1.1.0
+[1.0.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v0.0.1...v1.0.0
+[0.0.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/releases/tag/v0.0.1
