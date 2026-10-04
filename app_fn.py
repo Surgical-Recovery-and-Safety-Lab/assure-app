@@ -12,6 +12,7 @@ import joblib
 import requests
 import streamlit as st
 import vl_convert as vlc
+from medpipe import MedpipeClassifier
 from pandas import DataFrame, read_csv, to_numeric
 from weasyprint import HTML
 
@@ -22,7 +23,7 @@ from constants import AVERAGES, LABEL_MAP, MODEL, OPERATIONS
 def load_pipeline():
     """Load pipeline"""
 
-    return joblib.load(MODEL)
+    return MedpipeClassifier.load(MODEL)
 
 
 @st.cache_resource(show_spinner=False)
