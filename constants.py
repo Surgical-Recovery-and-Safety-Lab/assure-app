@@ -39,8 +39,9 @@ LABEL_MAP = {
     },
     "COMPLICATIONS": {
         "COMPLICATIONS": "Toggle all complications",
-        "AKI": "AKI",
         "ANY_COMP": "Any complication",
+        "REOP": "Reoperation",
+        "AKI": "AKI",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",
         "GI_BLEEDING": "GI bleeding",
