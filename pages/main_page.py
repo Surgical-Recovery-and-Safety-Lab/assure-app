@@ -59,7 +59,7 @@ with main_col1:
                 st.info("Please fill out all fields to enable the 'Run model' button.")
 
     if st.session_state.model_run:
-        cat_l2 = input_features["CATEGORY_LEVEL_2"]
+        cat_l2 = input_features["CATEGORY_LEVEL_2"].iloc[0]  # Get only value
 
         # If the model has been run
         st.header("Results", divider="rainbow")
@@ -74,6 +74,7 @@ with main_col1:
                 The results can be viewed as a graph or as a table. Select the desired 
                 visualisation by selecting the display type.
                 """)
+
         op_average = averages[cat_l2]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
