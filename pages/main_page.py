@@ -38,12 +38,11 @@ with main_col1:
         info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
         if is_ready:
             if run:
-                label_list = pipeline.outcomes
-                data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
+                label_list = pipeline.mp_config.data.outcomes
                 output_proba = zeros((len(label_list), 1, 2))
                 for i, label in enumerate(label_list):
                     output_proba[i, :, :] = pipeline.predict_proba(
-                        data, outcomes=label, estimator_type=MODEL_MAP[label]
+                        input_features, outcome=label
                     )[0]
                 st.session_state.output_proba = {
                     label_list[i]: 100 * array(output_proba)[i, 0, 1]
