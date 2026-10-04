@@ -5,8 +5,7 @@ Streamlit ASSURE app main page.
 """
 
 import streamlit as st
-from numpy import array, expand_dims, zeros
-from pandas import DataFrame
+from numpy import array, zeros
 
 from app_fn import (
     create_pdf_report,
@@ -20,7 +19,7 @@ from app_fn import (
     sync_health_outcome_toggles,
     sync_mortality_outcome_toggles,
 )
-from constants import COLUMNS, LABEL_MAP, MODEL_MAP
+from constants import LABEL_MAP
 
 main_col1, _ = st.columns([0.7, 0.3])
 
