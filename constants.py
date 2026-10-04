@@ -4,8 +4,7 @@ constants.py
 Constants for the app.
 """
 
-MODEL_NAME = "assure_v0.1.1.joblib"
-MODEL = "assets/models/" + MODEL_NAME
+MODEL = "assets/models/classifier/v1"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
