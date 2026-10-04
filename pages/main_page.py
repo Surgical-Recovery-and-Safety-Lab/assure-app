@@ -32,24 +32,39 @@ with main_col1:
 
         with st.spinner("Loading model and data..."):
             pipeline = load_pipeline()
+            regressor_pipeline = load_pipeline("regressor")
             averages = load_averages()
 
         run = st.button("Run model", disabled=not is_ready)
         info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
         if is_ready:
             if run:
-                label_list = pipeline.mp_config.data.outcomes
-                output_proba = zeros((len(label_list), 1, 2))
-                for i, label in enumerate(label_list):
+                # Run classifier
+                outcomes = pipeline.mp_config.data.outcomes
+                output_proba = zeros((len(outcomes), 1, 2))
+                for i, outcome in enumerate(outcomes):
                     output_proba[i, :, :] = pipeline.predict_proba(
-                        input_features, outcome=label
+                        input_features, outcome=outcome
                     )[0]
+
                 st.session_state.output_proba = {
-                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
-                    for i in range(len(label_list))
-                }
-                # Reshape to create dictionary with only positive probas
-                st.session_state.model_run = True
+                    outcomes[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(outcomes))
+                }  # Reshape to create dictionary with only positive probas
+
+                # Run regressor
+                outcomes = regressor_pipeline.mp_config.data.outcomes
+                st.session_state.output_dists = {}
+
+                for outcome in outcomes:
+                    st.session_state.output_dists[outcome] = (
+                        regressor_pipeline.predict_dist(
+                            input_features,
+                            outcome=outcome,
+                        )
+                    )
+
+                st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
                     "To generate results with new data, please click on 'Run model' again."
