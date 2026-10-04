@@ -18,7 +18,17 @@ from medpipe import MedpipeClassifier, MedpipeRegressor
 from pandas import DataFrame, Series, read_csv
 from weasyprint import HTML
 
-from constants import AVERAGES, CLASSIFIER, COLUMNS, LABEL_MAP, OPERATIONS, REGRESSOR
+from constants import (
+    AVERAGES,
+    CLASSIFIER,
+    COLUMNS,
+    LABEL_MAP,
+    LEGEND_AVERAGE,
+    LEGEND_HIGHER,
+    LEGEND_LOWER,
+    OPERATIONS,
+    REGRESSOR,
+)
 
 
 @st.cache_resource(show_spinner=False)
@@ -384,6 +394,21 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         }
     )
 
+    # One shared color encoding: same field name + same scale => one merged legend
+    legend_color = alt.Color(
+        "Legend:N",
+        scale=alt.Scale(
+            domain=[LEGEND_AVERAGE, LEGEND_LOWER, LEGEND_HIGHER],
+            range=["black", "green", "red"],
+        ),
+        legend=alt.Legend(
+            title=None,
+            orient="top",
+            direction="horizontal",
+            labelFontSize=12,
+        ),
+    )
+
     if plot_df.empty:
         # If all labels are unticked
         return alt.Chart(plot_df), plot_df
@@ -411,7 +436,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # 1. The Confidence Interval Layer (The horizontal "whisker")
     error_bars = (
         alt.Chart(plot_df)
-        .mark_errorbar()
+        .mark_errorbar(color="black")  # explicit, since it isn't color-encoded
         .encode(
             x=alt.X(
                 "Lower CI:Q",
@@ -426,10 +451,12 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # 2. The Average Layer (A circle representing the population mean)
     avg_point = (
         alt.Chart(plot_df)
-        .mark_point(filled=True, color="black", size=50)
+        .transform_calculate(Legend=f"'{LEGEND_AVERAGE}'")
+        .mark_point(filled=True, size=50)  # no color= here; the encoding sets it
         .encode(
             x="Population average:Q",
             y=alt.Y("Complications:N", sort=None),
+            color=legend_color,
             tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
         )
     )
@@ -438,15 +465,17 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     # We use a conditional color: Red if > Avg, Green if <= Avg
     patient_bars = (
         alt.Chart(plot_df)
-        .mark_bar(cornerRadiusEnd=25, opacity=0.5)  # Bar graph
+        .transform_calculate(
+            Legend=(
+                "datum['Risk percentage'] > datum['Population average'] "
+                f"? '{LEGEND_HIGHER}' : '{LEGEND_LOWER}'"
+            )
+        )
+        .mark_bar(cornerRadiusEnd=25, opacity=0.5)
         .encode(
             x="Risk percentage:Q",
             y=alt.Y("Complications:N", sort=None),
-            color=alt.condition(
-                alt.datum["Risk percentage"] > alt.datum["Population average"],
-                alt.value("red"),  # Higher than average
-                alt.value("green"),  # Lower than average
-            ),
+            color=legend_color,
             tooltip=["Complications", "Risk percentage"],
         )
     )
@@ -537,7 +566,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             column_config={
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
-                "Population average": "Population average (95% CI)",
+                "Population average": "Population average",
                 "Risk status": "Risk status",
             },
             hide_index=True,
