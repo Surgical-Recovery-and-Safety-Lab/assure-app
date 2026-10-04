@@ -6,6 +6,7 @@ Streamlit ASSURE helper functions.
 
 import base64
 import time
+from typing import Literal
 
 import altair as alt
 import joblib
@@ -13,18 +14,34 @@ import numpy as np
 import requests
 import streamlit as st
 import vl_convert as vlc
-from medpipe import MedpipeClassifier
-from pandas import DataFrame, Series, read_csv, to_numeric
+from medpipe import MedpipeClassifier, MedpipeRegressor
+from pandas import DataFrame, Series, read_csv
 from weasyprint import HTML
 
-from constants import AVERAGES, COLUMNS, LABEL_MAP, MODEL, OPERATIONS
+from constants import AVERAGES, CLASSIFIER, COLUMNS, LABEL_MAP, OPERATIONS, REGRESSOR
 
 
 @st.cache_resource(show_spinner=False)
-def load_pipeline():
-    """Load pipeline"""
+def load_pipeline(
+    pipeline_type: Literal["classifier", "regressor"] = "classifier",
+) -> MedpipeClassifier | MedpipeRegressor:
+    """Load a MedpipeClassifier or MedpipeRegressor pipeline.
 
-    return MedpipeClassifier.load(MODEL)
+    Parameters
+    ----------
+    pipeline_type : str, {"classifier", "regressor"}, default: classifier
+        Pipeline type to load
+
+    Return
+    ------
+    pipeline : MedpipeClassifier | MedpipeRegressor
+
+    """
+    if pipeline_type == "classifier":
+        return MedpipeClassifier.load(CLASSIFIER)
+
+    else:
+        return MedpipeRegressor.load(REGRESSOR)
 
 
 @st.cache_resource(show_spinner=False)
