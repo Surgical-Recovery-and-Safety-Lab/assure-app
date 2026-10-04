@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 main_page.py
 
@@ -11,7 +9,6 @@ from numpy import array, expand_dims, zeros
 from pandas import DataFrame
 
 from app_fn import (
-    convert_dtypes,
     create_pdf_report,
     data_visualisation,
     init_outcome_toggles,
@@ -103,7 +100,7 @@ with main_col1:
             )
 
             with st.container(horizontal=False):
-                for key in mortality_outcomes_dict.keys():
+                for key in mortality_outcomes_dict:
                     if key == "MORTALITY_OUTCOMES":
                         continue
                     toggle = st.toggle(

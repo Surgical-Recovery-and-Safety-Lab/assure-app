@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 app_fn.py
 
@@ -58,7 +56,7 @@ def convert_dtypes(data):
 
 def sync_mortality_outcome_toggles():
     """Sync the mortality outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["MORTALITY_OUTCOMES"].keys():
+    for key in LABEL_MAP["MORTALITY_OUTCOMES"]:
         if key == "MORTALITY_OUTCOMES":
             continue
         st.session_state[key] = st.session_state.MORTALITY_OUTCOMES
@@ -66,7 +64,7 @@ def sync_mortality_outcome_toggles():
 
 def sync_health_outcome_toggles():
     """Sync the health service outcome toggles based on the all toggle"""
-    for key in LABEL_MAP["HEALTH_OUTCOMES"].keys():
+    for key in LABEL_MAP["HEALTH_OUTCOMES"]:
         if key in ["HEALTH_OUTCOMES", "FTR", "LOS", "DAOH"]:
             continue
         st.session_state[key] = st.session_state.HEALTH_OUTCOMES
@@ -74,7 +72,7 @@ def sync_health_outcome_toggles():
 
 def sync_complication_toggles():
     """Sync the complication toggles based on the all toggle"""
-    for key in LABEL_MAP["COMPLICATIONS"].keys():
+    for key in LABEL_MAP["COMPLICATIONS"]:
         if key == "COMPLICATIONS":
             continue
         st.session_state[key] = st.session_state.COMPLICATIONS
@@ -87,7 +85,7 @@ def init_outcome_toggles():
             st.session_state[master_key] = True
 
         # Initialize all SUB-TOGGLES in that group to True as well
-        for sub_key in LABEL_MAP[master_key].keys():
+        for sub_key in LABEL_MAP[master_key]:
             if sub_key not in st.session_state:
                 if sub_key in ["FTR", "DAOH", "LOS"]:
                     continue
@@ -224,10 +222,9 @@ def main_page_layout():
             max_value=5,
             value=1,
         )
-    with asa_col2:
-        with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("**Amercian Society of Anaesthesiology -- Physical Status Score**")
-            st.markdown("""
+    with asa_col2 and st.popover("Help", type="tertiary", icon=":material/help:"):
+        st.write("**Amercian Society of Anaesthesiology -- Physical Status Score**")
+        st.markdown("""
                 1. Normal healthy patient
                 2. Patient with mild systemic disease
                 3. Patient with severe systemic disease
@@ -235,11 +232,11 @@ def main_page_layout():
                 5. Patient who is moribund and not suspected to survive without
                 the operation
                 """)
-            st.page_link(
-                "https://www.openanesthesia.org/keywords/asa-physical-status-classification/",
-                label="More information",
-                icon=":material/info:",
-            )
+        st.page_link(
+            "https://www.openanesthesia.org/keywords/asa-physical-status-classification/",
+            label="More information",
+            icon=":material/info:",
+        )
 
     operations_df = load_operations()  # Load operations dataframe
 
@@ -268,15 +265,13 @@ def main_page_layout():
             category_l2 = row["CATEGORY_LEVEL_2"]
             op_severity = row["OP_SEVERITY"]
 
-    with op_col2:
-        with st.popover("Help", type="tertiary", icon=":material/help:"):
-            st.write("**Operation search bar**")
-            st.write("""
+    with op_col2 and st.popover("Help", type="tertiary", icon=":material/help:"):
+        st.write("**Operation search bar**")
+        st.write("""
                 Start typing the operation name or description in the search bar to filter
                 the operation list. Once the correct operation is find select it from the
                 list. The surgical specialty, sub-specialty, and the operation severity
                 will be automatically filled for you.
-                
                 If the operation name is too long leaving the cursor hovering over it
                 will display the entire operation description.
                 """)
@@ -343,7 +338,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     comp_lower = []
     comp_upper = []
 
-    for key in complications_dict.keys():
+    for key in complications_dict:
         if st.session_state[key]:
             if key in ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]:
                 continue
@@ -497,7 +492,9 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     display_df = plot_df.copy()
 
     display_df["Population average"] = display_df.apply(
-        lambda x: f"{x["Population average"]:.1f}, 95% CI [{x["Lower CI"]:.1f}, {x["Upper CI"]:.1f}]",
+        lambda x: (
+            f"{x['Population average']:.1f}, 95% CI [{x['Lower CI']:.1f}, {x['Upper CI']:.1f}]"
+        ),
         axis=1,
     )
 
@@ -597,14 +594,19 @@ def create_pdf_report(charts, tables):
         chart_b64 = base64.b64encode(png_data).decode("utf-8")
 
         # Build the table rows for this specific dataframe
-        table_rows = "".join([f"""
+        table_rows = "".join(
+            [
+                f"""
             <tr>
                 <td>{r.get("Complications", r.get("Outcome", "N/A"))}</td>
                 <td>{r["Risk percentage"]:.1f}</td>
                 <td>{r["Population average"]}</td>
                 <td class="status-{"higher" if r["Risk status"] == "Higher" else "lower"}">{r["Risk status"]}</td>
             </tr>
-        """ for _, r in df.iterrows()])
+        """
+                for _, r in df.iterrows()
+            ]
+        )
 
         # Create the HTML block for this section
         sections_html += f"""
