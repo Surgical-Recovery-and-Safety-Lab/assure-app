@@ -8,7 +8,6 @@ import base64
 import time
 from typing import Literal
 
-import altair as alt
 import joblib
 import numpy as np
 import requests
@@ -23,9 +22,6 @@ from .constants import (
     CLASSIFIER,
     COLUMNS,
     LABEL_MAP,
-    LEGEND_AVERAGE,
-    LEGEND_HIGHER,
-    LEGEND_LOWER,
     OPERATIONS,
     REGRESSOR,
 )
