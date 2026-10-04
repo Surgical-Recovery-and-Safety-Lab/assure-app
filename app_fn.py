@@ -165,7 +165,7 @@ def main_page_layout():
     # Cancer radio buttons
     cancer = st.radio(
         "**Prior cancer**",
-        options=[1, 0],
+        options=[True, False],
         format_func=lambda x: "Yes" if x else "No",
         index=1,
         help="Did the patient have cancer?",
@@ -194,7 +194,7 @@ def main_page_layout():
     trauma = st.radio(
         "**Trauma**",
         index=1,
-        options=[1, 0],
+        options=[True, False],
         format_func=lambda x: "Yes" if x else "No",
         horizontal=True,
     )
@@ -249,7 +249,7 @@ def main_page_layout():
             # Extract specialty, sub-specialty, and severity
             category_l1 = row["CATEGORY_LEVEL_1"]
             category_l2 = row["CATEGORY_LEVEL_2"]
-            op_severity = row["OP_SEVERITY"]
+            op_severity = int(row["OP_SEVERITY"])
 
     with op_col2 and st.popover("Help", type="tertiary", icon=":material/help:"):
         st.write("**Operation search bar**")
@@ -282,7 +282,7 @@ def main_page_layout():
         age,
         ethnicity,
         sex,
-        asa_score,
+        float(asa_score),
         cancer,
         acuity,
         source,
