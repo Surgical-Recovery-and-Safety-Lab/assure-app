@@ -408,7 +408,16 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             labelFontSize=12,
         ),
     )
-
+    y_enc = alt.Y(
+        "Complications:N",
+        sort=None,
+        axis=alt.Axis(
+            labelLimit=0,  # 0 disables truncation
+            labelLineHeight=14,  # spacing between the two lines
+            labelFontSize=12,
+            title=None,
+        ),
+    )
     if plot_df.empty:
         # If all labels are unticked
         return alt.Chart(plot_df), plot_df
@@ -433,6 +442,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     """,
         unsafe_allow_html=True,
     )
+
     # 1. The Confidence Interval Layer (The horizontal "whisker")
     error_bars = (
         alt.Chart(plot_df)
@@ -444,7 +454,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
                 scale=alt.Scale(domain=[0, x_max]),
             ),
             x2="Upper CI:Q",
-            y=alt.Y("Complications:N", sort=None),
+            y=y_enc,
         )
     )
 
@@ -455,7 +465,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         .mark_point(filled=True, size=50)  # no color= here; the encoding sets it
         .encode(
             x="Population average:Q",
-            y=alt.Y("Complications:N", sort=None),
+            y=y_enc,
             color=legend_color,
             tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
         )
@@ -474,7 +484,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         .mark_bar(cornerRadiusEnd=25, opacity=0.5)
         .encode(
             x="Risk percentage:Q",
-            y=alt.Y("Complications:N", sort=None),
+            y=y_enc,
             color=legend_color,
             tooltip=["Complications", "Risk percentage"],
         )
@@ -492,7 +502,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
         )
         .encode(
             x=alt.datum(x_max),  # Fixed pixel position
-            y=alt.Y("Complications:N", sort=None),
+            y=y_enc,
             text=alt.Text(
                 "Risk percentage:Q", format=".1f"
             ),  # Formats to 1 decimal place
@@ -514,7 +524,7 @@ def data_visualisation(complications_dict, op_average, display="graph"):
             clip=False,
         )
         .encode(
-            y=alt.Y("Complications:N", sort=None),
+            y=y_enc,
             x=alt.datum(x_max),  # Anchored to the same spot, but shifted right via dx
             text="Risk status:N",
             color=alt.condition(
