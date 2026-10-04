@@ -58,7 +58,9 @@ with main_col1:
             with info_col:
                 st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run and input_features[8]:
+    if st.session_state.model_run:
+        cat_l2 = input_features["CATEGORY_LEVEL_2"]
+
         # If the model has been run
         st.header("Results", divider="rainbow")
         st.write("""Select one of the tabs below to view the desired results.""")
@@ -72,7 +74,7 @@ with main_col1:
                 The results can be viewed as a graph or as a table. Select the desired 
                 visualisation by selecting the display type.
                 """)
-        op_average = averages[input_features[8]]
+        op_average = averages[cat_l2]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
