@@ -9,7 +9,6 @@ from numpy import array, zeros
 
 from src.app_fn import (
     create_pdf_report,
-    data_visualisation,
     init_outcome_toggles,
     load_averages,
     load_pipeline,
@@ -20,6 +19,7 @@ from src.app_fn import (
     sync_mortality_outcome_toggles,
 )
 from src.constants import LABEL_MAP
+from src.visualisation import data_visualisation
 
 main_col1, _ = st.columns([0.7, 0.3])
 
