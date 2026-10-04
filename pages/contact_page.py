@@ -6,7 +6,7 @@ Streamlit ASSURE app contact page.
 
 import streamlit as st
 
-from app_fn import send_email
+from src.app_fn import send_email
 
 contact_col1, _ = st.columns([0.7, 0.3])
 
