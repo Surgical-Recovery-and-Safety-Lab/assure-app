@@ -7,7 +7,7 @@ Streamlit ASSURE helper functions.
 """
 
 import base64
-from datetime import datetime
+import time
 
 import altair as alt
 import joblib
@@ -630,7 +630,7 @@ def create_pdf_report(charts, tables):
         <hr style="border: 1px solid #eee; margin: 40px 0;">
         """
 
-    date = datetime.now().strftime("%B %d, %Y")
+    date = time.strftime("%B %d, %Y", time.localtime())
 
     # --- Final HTML Assembly ---
     html_content = f"""
