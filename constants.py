@@ -4,7 +4,8 @@ constants.py
 Constants for the app.
 """
 
-MODEL = "assets/models/classifier/v1"
+CLASSIFIER = "assets/models/classifier/v1"
+REGRESSOR = "assets/models/regressor/v3"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
@@ -32,7 +33,7 @@ LABEL_MAP = {
         "HEALTH_OUTCOMES": "Toggle all",
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
-        "DAOH": "Days alive and out of hospital",
+        "DAOH_90": "Days alive and out of hospital",
         "POSTOP_LOS": "Length of stay",
         "FTR": "Failure to rescue (coming soon)",
     },
