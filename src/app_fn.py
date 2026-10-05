@@ -4,18 +4,14 @@ app_fn.py
 Streamlit ASSURE helper functions.
 """
 
-import base64
-import time
 from typing import Literal
 
 import joblib
 import numpy as np
 import requests
 import streamlit as st
-import vl_convert as vlc
 from medpipe import MedpipeClassifier, MedpipeRegressor
 from pandas import DataFrame, Series, read_csv
-from weasyprint import HTML
 
 from .constants import (
     AVERAGES,
