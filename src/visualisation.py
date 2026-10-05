@@ -9,6 +9,7 @@ from .constants import (
     LEGEND_AVERAGE,
     LEGEND_HIGHER,
     LEGEND_LOWER,
+    LEGEND_MEDIAN,
     REGRESSOR_KEYS,
 )
 
@@ -74,7 +75,7 @@ def _build_regressor_plot_df(complications_dict):
             continue
         labels.append(label)
         dist = st.session_state.output_dists[key]
-        prediction.append(abs(dist.median()[0]))  # To avoid -0
+        prediction.append(round(dist.median()[0]))  # To get an integer
         l, u = dist.interval(0.95)
         lower.append(round(l[0]))  # To get an integer
         upper.append(round(u[0]))  # To get an integer
@@ -128,7 +129,32 @@ def _legend_color():
         "Legend:N",
         scale=alt.Scale(
             domain=[LEGEND_AVERAGE, LEGEND_LOWER, LEGEND_HIGHER],
-            range=["black", "green", "red"],
+            range=["black", "green", "red", "black"],
+        ),
+        legend=alt.Legend(
+            title=None,
+            orient="top",
+            direction="horizontal",
+            labelFontSize=12,
+        ),
+    )
+
+
+def _regressor_legend_color():
+    """Create the colour encoding shared by the layers that feed the legend.
+
+    The same field name and scale across layers merges them into one legend.
+
+    Returns
+    -------
+    altair.Color
+        Colour encoding on the ``Legend`` field.
+    """
+    return alt.Color(
+        "Legend:N",
+        scale=alt.Scale(
+            domain=["Median prediction (95% PI)"],
+            range=["black"],
         ),
         legend=alt.Legend(
             title=None,
@@ -344,6 +370,96 @@ def _risk_status_text_layer(plot_df, y_enc, x_max):
     )
 
 
+def _median_prediction_layer(plot_df, y_enc, legend_color):
+    """Build the circle marking the patient's median prediction.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data to plot.
+    y_enc : altair.Y
+        Shared y encoding.
+
+    Returns
+    -------
+    altair.Chart
+        Population average layer.
+    """
+    return (
+        alt.Chart(plot_df)
+        .transform_calculate(Legend=f"'{LEGEND_MEDIAN}'")
+        .mark_point(filled=True, size=50)
+        .encode(
+            x="Median prediction:Q",
+            y=y_enc,
+            color=legend_color,
+            tooltip=["Complications", "Median prediction", "Lower PI", "Upper PI"],
+        )
+    )
+
+
+def _prediction_bars_layer(plot_df, y_enc):
+    """Build the horizontal 95% PI whiskers.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data to plot.
+    y_enc : altair.Y
+        Shared y encoding.
+
+    Returns
+    -------
+    altair.Chart
+        Error bar layer.
+    """
+    return (
+        alt.Chart(plot_df)
+        .mark_errorbar(color="black")  # explicit, since it isn't colour-encoded
+        .encode(
+            x=alt.X(
+                "Lower PI:Q",
+                title="Prediction (days)",
+                scale=alt.Scale(domain=[0, 90]),
+            ),
+            x2="Upper PI:Q",
+            y=y_enc,
+        )
+    )
+
+
+def _prediction_value_text_layer(plot_df, y_enc):
+    """Build the patient prediction shown at the right-hand end of each row.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data to plot.
+    y_enc : altair.Y
+        Shared y encoding.
+
+    Returns
+    -------
+    altair.Chart
+        Risk value text layer.
+    """
+    return (
+        alt.Chart(plot_df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=10,
+            fontWeight="bold",
+            clip=False,
+        )
+        .encode(
+            x=alt.datum(90),
+            y=y_enc,
+            text=alt.Text("Median prediction:Q", format=".0f"),
+        )
+    )
+
+
 def _build_chart(plot_df):
     """Combine all layers into the final chart.
 
@@ -373,6 +489,43 @@ def _build_chart(plot_df):
         layers.properties(
             height=alt.Step(30),  # consistent breathing room per row
             title="Patient risk vs. Population average (95% CI)",
+        )
+        .configure_axis(
+            grid=False,  # remove distracting lines
+            domain=False,  # remove the 'L' shape axis lines
+            labelFontSize=12,
+        )
+        .configure_view(strokeWidth=0)  # remove the border box
+        .configure_title(anchor="middle")
+    )
+
+
+def _build_regressor_chart(plot_df):
+    """Combine all layers for the regressor plot into the final chart.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Non-empty data to plot, including the 'Risk status' column.
+
+    Returns
+    -------
+    altair.LayerChart
+        The configured layered chart.
+    """
+    y_enc = _y_encoding()
+    legend_color = _regressor_legend_color()
+
+    layers = (
+        _prediction_bars_layer(plot_df, y_enc)
+        + _median_prediction_layer(plot_df, y_enc, legend_color)
+        + _prediction_value_text_layer(plot_df, y_enc)
+    )
+
+    return (
+        layers.properties(
+            height=alt.Step(30),  # consistent breathing room per row
+            title="Patient median prediction (95% PI)",
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -531,15 +684,18 @@ def _render_table(classifier_table, regressor_table):
     st.info("Sort the table columns by clicking on the column name")
 
 
-def _render_chart(chart):
+def _render_chart(classifier_chart, regressor_chart):
     """Display the chart with its explanatory text.
 
     Parameters
     ----------
-    chart : altair.LayerChart
+    classifier_chart : altair.LayerChart
         Chart returned by `_build_chart`.
+    regressor_chart : altair.LayerChart
+        Chart returned by `_build_regressor_chart`.
     """
-    st.altair_chart(chart)
+    st.altair_chart(classifier_chart)
+    st.altair_chart(regressor_chart)
     st.write(
         "The chart above shows the current patient's risk relative to the "
         "average population risk for the selected operation."
@@ -589,7 +745,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     plot_df = _add_risk_status(plot_df)
 
     _hide_chart_toolbar()
-    chart = _build_chart(plot_df)
+    classifier_chart = _build_chart(plot_df)
+    regressor_chart = _build_regressor_chart(regressor_plot_df)
 
     st.write("**Risk summary**")
     classifier_table = _build_table(plot_df)
@@ -598,6 +755,6 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     if display == "table":
         _render_table(classifier_table, regressor_table)
     else:
-        _render_chart(chart)
+        _render_chart(classifier_chart, regressor_chart)
 
-    return chart, classifier_table
+    return classifier_chart, classifier_table
