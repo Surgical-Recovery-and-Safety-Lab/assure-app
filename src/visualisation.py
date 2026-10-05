@@ -16,8 +16,8 @@ from .constants import (
 # --------------------------------------------------------------------------- #
 # Data preparation
 # --------------------------------------------------------------------------- #
-def _build_plot_df(complications_dict, op_average):
-    """Collect the selected complications into a DataFrame.
+def _build_classifier_plot_df(complications_dict, op_average):
+    """Collect the selected classifier complications into a DataFrame.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def _build_plot_df(complications_dict, op_average):
     labels, patient_risk, average, lower, upper = [], [], [], [], []
 
     for key, label in complications_dict.items():
-        if not st.session_state[key] or key in EXCLUDED_KEYS:
+        if not st.session_state[key] or key in EXCLUDED_KEYS + REGRESSOR_KEYS:
             continue
         labels.append(label)
         patient_risk.append(st.session_state.output_proba[key])
