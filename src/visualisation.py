@@ -672,15 +672,16 @@ def _render_table(classifier_table, regressor_table):
         hide_index=True,
         width="stretch",
     )
-    st.dataframe(
-        regressor_table,
-        column_config={
-            "Complications": "Outcome",
-            "Prediction": "Patient median prediction",
-        },
-        hide_index=True,
-        width="stretch",
-    )
+    if regressor_table is not None:
+        st.dataframe(
+            regressor_table,
+            column_config={
+                "Complications": "Outcome",
+                "Prediction": "Patient median prediction",
+            },
+            hide_index=True,
+            width="stretch",
+        )
     st.info("Sort the table columns by clicking on the column name")
 
 
@@ -695,21 +696,23 @@ def _render_chart(classifier_chart, regressor_chart):
         Chart returned by `_build_regressor_chart`.
     """
     st.altair_chart(classifier_chart)
-    st.altair_chart(regressor_chart)
-    st.write(
-        "The chart above shows the current patient's risk relative to the "
-        "average population risk for the selected operation."
-    )
-    st.write(
-        "The black circle and horizontal bars represent the average population "
-        "risk and 95% confidence intervals."
-    )
-    st.write(
-        "The red / green bars represent the current patient's risk, with the "
-        "exact value specified on the right side of the graph. If the risk is "
-        "lower than the population average the bars are green, otherwise, they "
-        "are red."
-    )
+    with st.popover("Help", type="tertiary", icon=":material/help:"):
+        st.write(
+            "The chart above shows the current patient's risk relative to the "
+            "average population risk for the selected operation."
+        )
+        st.write(
+            "The black circle and horizontal bars represent the average population "
+            "risk and 95% confidence intervals."
+        )
+        st.write(
+            "The red / green bars represent the current patient's risk, with the "
+            "exact value specified on the right side of the graph. If the risk is "
+            "lower than the population average the bars are green, otherwise, they "
+            "are red."
+        )
+    if regressor_chart is not None:
+        st.altair_chart(regressor_chart)
 
 
 # --------------------------------------------------------------------------- #
@@ -738,6 +741,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     """
     plot_df = _build_classifier_plot_df(complications_dict, op_average)
     regressor_plot_df = _build_regressor_plot_df(complications_dict)
+    regressor_table = None
+    regressor_chart = None
 
     if plot_df.empty:  # all labels are unticked
         return alt.Chart(plot_df), plot_df
@@ -746,11 +751,13 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     _hide_chart_toolbar()
     classifier_chart = _build_chart(plot_df)
-    regressor_chart = _build_regressor_chart(regressor_plot_df)
 
     st.write("**Risk summary**")
     classifier_table = _build_table(plot_df)
-    regressor_table = _build_regressor_table(regressor_plot_df)
+
+    if not regressor_plot_df.empty:
+        regressor_table = _build_regressor_table(regressor_plot_df)
+        regressor_chart = _build_regressor_chart(regressor_plot_df)
 
     if display == "table":
         _render_table(classifier_table, regressor_table)
