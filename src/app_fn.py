@@ -4,7 +4,7 @@ app_fn.py
 Streamlit ASSURE helper functions.
 """
 
-from typing import Literal
+from typing import Any, Literal
 
 import joblib
 import numpy as np
@@ -31,13 +31,13 @@ def load_pipeline(
 
     Parameters
     ----------
-    pipeline_type : str, {"classifier", "regressor"}, default: classifier
-        Pipeline type to load
+    pipeline_type : {"classifier", "regressor"}, default "classifier"
+        Pipeline type to load.
 
-    Return
-    ------
-    pipeline : MedpipeClassifier | MedpipeRegressor
-
+    Returns
+    -------
+    MedpipeClassifier | MedpipeRegressor
+        The loaded pipeline.
     """
     if pipeline_type == "classifier":
         return MedpipeClassifier.load(CLASSIFIER)
@@ -47,45 +47,55 @@ def load_pipeline(
 
 
 @st.cache_resource(show_spinner=False)
-def load_averages():
-    """Load operation averages"""
+def load_averages() -> dict:
+    """Load the operation averages.
 
+    Returns
+    -------
+    dict
+        Operation averages, as loaded from the averages file.
+    """
     return joblib.load(AVERAGES)
 
 
 @st.cache_resource(show_spinner=False)
-def load_operations():
-    """Load operation DataFrame"""
+def load_operations() -> DataFrame:
+    """Load the operations table.
 
+    Returns
+    -------
+    pandas.DataFrame
+        Table of operations.
+    """
     return read_csv(OPERATIONS)
 
 
-def sync_mortality_outcome_toggles():
-    """Sync the mortality outcome toggles based on the all toggle"""
+def sync_mortality_outcome_toggles() -> None:
+    """Sync the mortality outcome toggles with the 'all' toggle."""
     for key in LABEL_MAP["MORTALITY_OUTCOMES"]:
         if key == "MORTALITY_OUTCOMES":
             continue
         st.session_state[key] = st.session_state.MORTALITY_OUTCOMES
 
 
-def sync_health_outcome_toggles():
-    """Sync the health service outcome toggles based on the all toggle"""
+def sync_health_outcome_toggles() -> None:
+    """Sync the health service outcome toggles with the 'all' toggle."""
     for key in LABEL_MAP["HEALTH_OUTCOMES"]:
         if key in ["HEALTH_OUTCOMES", "FTR", "LOS", "DAOH"]:
             continue
         st.session_state[key] = st.session_state.HEALTH_OUTCOMES
 
 
-def sync_complication_toggles():
-    """Sync the complication toggles based on the all toggle"""
+def sync_complication_toggles() -> None:
+    """Sync the complication toggles with the 'all' toggle."""
     for key in LABEL_MAP["COMPLICATIONS"]:
         if key == "COMPLICATIONS":
             continue
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
-def init_outcome_toggles():
-    """Initialise the keys used for the outcome toggles"""
+def init_outcome_toggles() -> None:
+    """Initialise the session state keys used for the outcome toggles."""
     for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS", "HEALTH_OUTCOMES"]:
         if master_key not in st.session_state:
             st.session_state[master_key] = True
@@ -98,8 +108,8 @@ def init_outcome_toggles():
                 st.session_state[sub_key] = True
 
 
-def show_consent_page():
-    """Show consent page to user"""
+def show_consent_page() -> None:
+    """Show the consent page to the user."""
     st.header("Disclaimer", divider="rainbow")
     st.warning("Please read the following carefully before proceeding.")
 
@@ -122,20 +132,13 @@ def show_consent_page():
         st.rerun()  # Rerun to immediately switch to the main app
 
 
-def main_page_layout():
-    """
-    Main page layout for user input.
-
-    Parameters
-    ----------
-    None
-        No arguments are provided.
+def main_page_layout() -> DataFrame:
+    """Lay out the main page and collect the user inputs.
 
     Returns
     -------
-    input_features : list
-        List of the input features extracted from the user inputs.
-
+    pandas.DataFrame
+        Input features extracted from the user inputs, with correct types.
     """
     st.header("Aotearoa's Smart SUrgical Risk Estimator")
 
@@ -314,7 +317,7 @@ def main_page_layout():
     return convert_input_features(input_features)
 
 
-def convert_input_features(input_features: list) -> DataFrame:
+def convert_input_features(input_features: list[Any]) -> DataFrame:
     """Convert the input feature list to a data frame with correct types.
 
     Parameters
@@ -322,11 +325,10 @@ def convert_input_features(input_features: list) -> DataFrame:
     input_features : list
         List of input features from the user.
 
-    Return
-    ------
-    DataFrame
+    Returns
+    -------
+    pandas.DataFrame
         Converted features into a data frame with correct typings.
-
     """
     data = DataFrame(np.expand_dims(input_features, 1).T, columns=Series(COLUMNS))
     data["ASA"] = data["ASA"].astype(float)
@@ -336,8 +338,23 @@ def convert_input_features(input_features: list) -> DataFrame:
     return data
 
 
-def send_email(sender_email, subject, message) -> bool:
-    """Send email from user feedback"""
+def send_email(sender_email: str, subject: str, message: str) -> bool:
+    """Send an email from the user feedback.
+
+    Parameters
+    ----------
+    sender_email : str
+        Email address of the sender.
+    subject : str
+        Subject of the email.
+    message : str
+        Body of the email.
+
+    Returns
+    -------
+    bool
+        True if the request was successful, False otherwise.
+    """
     url = st.secrets["url"]
     data = {"email": sender_email, "subject": subject, "message": message}
     response = requests.post(url, data=data)

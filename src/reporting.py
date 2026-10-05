@@ -1,11 +1,13 @@
 import base64
 import time
 
+import altair as alt
+import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
 
-def _chart_to_base64(chart):
+def _chart_to_base64(chart: alt.Chart | alt.LayerChart) -> str:
     """Render an Altair chart to a base64-encoded PNG.
 
     Parameters
@@ -22,7 +24,7 @@ def _chart_to_base64(chart):
     return base64.b64encode(png_data).decode("utf-8")
 
 
-def _empty_section_html(title):
+def _empty_section_html(title: str) -> str:
     """Build the HTML for a report section with no selected outcomes.
 
     Parameters
@@ -46,7 +48,7 @@ def _empty_section_html(title):
     """
 
 
-def _classifier_rows_html(df):
+def _classifier_rows_html(df: pd.DataFrame) -> str:
     """Build the HTML table rows for the classifier results.
 
     Parameters
@@ -73,7 +75,7 @@ def _classifier_rows_html(df):
     )
 
 
-def _regressor_rows_html(df):
+def _regressor_rows_html(df: pd.DataFrame) -> str:
     """Build the HTML table rows for the regressor results.
 
     Parameters
@@ -97,7 +99,9 @@ def _regressor_rows_html(df):
     )
 
 
-def _block_html(chart, headers, table_rows):
+def _block_html(
+    chart: alt.Chart | alt.LayerChart, headers: list[str], table_rows: str
+) -> str:
     """Build the HTML for one chart and its table.
 
     Parameters
@@ -133,7 +137,7 @@ def _block_html(chart, headers, table_rows):
     """
 
 
-def _section_html(title, blocks):
+def _section_html(title: str, blocks: list[str]) -> str:
     """Build the HTML for a report section made of one or more blocks.
 
     Parameters
@@ -158,11 +162,11 @@ def _section_html(title, blocks):
 
 
 def create_pdf_report(
-    charts,
-    tables,
-    regressor_chart=None,
-    regressor_table=None,
-):
+    charts: list[alt.Chart | alt.LayerChart],
+    tables: list[pd.DataFrame],
+    regressor_chart: alt.Chart | alt.LayerChart | None = None,
+    regressor_table: pd.DataFrame | None = None,
+) -> bytes:
     """Create a pdf report from the plots and tables.
 
     Assumes the order is mortality, complications and health service use. The

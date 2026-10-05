@@ -1,8 +1,10 @@
 """Risk visualisation (chart and table) for the web app."""
 
+from typing import Literal
+
 import altair as alt
 import streamlit as st
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 from .constants import (
     EXCLUDED_KEYS,
@@ -17,7 +19,10 @@ from .constants import (
 # --------------------------------------------------------------------------- #
 # Data preparation
 # --------------------------------------------------------------------------- #
-def _build_classifier_plot_df(complications_dict, op_average):
+def _build_classifier_plot_df(
+    complications_dict: dict[str, str],
+    op_average: dict[str, tuple[float, float, float]],
+) -> DataFrame:
     """Collect the selected classifier complications into a DataFrame.
 
     Parameters
@@ -55,7 +60,7 @@ def _build_classifier_plot_df(complications_dict, op_average):
     )
 
 
-def _build_regressor_plot_df(complications_dict):
+def _build_regressor_plot_df(complications_dict: dict[str, str]) -> DataFrame:
     """Collect the selected regressor complications into a DataFrame.
 
     Parameters
@@ -90,7 +95,7 @@ def _build_regressor_plot_df(complications_dict):
     )
 
 
-def _add_risk_status(plot_df):
+def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     """Add a 'Risk status' column for a quick visual cue.
 
     Parameters
@@ -115,7 +120,7 @@ def _add_risk_status(plot_df):
 # --------------------------------------------------------------------------- #
 # Shared chart encodings
 # --------------------------------------------------------------------------- #
-def _legend_color():
+def _legend_color() -> alt.Color:
     """Create the colour encoding shared by the layers that feed the legend.
 
     The same field name and scale across layers merges them into one legend.
@@ -140,8 +145,8 @@ def _legend_color():
     )
 
 
-def _regressor_legend_color():
-    """Create the colour encoding shared by the layers that feed the legend.
+def _regressor_legend_color() -> alt.Color:
+    """Create the regressor colour encoding shared by the layers feeding the legend.
 
     The same field name and scale across layers merges them into one legend.
 
@@ -165,7 +170,7 @@ def _regressor_legend_color():
     )
 
 
-def _y_encoding():
+def _y_encoding() -> alt.Y:
     """Create the y encoding shared by all layers.
 
     Returns
@@ -185,7 +190,7 @@ def _y_encoding():
     )
 
 
-def _status_color():
+def _status_color() -> dict:
     """Create the red / green condition used by the text layers.
 
     Returns
@@ -203,7 +208,7 @@ def _status_color():
 # --------------------------------------------------------------------------- #
 # Chart layers (one helper per element)
 # --------------------------------------------------------------------------- #
-def _error_bars_layer(plot_df, y_enc, x_max):
+def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Chart:
     """Build the horizontal 95% CI whiskers.
 
     Parameters
@@ -235,7 +240,9 @@ def _error_bars_layer(plot_df, y_enc, x_max):
     )
 
 
-def _average_point_layer(plot_df, y_enc, legend_color):
+def _average_point_layer(
+    plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
+) -> alt.Chart:
     """Build the circle marking the population average.
 
     Parameters
@@ -265,7 +272,9 @@ def _average_point_layer(plot_df, y_enc, legend_color):
     )
 
 
-def _patient_bars_layer(plot_df, y_enc, legend_color):
+def _patient_bars_layer(
+    plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
+) -> alt.Chart:
     """Build the patient risk bars, red if above average and green otherwise.
 
     Parameters
@@ -300,7 +309,9 @@ def _patient_bars_layer(plot_df, y_enc, legend_color):
     )
 
 
-def _risk_value_text_layer(plot_df, y_enc, x_max):
+def _risk_value_text_layer(
+    plot_df: DataFrame, y_enc: alt.Y, x_max: float
+) -> alt.Chart:
     """Build the patient risk value shown at the right-hand end of each row.
 
     Parameters
@@ -335,7 +346,9 @@ def _risk_value_text_layer(plot_df, y_enc, x_max):
     )
 
 
-def _risk_status_text_layer(plot_df, y_enc, x_max):
+def _risk_status_text_layer(
+    plot_df: DataFrame, y_enc: alt.Y, x_max: float
+) -> alt.Chart:
     """Build the 'Higher' / 'Lower' label shown next to the risk value.
 
     Parameters
@@ -370,7 +383,9 @@ def _risk_status_text_layer(plot_df, y_enc, x_max):
     )
 
 
-def _median_prediction_layer(plot_df, y_enc, legend_color):
+def _median_prediction_layer(
+    plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
+) -> alt.Chart:
     """Build the circle marking the patient's median prediction.
 
     Parameters
@@ -379,11 +394,13 @@ def _median_prediction_layer(plot_df, y_enc, legend_color):
         Data to plot.
     y_enc : altair.Y
         Shared y encoding.
+    legend_color : altair.Color
+        Shared legend colour encoding.
 
     Returns
     -------
     altair.Chart
-        Population average layer.
+        Median prediction layer.
     """
     return (
         alt.Chart(plot_df)
@@ -398,7 +415,7 @@ def _median_prediction_layer(plot_df, y_enc, legend_color):
     )
 
 
-def _prediction_bars_layer(plot_df, y_enc):
+def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """Build the horizontal 95% PI whiskers.
 
     Parameters
@@ -411,7 +428,7 @@ def _prediction_bars_layer(plot_df, y_enc):
     Returns
     -------
     altair.Chart
-        Error bar layer.
+        Prediction interval error bar layer.
     """
     return (
         alt.Chart(plot_df)
@@ -428,7 +445,7 @@ def _prediction_bars_layer(plot_df, y_enc):
     )
 
 
-def _prediction_value_text_layer(plot_df, y_enc):
+def _prediction_value_text_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """Build the patient prediction shown at the right-hand end of each row.
 
     Parameters
@@ -441,7 +458,7 @@ def _prediction_value_text_layer(plot_df, y_enc):
     Returns
     -------
     altair.Chart
-        Risk value text layer.
+        Prediction value text layer.
     """
     return (
         alt.Chart(plot_df)
@@ -460,7 +477,7 @@ def _prediction_value_text_layer(plot_df, y_enc):
     )
 
 
-def _build_chart(plot_df):
+def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     """Combine all layers into the final chart.
 
     Parameters
@@ -500,13 +517,14 @@ def _build_chart(plot_df):
     )
 
 
-def _build_regressor_chart(plot_df):
+def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
     """Combine all layers for the regressor plot into the final chart.
 
     Parameters
     ----------
     plot_df : pandas.DataFrame
-        Non-empty data to plot, including the 'Risk status' column.
+        Non-empty data to plot, including the 'Median prediction', 'Lower PI'
+        and 'Upper PI' columns.
 
     Returns
     -------
@@ -540,7 +558,7 @@ def _build_regressor_chart(plot_df):
 # --------------------------------------------------------------------------- #
 # Table
 # --------------------------------------------------------------------------- #
-def _format_average(row):
+def _format_average(row: Series) -> str:
     """Format the population average with its confidence interval.
 
     Parameters
@@ -559,13 +577,13 @@ def _format_average(row):
     )
 
 
-def _format_prediction(row):
+def _format_prediction(row: Series) -> str:
     """Format the median prediction with prediction intervals.
 
     Parameters
     ----------
     row : pandas.Series
-        Row with 'Lower PI' and 'Upper PI'.
+        Row with 'Median prediction', 'Lower PI' and 'Upper PI'.
 
     Returns
     -------
@@ -578,7 +596,7 @@ def _format_prediction(row):
     )
 
 
-def _build_table(plot_df):
+def _build_table(plot_df: DataFrame) -> DataFrame:
     """Build the table of results to display and download.
 
     Parameters
@@ -598,7 +616,7 @@ def _build_table(plot_df):
     ]
 
 
-def _build_regressor_table(plot_df):
+def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """Build the table of regressor results to display and download.
 
     Parameters
@@ -620,7 +638,7 @@ def _build_regressor_table(plot_df):
 # --------------------------------------------------------------------------- #
 # Streamlit rendering
 # --------------------------------------------------------------------------- #
-def _hide_chart_toolbar():
+def _hide_chart_toolbar() -> None:
     """Hide the table view and zoom options on Streamlit elements."""
     st.markdown(
         """
@@ -634,8 +652,19 @@ def _hide_chart_toolbar():
     )
 
 
-def _highlight_medical_risk(row):
-    """Highlight the risk status in red or green and bold font."""
+def _highlight_medical_risk(row: Series) -> list[str]:
+    """Highlight the risk status in red or green and bold font.
+
+    Parameters
+    ----------
+    row : pandas.Series
+        Table row containing a 'Risk status' entry.
+
+    Returns
+    -------
+    list[str]
+        CSS style for each cell in the row.
+    """
     # Create a list of styles for the whole row (defaulting to black)
     styles = ["color: black"] * len(row)
 
@@ -649,7 +678,9 @@ def _highlight_medical_risk(row):
     return styles
 
 
-def _render_table(classifier_table, regressor_table):
+def _render_table(
+    classifier_table: DataFrame | None, regressor_table: DataFrame | None
+) -> None:
     """Display the results table.
 
     Parameters
@@ -686,7 +717,9 @@ def _render_table(classifier_table, regressor_table):
     st.info("Sort the table columns by clicking on the column name")
 
 
-def _render_chart(classifier_chart, regressor_chart):
+def _render_chart(
+    classifier_chart: alt.LayerChart | None, regressor_chart: alt.LayerChart | None
+) -> None:
     """Display the chart with its explanatory text.
 
     Parameters
@@ -720,7 +753,16 @@ def _render_chart(classifier_chart, regressor_chart):
 # --------------------------------------------------------------------------- #
 # Public entry point
 # --------------------------------------------------------------------------- #
-def data_visualisation(complications_dict, op_average, display="graph"):
+def data_visualisation(
+    complications_dict: dict[str, str],
+    op_average: dict[str, tuple[float, float, float]],
+    display: Literal["graph", "table"] = "graph",
+) -> tuple[
+    alt.LayerChart | None,
+    DataFrame | None,
+    alt.LayerChart | None,
+    DataFrame | None,
+]:
     """Visualise data in the web app.
 
     Returning chart and table to be able to download them later.
