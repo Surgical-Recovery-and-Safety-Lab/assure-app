@@ -8,7 +8,6 @@ import streamlit as st
 from numpy import array, zeros
 
 from src.app_fn import (
-    create_pdf_report,
     init_outcome_toggles,
     load_averages,
     load_pipeline,
@@ -19,6 +18,7 @@ from src.app_fn import (
     sync_mortality_outcome_toggles,
 )
 from src.constants import LABEL_MAP
+from src.reporting import create_pdf_report
 from src.visualisation import data_visualisation
 
 main_col1, _ = st.columns([0.7, 0.3])
@@ -141,7 +141,7 @@ with main_col1:
                 default="graph",
             )
 
-            mortality_chart, mortality_table = data_visualisation(
+            mortality_chart, mortality_table, _, _ = data_visualisation(
                 mortality_outcomes_dict,
                 op_average,
                 display=st.session_state.mortality_display_option,
@@ -195,7 +195,7 @@ with main_col1:
                     default="graph",
                 )
 
-                comp_chart, comp_table = data_visualisation(
+                comp_chart, comp_table, _, _ = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,
@@ -249,15 +249,17 @@ with main_col1:
                     default="graph",
                 )
 
-                health_chart, health_table = data_visualisation(
-                    health_outcomes_dict,
-                    op_average,
-                    display=st.session_state.health_display_option,
+                health_chart, health_table, regressor_chart, regressor_table = (
+                    data_visualisation(
+                        health_outcomes_dict,
+                        op_average,
+                        display=st.session_state.health_display_option,
+                    )
                 )
 
         pdf_bytes = create_pdf_report(
-            [mortality_chart, comp_chart, health_chart],
-            [mortality_table, comp_table, health_table],
+            [mortality_chart, comp_chart, health_chart, regressor_chart],
+            [mortality_table, comp_table, health_table, regressor_table],
         )
         st.download_button(
             label="Download PDF report",
