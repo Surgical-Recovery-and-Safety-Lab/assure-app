@@ -496,16 +496,18 @@ def _highlight_medical_risk(row):
     return styles
 
 
-def _render_table(table_to_display):
+def _render_table(classifier_table, regressor_table):
     """Display the results table.
 
     Parameters
     ----------
-    table_to_display : pandas.DataFrame
-        Table returned by `_build_table`.
+    classifier_table : pandas.DataFrame
+        Table with classifier results returned by `_build_table`.
+    regressor_table : pandas.DataFrame
+        Table with regressor results returned by `_build_regressor_table`.
     """
     st.dataframe(
-        table_to_display.style.format({"Risk percentage": "{:.1f}%"}).apply(
+        classifier_table.style.format({"Risk percentage": "{:.1f}%"}).apply(
             _highlight_medical_risk, axis=1
         ),
         column_config={
@@ -513,6 +515,15 @@ def _render_table(table_to_display):
             "Risk percentage": "Patient risk",
             "Population average": "Population average",
             "Risk status": "Risk status",
+        },
+        hide_index=True,
+        width="stretch",
+    )
+    st.dataframe(
+        regressor_table,
+        column_config={
+            "Complications": "Outcome",
+            "Prediction": "Patient median prediction",
         },
         hide_index=True,
         width="stretch",
@@ -569,7 +580,8 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     table_to_display : pandas.DataFrame
         Table displayed.
     """
-    plot_df = _build_plot_df(complications_dict, op_average)
+    plot_df = _build_classifier_plot_df(complications_dict, op_average)
+    regressor_plot_df = _build_regressor_plot_df(complications_dict)
 
     if plot_df.empty:  # all labels are unticked
         return alt.Chart(plot_df), plot_df
@@ -580,11 +592,12 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     chart = _build_chart(plot_df)
 
     st.write("**Risk summary**")
-    table_to_display = _build_table(plot_df)
+    classifier_table = _build_table(plot_df)
+    regressor_table = _build_regressor_table(regressor_plot_df)
 
     if display == "table":
-        _render_table(table_to_display)
+        _render_table(classifier_table, regressor_table)
     else:
         _render_chart(chart)
 
-    return chart, table_to_display
+    return chart, classifier_table
