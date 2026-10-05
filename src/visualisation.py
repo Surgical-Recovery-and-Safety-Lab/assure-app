@@ -54,6 +54,41 @@ def _build_classifier_plot_df(complications_dict, op_average):
     )
 
 
+def _build_regressor_plot_df(complications_dict):
+    """Collect the selected regressor complications into a DataFrame.
+
+    Parameters
+    ----------
+    complications_dict : dict[str, str]
+        Dictionary containing the complications and the corresponding plot label.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per ticked complication. Empty if nothing is ticked.
+    """
+    labels, prediction, lower, upper = [], [], [], []
+
+    for key, label in complications_dict.items():
+        if not st.session_state[key] or key not in REGRESSOR_KEYS:
+            continue
+        labels.append(label)
+        dist = st.session_state.output_dists[key]
+        prediction.append(abs(dist.median()[0]))  # To avoid -0
+        l, u = dist.interval(0.95)
+        lower.append(round(l[0]))  # To get an integer
+        upper.append(round(u[0]))  # To get an integer
+
+    return DataFrame(
+        {
+            "Complications": labels,
+            "Median prediction": prediction,
+            "Lower PI": lower,
+            "Upper PI": upper,
+        }
+    )
+
+
 def _add_risk_status(plot_df):
     """Add a 'Risk status' column for a quick visual cue.
 
