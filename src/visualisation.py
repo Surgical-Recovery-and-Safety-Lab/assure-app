@@ -4,9 +4,13 @@ import altair as alt
 import streamlit as st
 from pandas import DataFrame
 
-from .constants import LEGEND_AVERAGE, LEGEND_HIGHER, LEGEND_LOWER
-
-EXCLUDED_KEYS = ("COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES")
+from .constants import (
+    EXCLUDED_KEYS,
+    LEGEND_AVERAGE,
+    LEGEND_HIGHER,
+    LEGEND_LOWER,
+    REGRESSOR_KEYS,
+)
 
 
 # --------------------------------------------------------------------------- #
