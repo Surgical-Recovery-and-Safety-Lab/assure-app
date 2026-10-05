@@ -97,13 +97,11 @@ def _regressor_rows_html(df):
     )
 
 
-def _section_html(title, chart, headers, table_rows):
-    """Build the HTML for a report section with a chart and a table.
+def _block_html(chart, headers, table_rows):
+    """Build the HTML for one chart and its table.
 
     Parameters
     ----------
-    title : str
-        Section title.
     chart : altair.Chart | altair.LayerChart
         Chart to embed as an image.
     headers : list[str]
@@ -114,12 +112,11 @@ def _section_html(title, chart, headers, table_rows):
     Returns
     -------
     str
-        HTML for the section.
+        HTML for the chart and table.
     """
     header_cells = "".join(f"<th>{header}</th>" for header in headers)
     return f"""
-    <div class="report-section" style="page-break-inside: avoid;">
-        <div class="section-title">{title}</div>
+    <div style="page-break-inside: avoid;">
         <div style="text-align: center; margin-bottom: 20px;">
             <img src="data:image/png;base64,{_chart_to_base64(chart)}"
                  style="width: 100%; max-width: 650px;">
@@ -133,56 +130,96 @@ def _section_html(title, chart, headers, table_rows):
             </tbody>
         </table>
     </div>
+    """
+
+
+def _section_html(title, blocks):
+    """Build the HTML for a report section made of one or more blocks.
+
+    Parameters
+    ----------
+    title : str
+        Section title.
+    blocks : list[str]
+        HTML blocks returned by `_block_html`.
+
+    Returns
+    -------
+    str
+        HTML for the section.
+    """
+    return f"""
+    <div class="report-section">
+        <div class="section-title">{title}</div>
+        {"".join(blocks)}
+    </div>
     <hr style="border: 1px solid #eee; margin: 40px 0;">
     """
 
 
-def create_pdf_report(charts, tables):
+def create_pdf_report(
+    charts,
+    tables,
+    regressor_chart=None,
+    regressor_table=None,
+):
     """Create a pdf report from the plots and tables.
 
-    Assumes the order is mortality, complications, health service use
-    (classifier) and health service use (regressor). The regressor table is
-    recognised by its 'Prediction' column.
+    Assumes the order is mortality, complications and health service use. The
+    regressor results are added to the end of the health service use section.
 
     Parameters
     ----------
-    charts : list[altair.Chart | None]
-        List of charts plotting the outcome graph results.
-    tables : list[pandas.DataFrame | None]
-        List of tables displaying the outcomes. A ``None`` or empty table
-        produces a "No outcomes were selected" section.
+    charts : list[altair.Chart]
+        Classifier charts for mortality, complications and health service use.
+    tables : list[pandas.DataFrame]
+        Classifier tables for mortality, complications and health service use.
+        An empty table produces no chart or table for that section.
+    regressor_chart : altair.Chart | None, default None
+        Chart of the regressor results, shown in the health service use section.
+    regressor_table : pandas.DataFrame | None, default None
+        Table of the regressor results, with 'Complications' and 'Prediction'
+        columns.
 
     Returns
     -------
     bytes
         Pdf report.
     """
-    # Headers aligned with the indices of charts/tables
-    section_titles = [
-        "Mortality outcomes",
-        "Complications",
-        "Health Service use",
-        "Health Service use",
-    ]
+    section_titles = ["Mortality outcomes", "Complications", "Health Service use"]
+    # Regressor results only belong to the last section
+    regressors = [None, None, (regressor_chart, regressor_table)]
 
     sections_html = ""
-    for title, chart, df in zip(section_titles, charts, tables, strict=True):
-        if df is None or df.empty:
-            sections_html += _empty_section_html(title)
-        elif "Prediction" in df.columns:
-            sections_html += _section_html(
-                title,
-                chart,
-                ["Outcome", "Patient median prediction"],
-                _regressor_rows_html(df),
+    for title, chart, df, regressor in zip(
+        section_titles, charts, tables, regressors, strict=True
+    ):
+        blocks = []
+
+        if df is not None and not df.empty:
+            blocks.append(
+                _block_html(
+                    chart,
+                    ["Outcome", "Patient Risk (%)", "Population Avg (%)", "Status"],
+                    _classifier_rows_html(df),
+                )
             )
+
+        if regressor is not None:
+            reg_chart, reg_df = regressor
+            if reg_df is not None and not reg_df.empty:
+                blocks.append(
+                    _block_html(
+                        reg_chart,
+                        ["Outcome", "Patient median prediction"],
+                        _regressor_rows_html(reg_df),
+                    )
+                )
+
+        if blocks:
+            sections_html += _section_html(title, blocks)
         else:
-            sections_html += _section_html(
-                title,
-                chart,
-                ["Outcome", "Patient Risk (%)", "Population Avg (%)", "Status"],
-                _classifier_rows_html(df),
-            )
+            sections_html += _empty_section_html(title)
 
     date = time.strftime("%B %d, %Y", time.localtime())
 

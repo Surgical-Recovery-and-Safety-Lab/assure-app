@@ -258,8 +258,10 @@ with main_col1:
                 )
 
         pdf_bytes = create_pdf_report(
-            [mortality_chart, comp_chart, health_chart, regressor_chart],
-            [mortality_table, comp_table, health_table, regressor_table],
+            [mortality_chart, comp_chart, health_chart],
+            [mortality_table, comp_table, health_table],
+            regressor_chart=regressor_chart,
+            regressor_table=regressor_table,
         )
         st.download_button(
             label="Download PDF report",
