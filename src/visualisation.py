@@ -659,19 +659,20 @@ def _render_table(classifier_table, regressor_table):
     regressor_table : pandas.DataFrame
         Table with regressor results returned by `_build_regressor_table`.
     """
-    st.dataframe(
-        classifier_table.style.format({"Risk percentage": "{:.1f}%"}).apply(
-            _highlight_medical_risk, axis=1
-        ),
-        column_config={
-            "Complications": "Outcome",
-            "Risk percentage": "Patient risk",
-            "Population average": "Population average",
-            "Risk status": "Risk status",
-        },
-        hide_index=True,
-        width="stretch",
-    )
+    if classifier_table is not None:
+        st.dataframe(
+            classifier_table.style.format({"Risk percentage": "{:.1f}%"}).apply(
+                _highlight_medical_risk, axis=1
+            ),
+            column_config={
+                "Complications": "Outcome",
+                "Risk percentage": "Patient risk",
+                "Population average": "Population average",
+                "Risk status": "Risk status",
+            },
+            hide_index=True,
+            width="stretch",
+        )
     if regressor_table is not None:
         st.dataframe(
             regressor_table,
@@ -695,22 +696,23 @@ def _render_chart(classifier_chart, regressor_chart):
     regressor_chart : altair.LayerChart
         Chart returned by `_build_regressor_chart`.
     """
-    st.altair_chart(classifier_chart)
-    with st.popover("Help", type="tertiary", icon=":material/help:"):
-        st.write(
-            "The chart above shows the current patient's risk relative to the "
-            "average population risk for the selected operation."
-        )
-        st.write(
-            "The black circle and horizontal bars represent the average population "
-            "risk and 95% confidence intervals."
-        )
-        st.write(
-            "The red / green bars represent the current patient's risk, with the "
-            "exact value specified on the right side of the graph. If the risk is "
-            "lower than the population average the bars are green, otherwise, they "
-            "are red."
-        )
+    if classifier_chart is not None:
+        st.altair_chart(classifier_chart)
+        with st.popover("Help", type="tertiary", icon=":material/help:"):
+            st.write(
+                "The chart above shows the current patient's risk relative to the "
+                "average population risk for the selected operation."
+            )
+            st.write(
+                "The black circle and horizontal bars represent the average population "
+                "risk and 95% confidence intervals."
+            )
+            st.write(
+                "The red / green bars represent the current patient's risk, with the "
+                "exact value specified on the right side of the graph. If the risk is "
+                "lower than the population average the bars are green, otherwise, they "
+                "are red."
+            )
     if regressor_chart is not None:
         st.altair_chart(regressor_chart)
 
@@ -734,26 +736,32 @@ def data_visualisation(complications_dict, op_average, display="graph"):
 
     Returns
     -------
-    chart : altair.Chart
-        Chart plotting the graph results.
-    table_to_display : pandas.DataFrame
-        Table displayed.
+    classifier_chart : altair.Chart | None
+        Chart plotting the graph results for classifiers.
+    classifier_table : pandas.DataFrame | None
+        Table displayed for classifiers.
+    regressor_chart : altair.Chart | None
+        Chart plotting the graph results for regressors.
+    regressor_table : pandas.DataFrame | None
+        Table displayed for regressors.
     """
     plot_df = _build_classifier_plot_df(complications_dict, op_average)
     regressor_plot_df = _build_regressor_plot_df(complications_dict)
+
+    # Set default values
+    classifier_chart = None
+    classifier_table = None
     regressor_table = None
     regressor_chart = None
 
-    if plot_df.empty:  # all labels are unticked
-        return alt.Chart(plot_df), plot_df
-
-    plot_df = _add_risk_status(plot_df)
-
-    _hide_chart_toolbar()
-    classifier_chart = _build_chart(plot_df)
-
     st.write("**Risk summary**")
-    classifier_table = _build_table(plot_df)
+    if not plot_df.empty:  # all labels are unticked
+        plot_df = _add_risk_status(plot_df)
+
+        _hide_chart_toolbar()
+        classifier_chart = _build_chart(plot_df)
+
+        classifier_table = _build_table(plot_df)
 
     if not regressor_plot_df.empty:
         regressor_table = _build_regressor_table(regressor_plot_df)
@@ -764,4 +772,4 @@ def data_visualisation(complications_dict, op_average, display="graph"):
     else:
         _render_chart(classifier_chart, regressor_chart)
 
-    return classifier_chart, classifier_table
+    return classifier_chart, classifier_table, regressor_chart, regressor_table
