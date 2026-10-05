@@ -61,5 +61,6 @@ LABEL_MAP = {
 LEGEND_AVERAGE = "Population average (95% CI)"
 LEGEND_LOWER = "Patient risk (lower)"
 LEGEND_HIGHER = "Patient risk (higher)"
+LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
 REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
