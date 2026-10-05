@@ -5,10 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [Unreleased]
+## [1.4.0] - 2026-10-05
 
 ### Changed
 * Bumped medpipe version from 0.3.1 to 0.4.0.dev2
+* Loading function now uses the new `MedpipeClassifier` or `MepipeRegressor`
+loading functions
+* Split the `data_visualisation` function into smaller functions placed in the new
+`visualisation.py` file
+* The PDF report shows 'No outcomes selected' is the user does not tick any outcomes
+
+### Added
+* New data conversion function to make the format fit with the new medpipe version
+* The `MedpipeRegressor` inference
+* The `reoperation` complication to the list of complications
+* A legend for the graph representations
+* Encoded y values for graphical display to avoid truncating the complications
+* A `src/` folder that contains the helper functions
+* Visualisation for the regressor results DAOH and LOS as table and graph
+* Exporting regressor results to the PDF report
+* Created a `reporting.py` script for PDF report generation
+* Proper docstring and type hinting
+
+### Removed
+* Removed old data type conversion function
 
 ## [1.3.1] - 2026-07-28
 
@@ -92,7 +112,8 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * First version
 
 
-[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...1.4.0
 [1.3.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.4...v1.3.0
 [1.2.4]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.3...v1.2.4
