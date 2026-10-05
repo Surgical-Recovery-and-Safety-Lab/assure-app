@@ -95,7 +95,7 @@ def _add_risk_status(plot_df):
     Parameters
     ----------
     plot_df : pandas.DataFrame
-        Data returned by `_build_plot_df`.
+        Data returned by `_build_classifier_plot_df`.
 
     Returns
     -------
@@ -406,6 +406,25 @@ def _format_average(row):
     )
 
 
+def _format_prediction(row):
+    """Format the median prediction with prediction intervals.
+
+    Parameters
+    ----------
+    row : pandas.Series
+        Row with 'Lower PI' and 'Upper PI'.
+
+    Returns
+    -------
+    str
+        For example ``"12.3, 95% PI [10.1, 14.5]"``.
+    """
+    return (
+        f"{row['Median prediction']:.0f}, "
+        f"95% PI [{row['Lower PI']:.0f}, {row['Upper PI']:.0f}] days"
+    )
+
+
 def _build_table(plot_df):
     """Build the table of results to display and download.
 
@@ -424,6 +443,25 @@ def _build_table(plot_df):
     return display_df[
         ["Complications", "Risk percentage", "Population average", "Risk status"]
     ]
+
+
+def _build_regressor_table(plot_df):
+    """Build the table of regressor results to display and download.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Non-empty data to display.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Table with the outcome, median prediction, upper and lower prediction
+        intervals.
+    """
+    display_df = plot_df.copy()
+    display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
+    return display_df[["Complications", "Prediction"]]
 
 
 # --------------------------------------------------------------------------- #
