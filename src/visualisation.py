@@ -160,7 +160,7 @@ def _regressor_legend_color() -> alt.Color:
         "Legend:N",
         scale=alt.Scale(
             domain=["Median prediction (95% PI)"],
-            range=["black"],
+            range=["blue"],
         ),
         legend=alt.Legend(
             title=None,
@@ -406,7 +406,7 @@ def _median_prediction_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_MEDIAN}'")
-        .mark_point(filled=True, size=50)
+        .mark_point(filled=True, size=250, shape="diamond")
         .encode(
             x="Median prediction:Q",
             y=y_enc,
@@ -433,7 +433,9 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """
     return (
         alt.Chart(plot_df)
-        .mark_errorbar(color="black")  # explicit, since it isn't colour-encoded
+        .mark_errorbar(
+            color="blue", thickness=2
+        )  # explicit, since it isn't colour-encoded
         .encode(
             x=alt.X(
                 "Lower PI:Q",
