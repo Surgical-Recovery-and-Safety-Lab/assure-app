@@ -12,6 +12,7 @@ from .constants import (
     LEGEND_HIGHER,
     LEGEND_LOWER,
     LEGEND_MEDIAN,
+    LEGEND_PATIENT,
     REGRESSOR_KEYS,
 )
 
@@ -133,8 +134,8 @@ def _legend_color() -> alt.Color:
     return alt.Color(
         "Legend:N",
         scale=alt.Scale(
-            domain=[LEGEND_AVERAGE, LEGEND_LOWER, LEGEND_HIGHER],
-            range=["black", "green", "red", "black"],
+            domain=[LEGEND_AVERAGE, LEGEND_PATIENT],
+            range=["black", "blue"],
         ),
         legend=alt.Legend(
             title=None,
@@ -298,7 +299,7 @@ def _patient_diamond_layer(
         .transform_calculate(
             Legend=(
                 "datum['Risk percentage'] > datum['Population average'] "
-                f"? '{LEGEND_HIGHER}' : '{LEGEND_LOWER}'"
+                f"? '{LEGEND_PATIENT}' : '{LEGEND_PATIENT}'"
             )
         )
         .mark_point(filled=True, shape="diamond", size=250)
