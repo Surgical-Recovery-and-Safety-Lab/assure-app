@@ -274,7 +274,7 @@ def _average_point_layer(
     )
 
 
-def _patient_bars_layer(
+def _patient_diamond_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
     """Build the patient risk bars, red if above average and green otherwise.
@@ -301,7 +301,7 @@ def _patient_bars_layer(
                 f"? '{LEGEND_HIGHER}' : '{LEGEND_LOWER}'"
             )
         )
-        .mark_bar(cornerRadiusEnd=25, opacity=0.5)
+        .mark_point(filled=True, shape="diamond", size=250)
         .encode(
             x="Risk percentage:Q",
             y=y_enc,
@@ -311,9 +311,7 @@ def _patient_bars_layer(
     )
 
 
-def _risk_value_text_layer(
-    plot_df: DataFrame, y_enc: alt.Y, x_max: float
-) -> alt.Chart:
+def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Chart:
     """Build the patient risk value shown at the right-hand end of each row.
 
     Parameters
@@ -497,9 +495,9 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     legend_color = _legend_color()
 
     layers = (
-        _patient_bars_layer(plot_df, y_enc, legend_color)
-        + _error_bars_layer(plot_df, y_enc, x_max)
+        _error_bars_layer(plot_df, y_enc, x_max)
         + _average_point_layer(plot_df, y_enc, legend_color)
+        + _patient_diamond_layer(plot_df, y_enc, legend_color)
         + _risk_value_text_layer(plot_df, y_enc, x_max)
         + _risk_status_text_layer(plot_df, y_enc, x_max)
     )
