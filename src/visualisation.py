@@ -178,8 +178,8 @@ def _regressor_legend_color() -> alt.Color:
     return alt.Color(
         "Legend:N",
         scale=alt.Scale(
-            domain=["Median prediction (95% PI)"],
-            range=["blue"],
+            domain=[LEGEND_AVERAGE, LEGEND_MEDIAN],
+            range=["black", "blue"],
         ),
         legend=alt.Legend(
             title=None,
@@ -544,7 +544,7 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
 
 
 def _build_regressor_chart(
-    plot_df: DataFrame, outcome: Literal["DOAH_90", "POSTOP_LOS"]
+    plot_df: DataFrame, outcome: Literal["DAOH_90", "POSTOP_LOS"]
 ) -> alt.LayerChart:
     """Combine all layers for the regressor plot into the final chart.
 
@@ -568,6 +568,8 @@ def _build_regressor_chart(
 
     layers = (
         _prediction_bars_layer(plot_df, y_enc, outcome)
+        + _error_bars_layer(plot_df, y_enc)
+        + _average_point_layer(plot_df, y_enc, legend_color)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
         + _prediction_value_text_layer(plot_df, y_enc)
     )
@@ -575,7 +577,7 @@ def _build_regressor_chart(
     return (
         layers.properties(
             height=alt.Step(30),  # consistent breathing room per row
-            title="Patient median prediction (95% PI)",
+            title=title,
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -664,7 +666,8 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
-    return display_df[["Complications", "Prediction"]]
+    display_df["Population average"] = display_df.apply(_format_average, axis=1)
+    return display_df[["Complications", "Prediction", "Population average"]]
 
 
 # --------------------------------------------------------------------------- #
@@ -742,6 +745,7 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
+                "Population average": "Population average",
             },
             hide_index=True,
             width="stretch",
@@ -829,7 +833,7 @@ def data_visualisation(
         Table displayed for regressors.
     """
     plot_df = _build_classifier_plot_df(complications_dict, op_average)
-    regressor_plot_df = _build_regressor_plot_df(complications_dict)
+    regressor_plot_df = _build_regressor_plot_df(complications_dict, op_average)
 
     # Set default values
     classifier_chart = None
