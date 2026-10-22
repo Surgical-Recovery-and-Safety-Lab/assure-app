@@ -10,8 +10,9 @@ import joblib
 import numpy as np
 import requests
 import streamlit as st
-from medpipe import MedpipeClassifier, MedpipeRegressor
 from pandas import DataFrame, Series, read_csv
+
+from medpipe import MedpipeClassifier, MedpipeRegressor
 
 from .constants import (
     AVERAGES,
@@ -331,7 +332,7 @@ def convert_input_features(input_features: list[Any]) -> DataFrame:
         Converted features into a data frame with correct typings.
     """
     data = DataFrame(np.expand_dims(input_features, 1).T, columns=Series(COLUMNS))
-    data["ASA"] = data["ASA"].astype(float)
+    data["ASA_ORIGINAL"] = data["ASA_ORIGINAL"].astype(float)
     data["TRAUMA"] = data["TRAUMA"].astype(bool)
     data["PRIOR_CANCER"] = data["PRIOR_CANCER"].astype(bool)
 

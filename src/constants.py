@@ -4,16 +4,16 @@ constants.py
 Constants for the app.
 """
 
-CLASSIFIER = "assets/models/classifier/v1"
-REGRESSOR = "assets/models/regressor/v3"
+CLASSIFIER = "assets/models/classifier/v2"
+REGRESSOR = "assets/models/regressor/v2"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
 COLUMNS = [
     "AGE",
-    "ETHNICITY",
-    "SEX",
-    "ASA",
+    "ETHNICITY_ORIGINAL",
+    "SEX_ORIGINAL",
+    "ASA_ORIGINAL",
     "PRIOR_CANCER",
     "ADMISSION_ACUITY",
     "ADMISSION_SOURCE",
