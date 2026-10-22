@@ -162,8 +162,8 @@ def _section_html(title: str, blocks: list[str]) -> str:
 
 
 def create_pdf_report(
-    charts: list[alt.Chart | alt.LayerChart],
-    tables: list[pd.DataFrame],
+    charts: list[alt.Chart | alt.LayerChart | None],
+    tables: list[pd.DataFrame | None],
     regressor_chart: alt.Chart | alt.LayerChart | None = None,
     regressor_table: pd.DataFrame | None = None,
 ) -> bytes:
