@@ -541,6 +541,10 @@ def _build_regressor_chart(
     """
     y_enc = _y_encoding()
     legend_color = _regressor_legend_color()
+    if outcome == "DAOH_90":
+        title = "Days alive and out of hospital patient median prediction (95% PI)"
+    else:
+        title = "Postoperative length of stay patient median prediction (95% PI)"
 
     layers = (
         _prediction_bars_layer(plot_df, y_enc, outcome)
