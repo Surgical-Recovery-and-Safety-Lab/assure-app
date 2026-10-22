@@ -81,7 +81,8 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
     Parameters
     ----------
     df : pandas.DataFrame
-        Table with 'Complications' and 'Prediction' columns.
+        Table with 'Complications', 'Prediction', 'Population average',
+        'Risk status' and 'Favourable' columns.
 
     Returns
     -------
@@ -93,6 +94,8 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
         <tr>
             <td>{r["Complications"]}</td>
             <td>{r["Prediction"]}</td>
+            <td>{r["Population average"]}</td>
+            <td class="status-{"lower" if r["Favourable"] else "higher"}">{r["Risk status"]}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -224,7 +227,7 @@ def create_pdf_report(
                 blocks.append(
                     _block_html(
                         reg_charts,
-                        ["Outcome", "Patient median prediction"],
+                        ["Outcome", "Patient median prediction", "Population Avg", "Status"],
                         _regressor_rows_html(reg_df),
                     )
                 )

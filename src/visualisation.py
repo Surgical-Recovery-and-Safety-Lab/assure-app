@@ -137,6 +137,29 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     return plot_df
 
 
+def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
+    """Add the 'Risk status' and 'Favourable' columns to the regressor data.
+
+    A prediction above the population average is "Higher", otherwise "Lower".
+    More days alive and out of hospital is favourable, while a longer stay is not.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data returned by `_build_regressor_plot_df`.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The same DataFrame with 'Risk status' and 'Favourable' columns.
+    """
+    higher = plot_df["Median prediction"] > plot_df["Population average"]
+    daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
+    plot_df["Risk status"] = higher.map({True: "Higher", False: "Lower"})
+    plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
+    return plot_df
+
+
 # --------------------------------------------------------------------------- #
 # Shared chart encodings
 # --------------------------------------------------------------------------- #
@@ -207,6 +230,22 @@ def _y_encoding() -> alt.Y:
             labelFontSize=12,
             title=None,
         ),
+    )
+
+
+def _regressor_status_color() -> alt.condition:
+    """Create the red / green condition used by the regressor text layers.
+
+    Returns
+    -------
+    altair.condition
+        Green if the prediction is favourable compared to the population average,
+        else red.
+    """
+    return alt.condition(
+        alt.datum["Favourable"],
+        alt.value("green"),
+        alt.value("red"),
     )
 
 
@@ -435,8 +474,13 @@ def _median_prediction_layer(
     )
 
 
+def _regressor_x_max(outcome: Literal["DAOH_90", "POSTOP_LOS"]) -> int:
+    """Return the upper limit of the x axis for a regressor outcome."""
+    return 89 if outcome == "DAOH_90" else 30
+
+
 def _prediction_bars_layer(
-    plot_df: DataFrame, y_enc: alt.Y, outcome: Literal["DAOH_90", "POSTOP_LOS"]
+    plot_df: DataFrame, y_enc: alt.Y, x_max: float
 ) -> alt.Chart:
     """Build the horizontal 95% PI whiskers.
 
@@ -446,14 +490,14 @@ def _prediction_bars_layer(
         Data to plot.
     y_enc : altair.Y
         Shared y encoding.
+    x_max : float
+        Upper limit of the x axis.
 
     Returns
     -------
     altair.Chart
         Prediction interval error bar layer.
     """
-    x_max = 89 if outcome == "DAOH_90" else 30
-
     return (
         alt.Chart(plot_df)
         .mark_errorbar(
@@ -471,7 +515,9 @@ def _prediction_bars_layer(
     )
 
 
-def _prediction_value_text_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
+def _prediction_value_text_layer(
+    plot_df: DataFrame, y_enc: alt.Y, x_max: float
+) -> alt.Chart:
     """Build the patient prediction shown at the right-hand end of each row.
 
     Parameters
@@ -480,6 +526,8 @@ def _prediction_value_text_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
         Data to plot.
     y_enc : altair.Y
         Shared y encoding.
+    x_max : float
+        Upper limit of the x axis, used to anchor the text.
 
     Returns
     -------
@@ -496,9 +544,47 @@ def _prediction_value_text_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
             clip=False,
         )
         .encode(
-            x=alt.datum(90),
+            x=alt.datum(x_max),
             y=y_enc,
             text=alt.Text("Median prediction:Q", format=".0f"),
+            color=_regressor_status_color(),
+        )
+    )
+
+
+def _prediction_status_text_layer(
+    plot_df: DataFrame, y_enc: alt.Y, x_max: float
+) -> alt.Chart:
+    """Build the 'Higher' / 'Lower' label shown next to the prediction.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data to plot.
+    y_enc : altair.Y
+        Shared y encoding.
+    x_max : float
+        Upper limit of the x axis, used to anchor the text.
+
+    Returns
+    -------
+    altair.Chart
+        Prediction status text layer.
+    """
+    return (
+        alt.Chart(plot_df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=40,  # same anchor as the value text, shifted right
+            fontWeight="bold",
+            clip=False,
+        )
+        .encode(
+            x=alt.datum(x_max),
+            y=y_enc,
+            text="Risk status:N",
+            color=_regressor_status_color(),
         )
     )
 
@@ -559,6 +645,7 @@ def _build_regressor_chart(
     altair.LayerChart
         The configured layered chart.
     """
+    x_max = _regressor_x_max(outcome)
     y_enc = _y_encoding()
     legend_color = _regressor_legend_color()
     if outcome == "DAOH_90":
@@ -567,11 +654,12 @@ def _build_regressor_chart(
         title = "Postoperative length of stay patient median prediction (95% PI)"
 
     layers = (
-        _prediction_bars_layer(plot_df, y_enc, outcome)
+        _prediction_bars_layer(plot_df, y_enc, x_max)
         + _error_bars_layer(plot_df, y_enc)
         + _average_point_layer(plot_df, y_enc, legend_color)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
-        + _prediction_value_text_layer(plot_df, y_enc)
+        + _prediction_value_text_layer(plot_df, y_enc, x_max)
+        + _prediction_status_text_layer(plot_df, y_enc, x_max)
     )
 
     return (
@@ -667,7 +755,15 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
     display_df["Population average"] = display_df.apply(_format_average, axis=1)
-    return display_df[["Complications", "Prediction", "Population average"]]
+    return display_df[
+        [
+            "Complications",
+            "Prediction",
+            "Population average",
+            "Risk status",
+            "Favourable",
+        ]
+    ]
 
 
 # --------------------------------------------------------------------------- #
@@ -685,6 +781,25 @@ def _hide_chart_toolbar() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def _highlight_regressor_status(row: Series) -> list[str]:
+    """Highlight the regressor status in green if favourable, else red.
+
+    Parameters
+    ----------
+    row : pandas.Series
+        Table row containing 'Risk status' and 'Favourable' entries.
+
+    Returns
+    -------
+    list[str]
+        CSS style for each cell in the row.
+    """
+    styles = ["color: black"] * len(row)
+    colour = "green" if row["Favourable"] else "red"
+    styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
+    return styles
 
 
 def _highlight_medical_risk(row: Series) -> list[str]:
@@ -741,11 +856,13 @@ def _render_table(
         )
     if regressor_table is not None:
         st.dataframe(
-            regressor_table,
+            regressor_table.style.apply(_highlight_regressor_status, axis=1),
             column_config={
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
                 "Population average": "Population average",
+                "Risk status": "Risk status",
+                "Favourable": None,  # only used for the colours
             },
             hide_index=True,
             width="stretch",
@@ -852,6 +969,7 @@ def data_visualisation(
         classifier_table = _build_table(plot_df)
 
     if not regressor_plot_df.empty:
+        regressor_plot_df = _add_regressor_status(regressor_plot_df)
         regressor_table = _build_regressor_table(regressor_plot_df)
         # Build one chart per outcome (DAOH and LOS), if it is ticked
         outcome_labels = LABEL_MAP["HEALTH_OUTCOMES"]
