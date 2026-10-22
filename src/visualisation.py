@@ -228,7 +228,7 @@ def _status_color():
 # --------------------------------------------------------------------------- #
 # Chart layers (one helper per element)
 # --------------------------------------------------------------------------- #
-def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Chart:
+def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """Build the horizontal 95% CI whiskers.
 
     Parameters
@@ -237,8 +237,6 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Cha
         Data to plot.
     y_enc : altair.Y
         Shared y encoding.
-    x_max : float
-        Upper limit of the x axis.
 
     Returns
     -------
@@ -249,11 +247,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Cha
         alt.Chart(plot_df)
         .mark_rect(color="grey", opacity=0.5, cornerRadius=25, height=15)
         .encode(
-            x=alt.X(
-                "Lower CI:Q",
-                title="Risk percentage (%)",
-                scale=alt.Scale(domain=[0, x_max]),
-            ),
+            x="Lower CI:Q",
             x2="Upper CI:Q",
             y=y_enc,
         )
@@ -295,7 +289,7 @@ def _average_point_layer(
 
 
 def _patient_diamond_layer(
-    plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
+    plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color, x_max
 ) -> alt.Chart:
     """Build the patient risk bars, red if above average and green otherwise.
 
@@ -307,6 +301,8 @@ def _patient_diamond_layer(
         Shared y encoding.
     legend_color : altair.Color
         Shared legend colour encoding.
+    x_max : float
+        Upper limit of the x axis.
 
     Returns
     -------
@@ -323,7 +319,11 @@ def _patient_diamond_layer(
         )
         .mark_point(filled=True, shape="diamond", size=250)
         .encode(
-            x="Risk percentage:Q",
+            x=alt.X(
+                "Risk percentage:Q",
+                title="Risk percentage (%)",
+                scale=alt.Scale(domain=[0, x_max]),
+            ),
             y=y_enc,
             color=legend_color,
             tooltip=["Complications", "Risk percentage"],
@@ -463,7 +463,7 @@ def _prediction_bars_layer(
             x=alt.X(
                 "Lower PI:Q",
                 title="Prediction (days)",
-                scale=alt.Scale(domain=[0, max_val]),
+                scale=alt.Scale(domain=[0, x_max]),
             ),
             x2="Upper PI:Q",
             y=y_enc,
@@ -521,9 +521,9 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     legend_color = _legend_color()
 
     layers = (
-        _error_bars_layer(plot_df, y_enc, x_max)
+        _patient_diamond_layer(plot_df, y_enc, legend_color, x_max)
+        + _error_bars_layer(plot_df, y_enc)
         + _average_point_layer(plot_df, y_enc, legend_color)
-        + _patient_diamond_layer(plot_df, y_enc, legend_color)
         + _risk_value_text_layer(plot_df, y_enc, x_max)
         + _risk_status_text_layer(plot_df, y_enc, x_max)
     )
