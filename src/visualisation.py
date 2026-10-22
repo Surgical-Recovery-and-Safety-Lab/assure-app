@@ -8,9 +8,9 @@ from pandas import DataFrame, Series
 
 from .constants import (
     EXCLUDED_KEYS,
+    LABEL_MAP,
     LEGEND_AVERAGE,
     LEGEND_MEDIAN,
-    LABEL_MAP,
     LEGEND_PATIENT,
     REGRESSOR_KEYS,
 )
@@ -415,7 +415,9 @@ def _median_prediction_layer(
     )
 
 
-def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
+def _prediction_bars_layer(
+    plot_df: DataFrame, y_enc: alt.Y, outcome: Literal["DAOH_90", "POSTOP_LOS"]
+) -> alt.Chart:
     """Build the horizontal 95% PI whiskers.
 
     Parameters
@@ -430,6 +432,8 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     altair.Chart
         Prediction interval error bar layer.
     """
+    x_max = 89 if outcome == "DAOH_90" else 30
+
     return (
         alt.Chart(plot_df)
         .mark_errorbar(
@@ -439,7 +443,7 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
             x=alt.X(
                 "Lower PI:Q",
                 title="Prediction (days)",
-                scale=alt.Scale(domain=[0, 90]),
+                scale=alt.Scale(domain=[0, max_val]),
             ),
             x2="Upper PI:Q",
             y=y_enc,
@@ -519,7 +523,9 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     )
 
 
-def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
+def _build_regressor_chart(
+    plot_df: DataFrame, outcome: Literal["DOAH_90", "POSTOP_LOS"]
+) -> alt.LayerChart:
     """Combine all layers for the regressor plot into the final chart.
 
     Parameters
@@ -537,7 +543,7 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
     legend_color = _regressor_legend_color()
 
     layers = (
-        _prediction_bars_layer(plot_df, y_enc)
+        _prediction_bars_layer(plot_df, y_enc, outcome)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
         + _prediction_value_text_layer(plot_df, y_enc)
     )
@@ -829,9 +835,9 @@ def data_visualisation(
         ]
 
         if not daoh.empty:
-            daoh_chart = _build_regressor_chart(daoh)
+            daoh_chart = _build_regressor_chart(daoh, outcome="DAOH_90")
         if not los.empty:
-            los_chart = _build_regressor_chart(los)
+            los_chart = _build_regressor_chart(los, outcome="POSTOP_LOS")
 
     if display == "table":
         _render_table(classifier_table, regressor_table)
