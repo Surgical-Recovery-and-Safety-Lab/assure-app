@@ -16,7 +16,6 @@ from .constants import (
     REGRESSOR_KEYS,
 )
 
-
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
 Y_AXIS_EXTENT = 210
 
@@ -484,9 +483,7 @@ def _regressor_x_max(outcome: Literal["DAOH_90", "POSTOP_LOS"]) -> int:
     return 89 if outcome == "DAOH_90" else 30
 
 
-def _prediction_bars_layer(
-    plot_df: DataFrame, y_enc: alt.Y, x_max: float
-) -> alt.Chart:
+def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Chart:
     """Build the horizontal 95% PI whiskers.
 
     Parameters
@@ -891,27 +888,42 @@ def _render_chart(
     los_chart : altair.LayerChart
         Length of stay chart returned by `_build_regressor_chart`.
     """
+    show_help = False
     if classifier_chart is not None:
         st.altair_chart(classifier_chart)
-        with st.popover("Help", type="tertiary", icon=":material/help:"):
+        show_help = True
+    if daoh_chart is not None:
+        st.altair_chart(daoh_chart)
+        show_help = True
+    if los_chart is not None:
+        st.altair_chart(los_chart)
+        show_help = True
+
+    if show_help:
+        with st.popover(
+            "How to read the charts", type="tertiary", icon=":material/help:"
+        ):
             st.write(
-                "The chart above shows the current patient's risk relative to the "
+                "The charts above show the current patient's risk relative to the "
                 "average population risk for the selected operation."
             )
             st.write(
-                "The black circle and horizontal bars represent the average population "
+                "The grey bar and shading represent the average population "
                 "risk and 95% confidence intervals."
             )
             st.write(
-                "The red / green bars represent the current patient's risk, with the "
-                "exact value specified on the right side of the graph. If the risk is "
-                "lower than the population average the bars are green, otherwise, they "
-                "are red."
+                "The blue diamond represent the current patient's risk, with the "
+                "exact value specified on the right side of the graph. If the "
+                "patient's outcome is better than the population average, the "
+                "text will be green, otherwise, it will be red."
             )
-    if daoh_chart is not None:
-        st.altair_chart(daoh_chart)
-    if los_chart is not None:
-        st.altair_chart(los_chart)
+            st.write(
+                "For days alive and out of hospital and length of stay, the blue "
+                "bars around the diamond represent the 95% prediction interval. "
+                "There is a 95% chance that the true value will be between the "
+                "two values. If there are none, they are the same as the median "
+                "prediction."
+            )
 
 
 # --------------------------------------------------------------------------- #
