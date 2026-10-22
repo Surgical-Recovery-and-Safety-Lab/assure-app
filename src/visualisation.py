@@ -17,6 +17,10 @@ from .constants import (
 )
 
 
+# Pixels reserved for the y axis labels, wide enough for the longest outcome name
+Y_AXIS_EXTENT = 210
+
+
 # --------------------------------------------------------------------------- #
 # Data preparation
 # --------------------------------------------------------------------------- #
@@ -229,6 +233,7 @@ def _y_encoding() -> alt.Y:
             labelLineHeight=14,  # spacing between the two lines
             labelFontSize=12,
             title=None,
+            minExtent=Y_AXIS_EXTENT,  # same label width, so the plots start aligned
         ),
     )
 
