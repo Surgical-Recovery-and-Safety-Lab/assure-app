@@ -6,6 +6,8 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
+from .constants import COLOR_GREEN, COLOR_RED
+
 
 def _chart_to_base64(chart: alt.Chart | alt.LayerChart) -> str:
     """Render an Altair chart to a base64-encoded PNG.
@@ -253,8 +255,8 @@ def create_pdf_report(
         th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
         td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
-        .status-higher {{ color: #e74c3c; font-weight: bold; }}
-        .status-lower {{ color: #27ae60; font-weight: bold; }}
+        .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
+        .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
         .box {{
         background-color: #e8f4fd;
         border-radius: 5px;

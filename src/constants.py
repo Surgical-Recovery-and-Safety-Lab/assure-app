@@ -65,3 +65,9 @@ LEGEND_HIGHER = "Patient risk (higher)"
 LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
 REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
+# Hex values rather than names, since Streamlit remaps colour names to its theme
+COLOR_RED = "#ff0000"
+COLOR_GREEN = "#008000"
+COLOR_GREY = "#808080"
+COLOR_BLUE = "#0000ff"
+COLOR_BLACK = "#000000"

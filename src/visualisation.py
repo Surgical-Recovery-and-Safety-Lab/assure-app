@@ -8,6 +8,11 @@ import streamlit as st
 from pandas import DataFrame, Series
 
 from .constants import (
+    COLOR_BLACK,
+    COLOR_BLUE,
+    COLOR_GREEN,
+    COLOR_GREY,
+    COLOR_RED,
     EXCLUDED_KEYS,
     LABEL_MAP,
     LEGEND_AVERAGE,
@@ -180,7 +185,7 @@ def _legend_color() -> alt.Color:
         "Legend:N",
         scale=alt.Scale(
             domain=[LEGEND_AVERAGE, LEGEND_PATIENT],
-            range=["black", "blue"],
+            range=[COLOR_BLACK, COLOR_BLUE],
         ),
         legend=alt.Legend(
             title=None,
@@ -205,7 +210,7 @@ def _regressor_legend_color() -> alt.Color:
         "Legend:N",
         scale=alt.Scale(
             domain=[LEGEND_AVERAGE, LEGEND_MEDIAN],
-            range=["black", "blue"],
+            range=[COLOR_BLACK, COLOR_BLUE],
         ),
         legend=alt.Legend(
             title=None,
@@ -248,8 +253,8 @@ def _regressor_status_color() -> alt.condition:
     """
     return alt.condition(
         alt.datum["Favourable"],
-        alt.value("green"),
-        alt.value("red"),
+        alt.value(COLOR_GREEN),
+        alt.value(COLOR_RED),
     )
 
 
@@ -263,8 +268,8 @@ def _status_color():
     """
     return alt.condition(
         alt.datum["Risk percentage"] > alt.datum["Population average"],
-        alt.value("red"),
-        alt.value("green"),
+        alt.value(COLOR_RED),
+        alt.value(COLOR_GREEN),
     )
 
 
@@ -288,7 +293,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """
     return (
         alt.Chart(plot_df)
-        .mark_rect(color="grey", opacity=0.5, cornerRadius=25, height=15)
+        .mark_rect(color=COLOR_GREY, opacity=0.5, cornerRadius=25, height=15)
         .encode(
             x="Lower CI:Q",
             x2="Upper CI:Q",
@@ -360,7 +365,7 @@ def _patient_diamond_layer(
                 f"? '{LEGEND_PATIENT}' : '{LEGEND_PATIENT}'"
             )
         )
-        .mark_point(filled=True, shape="diamond", size=250)
+        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
         .encode(
             x=alt.X(
                 "Risk percentage:Q",
@@ -468,7 +473,7 @@ def _median_prediction_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_MEDIAN}'")
-        .mark_point(filled=True, size=250, shape="diamond")
+        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
         .encode(
             x="Median prediction:Q",
             y=y_enc,
@@ -503,7 +508,7 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
     return (
         alt.Chart(plot_df)
         .mark_errorbar(
-            color="blue", thickness=2
+            color=COLOR_BLUE, thickness=2, opacity=1
         )  # explicit, since it isn't colour-encoded
         .encode(
             x=alt.X(
@@ -609,9 +614,9 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     legend_color = _legend_color()
 
     layers = (
-        _patient_diamond_layer(plot_df, y_enc, legend_color, x_max)
-        + _error_bars_layer(plot_df, y_enc)
+        _error_bars_layer(plot_df, y_enc)
         + _average_point_layer(plot_df, y_enc, legend_color)
+        + _patient_diamond_layer(plot_df, y_enc, legend_color, x_max)
         + _risk_value_text_layer(plot_df, y_enc, x_max)
         + _risk_status_text_layer(plot_df, y_enc, x_max)
     )
@@ -656,8 +661,8 @@ def _build_regressor_chart(
         title = "Postoperative length of stay patient median prediction (95% PI)"
 
     layers = (
-        _prediction_bars_layer(plot_df, y_enc, x_max)
-        + _error_bars_layer(plot_df, y_enc)
+        _error_bars_layer(plot_df, y_enc)
+        + _prediction_bars_layer(plot_df, y_enc, x_max)
         + _average_point_layer(plot_df, y_enc, legend_color)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
         + _prediction_value_text_layer(plot_df, y_enc, x_max)
@@ -799,7 +804,7 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         CSS style for each cell in the row.
     """
     styles = ["color: black"] * len(row)
-    colour = "green" if row["Favourable"] else "red"
+    colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
     styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
     return styles
 
@@ -823,9 +828,9 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     risk_col_index = row.index.get_loc("Risk status")
     if row["Risk status"] == "Higher":
         # Find the index of the column you want to color
-        styles[risk_col_index] = "color: red; font-weight: bold"
+        styles[risk_col_index] = f"color: {COLOR_RED}; font-weight: bold"
     else:
-        styles[risk_col_index] = "color: green; font-weight: bold"
+        styles[risk_col_index] = f"color: {COLOR_GREEN}; font-weight: bold"
 
     return styles
 
