@@ -173,7 +173,7 @@ def main_page_layout() -> DataFrame:
         "European": "NZ European",
         "Māori": "Māori",
         "MELAA/Other": "MELAA/Other",
-        "Pacific peoples": "Pacific",
+        "Pacific Peoples": "Pacific",
     }
     ethnicity_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with ethnicity_col1:
