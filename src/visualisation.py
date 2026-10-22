@@ -3,6 +3,7 @@
 from typing import Literal
 
 import altair as alt
+import numpy as np
 import streamlit as st
 from pandas import DataFrame, Series
 
@@ -60,21 +61,34 @@ def _build_classifier_plot_df(
     )
 
 
-def _build_regressor_plot_df(complications_dict: dict[str, str]) -> DataFrame:
+def _build_regressor_plot_df(
+    complications_dict: dict[str, str],
+    op_average: dict[str, tuple[float, float, float]],
+) -> DataFrame:
     """Collect the selected regressor complications into a DataFrame.
 
     Parameters
     ----------
     complications_dict : dict[str, str]
         Dictionary containing the complications and the corresponding plot label.
+    op_average : dict[str, tuple[float, float, float]]
+        Operation averages (mean, lower CI, upper CI) for each complication,
+        expressed as proportions.
 
     Returns
     -------
     pandas.DataFrame
         One row per ticked complication. Empty if nothing is ticked.
     """
-    labels, prediction, lower, upper = [], [], [], []
-
+    labels, prediction, pi_lower, pi_upper, average, lower, upper = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
     for key, label in complications_dict.items():
         if not st.session_state[key] or key not in REGRESSOR_KEYS:
             continue
@@ -82,15 +96,21 @@ def _build_regressor_plot_df(complications_dict: dict[str, str]) -> DataFrame:
         dist = st.session_state.output_dists[key]
         prediction.append(round(dist.median()[0]))  # To get an integer
         l, u = dist.interval(0.95)
-        lower.append(round(l[0]))  # To get an integer
-        upper.append(round(u[0]))  # To get an integer
+        pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
+        pi_upper.append(np.ceil(u[0]))  # To get an integer
+        average.append(np.round(op_average[key][0]))
+        lower.append(np.ceil(op_average[key][1]))
+        upper.append(np.ceil(op_average[key][2]))
 
     return DataFrame(
         {
             "Complications": labels,
             "Median prediction": prediction,
-            "Lower PI": lower,
-            "Upper PI": upper,
+            "Lower PI": pi_lower,
+            "Upper PI": pi_upper,
+            "Population average": average,
+            "Lower CI": lower,
+            "Upper CI": upper,
         }
     )
 
