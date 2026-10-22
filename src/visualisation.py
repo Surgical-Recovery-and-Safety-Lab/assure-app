@@ -9,9 +9,8 @@ from pandas import DataFrame, Series
 from .constants import (
     EXCLUDED_KEYS,
     LEGEND_AVERAGE,
-    LEGEND_HIGHER,
-    LEGEND_LOWER,
     LEGEND_MEDIAN,
+    LABEL_MAP,
     LEGEND_PATIENT,
     REGRESSOR_KEYS,
 )
@@ -191,7 +190,7 @@ def _y_encoding() -> alt.Y:
     )
 
 
-def _status_color() -> dict:
+def _status_color():
     """Create the red / green condition used by the text layers.
 
     Returns
@@ -721,7 +720,9 @@ def _render_table(
 
 
 def _render_chart(
-    classifier_chart: alt.LayerChart | None, regressor_chart: alt.LayerChart | None
+    classifier_chart: alt.LayerChart | None,
+    daoh_chart: alt.LayerChart | None,
+    los_chart: alt.LayerChart | None,
 ) -> None:
     """Display the chart with its explanatory text.
 
@@ -729,8 +730,10 @@ def _render_chart(
     ----------
     classifier_chart : altair.LayerChart
         Chart returned by `_build_chart`.
-    regressor_chart : altair.LayerChart
-        Chart returned by `_build_regressor_chart`.
+    daoh_chart : altair.LayerChart
+        Days alive and out of hospital chart returned by `_build_regressor_chart`.
+    los_chart : altair.LayerChart
+        Length of stay chart returned by `_build_regressor_chart`.
     """
     if classifier_chart is not None:
         st.altair_chart(classifier_chart)
@@ -749,8 +752,10 @@ def _render_chart(
                 "lower than the population average the bars are green, otherwise, they "
                 "are red."
             )
-    if regressor_chart is not None:
-        st.altair_chart(regressor_chart)
+    if daoh_chart is not None:
+        st.altair_chart(daoh_chart)
+    if los_chart is not None:
+        st.altair_chart(los_chart)
 
 
 # --------------------------------------------------------------------------- #
@@ -763,6 +768,7 @@ def data_visualisation(
 ) -> tuple[
     alt.LayerChart | None,
     DataFrame | None,
+    alt.LayerChart | None,
     alt.LayerChart | None,
     DataFrame | None,
 ]:
@@ -785,8 +791,10 @@ def data_visualisation(
         Chart plotting the graph results for classifiers.
     classifier_table : pandas.DataFrame | None
         Table displayed for classifiers.
-    regressor_chart : altair.Chart | None
-        Chart plotting the graph results for regressors.
+    daoh_chart : altair.Chart | None
+        Chart plotting the days alive and out of hospital prediction.
+    los_chart : altair.Chart | None
+        Chart plotting the length of stay prediction.
     regressor_table : pandas.DataFrame | None
         Table displayed for regressors.
     """
@@ -797,7 +805,8 @@ def data_visualisation(
     classifier_chart = None
     classifier_table = None
     regressor_table = None
-    regressor_chart = None
+    daoh_chart = None
+    los_chart = None
 
     st.write("**Risk summary**")
     if not plot_df.empty:  # all labels are unticked
@@ -810,11 +819,23 @@ def data_visualisation(
 
     if not regressor_plot_df.empty:
         regressor_table = _build_regressor_table(regressor_plot_df)
-        regressor_chart = _build_regressor_chart(regressor_plot_df)
+        # Build one chart per outcome (DAOH and LOS), if it is ticked
+        outcome_labels = LABEL_MAP["HEALTH_OUTCOMES"]
+        daoh = regressor_plot_df.loc[
+            regressor_plot_df["Complications"] == outcome_labels["DAOH_90"]
+        ]
+        los = regressor_plot_df.loc[
+            regressor_plot_df["Complications"] == outcome_labels["POSTOP_LOS"]
+        ]
+
+        if not daoh.empty:
+            daoh_chart = _build_regressor_chart(daoh)
+        if not los.empty:
+            los_chart = _build_regressor_chart(los)
 
     if display == "table":
         _render_table(classifier_table, regressor_table)
     else:
-        _render_chart(classifier_chart, regressor_chart)
+        _render_chart(classifier_chart, daoh_chart, los_chart)
 
-    return classifier_chart, classifier_table, regressor_chart, regressor_table
+    return classifier_chart, classifier_table, daoh_chart, los_chart, regressor_table

@@ -100,14 +100,14 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
 
 
 def _block_html(
-    chart: alt.Chart | alt.LayerChart, headers: list[str], table_rows: str
+    charts: list[alt.Chart | alt.LayerChart], headers: list[str], table_rows: str
 ) -> str:
-    """Build the HTML for one chart and its table.
+    """Build the HTML for one or more charts and their table.
 
     Parameters
     ----------
-    chart : altair.Chart | altair.LayerChart
-        Chart to embed as an image.
+    charts : list[altair.Chart | altair.LayerChart]
+        Charts to embed as images, in order, above the table.
     headers : list[str]
         Table column headers.
     table_rows : str
@@ -119,12 +119,18 @@ def _block_html(
         HTML for the chart and table.
     """
     header_cells = "".join(f"<th>{header}</th>" for header in headers)
-    return f"""
-    <div style="page-break-inside: avoid;">
+    images = "".join(
+        f"""
         <div style="text-align: center; margin-bottom: 20px;">
             <img src="data:image/png;base64,{_chart_to_base64(chart)}"
                  style="width: 100%; max-width: 650px;">
         </div>
+        """
+        for chart in charts
+    )
+    return f"""
+    <div style="page-break-inside: avoid;">
+        {images}
         <table>
             <thead>
                 <tr>{header_cells}</tr>
@@ -164,7 +170,7 @@ def _section_html(title: str, blocks: list[str]) -> str:
 def create_pdf_report(
     charts: list[alt.Chart | alt.LayerChart | None],
     tables: list[pd.DataFrame | None],
-    regressor_chart: alt.Chart | alt.LayerChart | None = None,
+    regressor_charts: list[alt.Chart | alt.LayerChart | None] | None = None,
     regressor_table: pd.DataFrame | None = None,
 ) -> bytes:
     """Create a pdf report from the plots and tables.
@@ -179,8 +185,10 @@ def create_pdf_report(
     tables : list[pandas.DataFrame]
         Classifier tables for mortality, complications and health service use.
         An empty table produces no chart or table for that section.
-    regressor_chart : altair.Chart | None, default None
-        Chart of the regressor results, shown in the health service use section.
+    regressor_charts : list[altair.Chart | None] | None, default None
+        Charts of the regressor results (one per outcome), shown above the
+        regressor table in the health service use section. Missing charts are
+        skipped.
     regressor_table : pandas.DataFrame | None, default None
         Table of the regressor results, with 'Complications' and 'Prediction'
         columns.
@@ -192,7 +200,8 @@ def create_pdf_report(
     """
     section_titles = ["Mortality outcomes", "Complications", "Health Service use"]
     # Regressor results only belong to the last section
-    regressors = [None, None, (regressor_chart, regressor_table)]
+    reg_charts = [chart for chart in (regressor_charts or []) if chart is not None]
+    regressors = [None, None, (reg_charts, regressor_table)]
 
     sections_html = ""
     for title, chart, df, regressor in zip(
@@ -203,18 +212,18 @@ def create_pdf_report(
         if df is not None and not df.empty:
             blocks.append(
                 _block_html(
-                    chart,
+                    [chart],
                     ["Outcome", "Patient Risk (%)", "Population Avg (%)", "Status"],
                     _classifier_rows_html(df),
                 )
             )
 
         if regressor is not None:
-            reg_chart, reg_df = regressor
+            reg_charts, reg_df = regressor
             if reg_df is not None and not reg_df.empty:
                 blocks.append(
                     _block_html(
-                        reg_chart,
+                        reg_charts,
                         ["Outcome", "Patient median prediction"],
                         _regressor_rows_html(reg_df),
                     )

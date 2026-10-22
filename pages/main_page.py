@@ -141,7 +141,7 @@ with main_col1:
                 default="graph",
             )
 
-            mortality_chart, mortality_table, _, _ = data_visualisation(
+            mortality_chart, mortality_table, _, _, _ = data_visualisation(
                 mortality_outcomes_dict,
                 op_average,
                 display=st.session_state.mortality_display_option,
@@ -195,7 +195,7 @@ with main_col1:
                     default="graph",
                 )
 
-                comp_chart, comp_table, _, _ = data_visualisation(
+                comp_chart, comp_table, _, _, _ = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,
@@ -249,18 +249,22 @@ with main_col1:
                     default="graph",
                 )
 
-                health_chart, health_table, regressor_chart, regressor_table = (
-                    data_visualisation(
-                        health_outcomes_dict,
-                        op_average,
-                        display=st.session_state.health_display_option,
-                    )
+                (
+                    health_chart,
+                    health_table,
+                    daoh_chart,
+                    los_chart,
+                    regressor_table,
+                ) = data_visualisation(
+                    health_outcomes_dict,
+                    op_average,
+                    display=st.session_state.health_display_option,
                 )
 
         pdf_bytes = create_pdf_report(
             [mortality_chart, comp_chart, health_chart],
             [mortality_table, comp_table, health_table],
-            regressor_chart=regressor_chart,
+            regressor_charts=[daoh_chart, los_chart],
             regressor_table=regressor_table,
         )
         st.download_button(
