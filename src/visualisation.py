@@ -293,7 +293,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
     """
     return (
         alt.Chart(plot_df)
-        .mark_rect(color=COLOR_GREY, opacity=0.5, cornerRadius=25, height=15)
+        .mark_rect(color=COLOR_GREY, opacity=0.75, cornerRadius=25, height=15)
         .encode(
             x="Lower CI:Q",
             x2="Upper CI:Q",
@@ -325,7 +325,7 @@ def _average_point_layer(
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_AVERAGE}'")
         .mark_tick(
-            bandSize=10, thickness=2, height=15, opacity=0.5
+            bandSize=10, thickness=2, height=15, opacity=0.75
         )  # colour comes from the encoding
         .encode(
             x="Population average:Q",
