@@ -72,6 +72,9 @@ def _build_classifier_plot_df(
     for key, label in complications_dict.items():
         if not st.session_state[key] or key in EXCLUDED_KEYS + REGRESSOR_KEYS:
             continue
+        if key not in op_average or key not in st.session_state.output_proba:
+            st.warning(f"No results are available for {label}.")
+            continue
         labels.append(label)
         patient_risk.append(st.session_state.output_proba[key])
         average.append(op_average[key][0] * 100)
@@ -119,6 +122,9 @@ def _build_regressor_plot_df(
     )
     for key, label in complications_dict.items():
         if not st.session_state[key] or key not in REGRESSOR_KEYS:
+            continue
+        if key not in op_average or key not in st.session_state.output_dists:
+            st.warning(f"No results are available for {label}.")
             continue
         labels.append(label)
         dist = st.session_state.output_dists[key]
