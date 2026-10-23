@@ -29,5 +29,10 @@ with contact_col1:
                     success = send_email(email, subject, message)
                     if success:
                         st.success("Thank you, your message has been sent!")
+                    else:
+                        st.error(
+                            "Sorry, your message could not be sent. Please try "
+                            "again later."
+                        )
             else:
                 st.error("Please fill out all fields.")
