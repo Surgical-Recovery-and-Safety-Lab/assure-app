@@ -162,12 +162,9 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     pandas.DataFrame
         The same DataFrame with a 'Risk status' column ("Higher" or "Lower").
     """
-    plot_df["Risk status"] = plot_df.apply(
-        lambda row: (
-            "Higher" if row["Risk percentage"] > row["Population average"] else "Lower"
-        ),
-        axis=1,
-    )
+    # Compare at the displayed precision, so equal looking values are not "Higher"
+    higher = plot_df["Risk percentage"].round(1) > plot_df["Population average"].round(1)
+    plot_df["Risk status"] = higher.map({True: "Higher", False: "Lower"})
     return plot_df
 
 
