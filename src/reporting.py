@@ -224,7 +224,7 @@ def create_pdf_report(
     ):
         blocks = []
 
-        if df is not None and not df.empty:
+        if chart is not None and df is not None and not df.empty:
             blocks.append(
                 _block_html(
                     [chart],

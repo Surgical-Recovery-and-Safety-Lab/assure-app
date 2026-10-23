@@ -39,7 +39,7 @@ with main_col1:
 
         run = st.button("Run model", disabled=not is_ready)
         info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-        if is_ready:
+        if input_features is not None:
             if run:
                 # Run classifier
                 outcomes = pipeline.mp_config.data.outcomes
@@ -161,10 +161,12 @@ with main_col1:
                 default="graph",
             )
 
-            mortality_chart, mortality_table, _, _, _ = data_visualisation(
-                mortality_outcomes_dict,
-                op_average,
-                display=st.session_state.mortality_display_option,
+            mortality_chart, mortality_table, *_mortality_regressors = (
+                data_visualisation(
+                    mortality_outcomes_dict,
+                    op_average,
+                    display=st.session_state.mortality_display_option,
+                )
             )
 
         with comp_tab:
@@ -210,7 +212,7 @@ with main_col1:
                     default="graph",
                 )
 
-                comp_chart, comp_table, _, _, _ = data_visualisation(
+                comp_chart, comp_table, *_comp_regressors = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,

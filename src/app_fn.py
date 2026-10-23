@@ -10,7 +10,7 @@ import time
 from collections import deque
 from datetime import datetime
 from typing import Any, Literal
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import joblib
 import requests
@@ -464,9 +464,10 @@ def get_report_date() -> str:
         Date formatted for the report, for example "October 24, 2026". The server
         timezone is used if the one of the browser is not available.
     """
+    timezone = st.context.timezone
     try:
-        now = datetime.now(ZoneInfo(st.context.timezone))
-    except Exception:  # Unknown or unavailable timezone
+        now = datetime.now(ZoneInfo(timezone) if timezone else None)
+    except (ZoneInfoNotFoundError, ValueError):  # Unknown timezone
         now = datetime.now()
     return now.strftime("%B %d, %Y")
 
