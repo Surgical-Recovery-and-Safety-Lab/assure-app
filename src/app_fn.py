@@ -4,6 +4,10 @@ app_fn.py
 Streamlit ASSURE helper functions.
 """
 
+import re
+import threading
+import time
+from collections import deque
 from typing import Any, Literal
 
 import joblib
@@ -18,8 +22,13 @@ from .constants import (
     CLASSIFIER,
     COLUMNS,
     LABEL_MAP,
+    MAX_EMAIL_LENGTH,
+    MAX_MESSAGE_LENGTH,
+    MAX_SENDS_PER_HOUR,
+    MAX_SUBJECT_LENGTH,
     OPERATIONS,
     REGRESSOR,
+    SEND_COOLDOWN,
     SEND_EMAIL_TIMEOUT,
     UNAVAILABLE_KEYS,
 )
@@ -366,6 +375,79 @@ def convert_input_features(input_features: list[Any]) -> DataFrame:
     data["PRIOR_CANCER"] = data["PRIOR_CANCER"].astype(bool)
 
     return data
+
+
+EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f\x7f]")  # Includes line breaks
+_send_lock = threading.Lock()
+
+
+@st.cache_resource(show_spinner=False)
+def _send_times() -> deque:
+    """Return the send times shared by all sessions, as monotonic seconds."""
+    return deque()
+
+
+def validate_feedback(sender_email: str, subject: str, message: str) -> str | None:
+    """Check the feedback form fields.
+
+    Parameters
+    ----------
+    sender_email : str
+        Email address of the sender.
+    subject : str
+        Subject of the email.
+    message : str
+        Body of the email.
+
+    Returns
+    -------
+    str | None
+        Message describing what is wrong, or None if the fields are valid.
+    """
+    if not (sender_email and subject and message):
+        return "Please fill out all fields."
+    if len(sender_email) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.fullmatch(sender_email):
+        return "Please enter a valid email address."
+    if len(subject) > MAX_SUBJECT_LENGTH:
+        return f"The subject must be at most {MAX_SUBJECT_LENGTH} characters."
+    if len(message) > MAX_MESSAGE_LENGTH:
+        return f"The message must be at most {MAX_MESSAGE_LENGTH} characters."
+    # Line breaks in these fields could be used to inject email headers
+    if CONTROL_CHARACTERS.search(sender_email) or CONTROL_CHARACTERS.search(subject):
+        return "The email address and subject cannot contain line breaks."
+    return None
+
+
+def reserve_send_slot() -> str | None:
+    """Reserve the right to send a message, if the rate limits allow it.
+
+    A session has to wait between two messages, and the number of messages from
+    all the sessions together is capped per hour. A reserved slot is used up even
+    if the message then fails to send, so failures cannot be retried in a loop.
+
+    Returns
+    -------
+    str | None
+        Message explaining why the message cannot be sent now, or None if a slot
+        was reserved.
+    """
+    now = time.monotonic()
+    last_send = st.session_state.get("last_send")
+    if last_send is not None and now - last_send < SEND_COOLDOWN:
+        wait = int(SEND_COOLDOWN - (now - last_send)) + 1
+        return f"Please wait {wait} seconds before sending another message."
+
+    with _send_lock:
+        send_times = _send_times()
+        while send_times and now - send_times[0] > 3600:
+            send_times.popleft()
+        if len(send_times) >= MAX_SENDS_PER_HOUR:
+            return "We are receiving a lot of messages. Please try again later."
+        send_times.append(now)
+
+    st.session_state.last_send = now
+    return None
 
 
 def send_email(sender_email: str, subject: str, message: str) -> bool:
