@@ -9,6 +9,7 @@ REGRESSOR = "assets/models/regressor/v2"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
+SEND_EMAIL_TIMEOUT = 10  # Seconds to wait for the feedback service
 COLUMNS = [
     "AGE",
     "ETHNICITY_ORIGINAL",
