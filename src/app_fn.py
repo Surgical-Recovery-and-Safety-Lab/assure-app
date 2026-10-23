@@ -8,7 +8,9 @@ import re
 import threading
 import time
 from collections import deque
+from datetime import datetime
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 import joblib
 import requests
@@ -448,6 +450,22 @@ def reserve_send_slot() -> str | None:
 
     st.session_state.last_send = now
     return None
+
+
+def get_report_date() -> str:
+    """Return today's date in the timezone of the user's browser.
+
+    Returns
+    -------
+    str
+        Date formatted for the report, for example "October 24, 2026". The server
+        timezone is used if the one of the browser is not available.
+    """
+    try:
+        now = datetime.now(ZoneInfo(st.context.timezone))
+    except Exception:  # Unknown or unavailable timezone
+        now = datetime.now()
+    return now.strftime("%B %d, %Y")
 
 
 def send_email(sender_email: str, subject: str, message: str) -> bool:

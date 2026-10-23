@@ -8,6 +8,7 @@ import streamlit as st
 from numpy import array, zeros
 
 from src.app_fn import (
+    get_report_date,
     init_outcome_toggles,
     load_averages,
     load_pipeline,
@@ -148,7 +149,6 @@ with main_col1:
                         args=("MORTALITY_OUTCOMES",),
                     )
 
-
             # Create the graph/table toggle
             st.pills(
                 "**Display type**",
@@ -197,7 +197,6 @@ with main_col1:
                                 on_change=sync_master_toggle,
                                 args=("COMPLICATIONS",),
                             )
-
 
                 # Create the graph/table toggle
                 st.pills(
@@ -248,7 +247,6 @@ with main_col1:
                                 args=("HEALTH_OUTCOMES",),
                             )
 
-
                 # Create the graph/table toggle
                 st.pills(
                     "**Display type**",
@@ -273,12 +271,15 @@ with main_col1:
 
         # The report is only generated when the button is clicked, since rendering
         # the charts is slow and the script reruns on every interaction
+        report_date = get_report_date()
+
         def build_report() -> bytes:
             return create_pdf_report(
                 [mortality_chart, comp_chart, health_chart],
                 [mortality_table, comp_table, health_table],
                 regressor_charts=[daoh_chart, los_chart],
                 regressor_table=regressor_table,
+                report_date=report_date,
             )
 
         st.download_button(
