@@ -90,7 +90,12 @@ with main_col1:
                 visualisation by selecting the display type.
                 """)
 
-        op_average = averages[cat_l2]
+        op_average = averages.get(cat_l2)
+        if op_average is None:
+            st.error(
+                "Population averages are not available for this operation category."
+            )
+            st.stop()
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
