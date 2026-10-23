@@ -5,24 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [1.5.0] - 2026-10-23
-
-### Added
-* New regression outcomes for days alive and out of hospital and length of 
-stay.
-
-### Changed
-* Reviewed the data visualisation to have the patient as a point and the 
-population average as a rectangle.
-* The `Help` button for explaining the charts has been updated to `How to read
-the charts` and includes information about the regression outcomes.
-* Updated the model version from v1 to v2 for classifiers and regressors.
-
-### Fixed
-* Typo in the ethnicity input for Pacific Peoples.
-* Case when the CI are None.
-
-## [1.4.0] - 2026-10-05
+## [1.4.0] - 2026-10-23
 
 ### Changed
 * Bumped medpipe version from 0.3.1 to 0.4.0.dev2
@@ -31,6 +14,11 @@ loading functions
 * Split the `data_visualisation` function into smaller functions placed in the new
 `visualisation.py` file
 * The PDF report shows 'No outcomes selected' is the user does not tick any outcomes
+* Reviewed the data visualisation to have the patient as a point and the 
+population average as a rectangle.
+* The `Help` button for explaining the charts has been updated to `How to read
+the charts` and includes information about the regression outcomes.
+* Updated the model version from v1 to v2 for classifiers and regressors.
 
 ### Added
 * New data conversion function to make the format fit with the new medpipe version
@@ -43,9 +31,15 @@ loading functions
 * Exporting regressor results to the PDF report
 * Created a `reporting.py` script for PDF report generation
 * Proper docstring and type hinting
+* New regression outcomes for days alive and out of hospital and length of 
+stay.
 
 ### Removed
 * Removed old data type conversion function
+
+### Fixed
+* Typo in the ethnicity input for Pacific Peoples.
+* Case when the CI are None.
 
 ## [1.3.1] - 2026-07-28
 
@@ -130,7 +124,6 @@ loading functions
 
 
 [Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...HEAD
-[1.5.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...1.5.0
 [1.4.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...1.4.0
 [1.3.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.4...v1.3.0
