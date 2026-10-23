@@ -20,6 +20,7 @@ from .constants import (
     LABEL_MAP,
     OPERATIONS,
     REGRESSOR,
+    SEND_EMAIL_TIMEOUT,
 )
 
 
@@ -362,9 +363,15 @@ def send_email(sender_email: str, subject: str, message: str) -> bool:
     Returns
     -------
     bool
-        True if the request was successful, False otherwise.
+        True if the request was successful, False otherwise, including if the
+        url is not configured or the request could not be sent.
     """
-    url = st.secrets["url"]
-    data = {"email": sender_email, "subject": subject, "message": message}
-    response = requests.post(url, data=data)
+    try:
+        url = st.secrets["url"]
+        data = {"email": sender_email, "subject": subject, "message": message}
+        response = requests.post(url, data=data, timeout=SEND_EMAIL_TIMEOUT)
+    except (KeyError, FileNotFoundError, requests.RequestException):
+        # Do not let the exception propagate, as its message can contain the url
+        return False
+
     return response.status_code == 200
