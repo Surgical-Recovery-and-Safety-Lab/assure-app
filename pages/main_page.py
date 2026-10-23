@@ -28,7 +28,7 @@ with main_col1:
         show_consent_page()
     else:
         input_features = main_page_layout()
-        is_ready = None not in input_features  # Define the is_ready flag
+        is_ready = input_features is not None  # Define the is_ready flag
 
         with st.spinner("Loading model and data..."):
             pipeline = load_pipeline()
@@ -64,6 +64,10 @@ with main_col1:
                         )
                     )
 
+                # Keep what the results were computed from, so they stay consistent
+                # if the inputs are edited afterwards
+                st.session_state.run_inputs = input_features
+                st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[0]
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
@@ -73,11 +77,22 @@ with main_col1:
             with info_col:
                 st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run:
-        cat_l2 = input_features["CATEGORY_LEVEL_2"].iloc[0]  # Get only value
+    if (
+        st.session_state.model_run
+        and st.session_state.consent
+        and st.session_state.run_category is not None
+    ):
+        cat_l2 = st.session_state.run_category  # Category the model was run with
 
         # If the model has been run
         st.header("Results", divider="rainbow")
+        if input_features is None or not input_features.equals(
+            st.session_state.run_inputs
+        ):
+            st.warning(
+                "The inputs have changed since the model was last run. The results "
+                "below are for the previous inputs."
+            )
         st.write("""Select one of the tabs below to view the desired results.""")
         st.write("""
                  The outcomes can be toggled on and off using the switches. The
