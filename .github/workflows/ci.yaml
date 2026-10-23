@@ -19,7 +19,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt -c constraints.txt
-          pip install pytest
+          pip install -r requirements-dev.txt
+      - name: Lint with ruff
+        run: ruff check .
+      - name: Check the formatting with ruff
+        run: ruff format --check .
+      - name: Check the types with mypy
+        run: mypy app.py pages src tests
       - name: Check that the code compiles
         run: python -m compileall -q app.py pages src
       - name: Run the tests
