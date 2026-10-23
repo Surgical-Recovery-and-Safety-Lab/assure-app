@@ -1,6 +1,7 @@
 """Risk visualisation (chart and table) for the web app."""
 
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import altair as alt
 import numpy as np
@@ -19,6 +20,7 @@ from .constants import (
     LEGEND_MEDIAN,
     LEGEND_PATIENT,
     REGRESSOR_KEYS,
+    RISK_DECIMALS,
 )
 
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
@@ -72,11 +74,18 @@ def _build_classifier_plot_df(
     for key, label in complications_dict.items():
         if not st.session_state[key] or key in EXCLUDED_KEYS + REGRESSOR_KEYS:
             continue
+        if key not in op_average or key not in st.session_state.output_proba:
+            st.warning(f"No results are available for {label}.")
+            continue
         labels.append(label)
-        patient_risk.append(st.session_state.output_proba[key])
-        average.append(op_average[key][0] * 100)
-        lower.append(_ci_value(op_average[key][1], lambda v: v * 100))
-        upper.append(_ci_value(op_average[key][2], lambda v: v * 100))
+        patient_risk.append(np.round(st.session_state.output_proba[key], RISK_DECIMALS))
+        average.append(np.round(op_average[key][0] * 100, RISK_DECIMALS))
+        lower.append(
+            _ci_value(op_average[key][1], lambda v: np.round(v * 100, RISK_DECIMALS))
+        )
+        upper.append(
+            _ci_value(op_average[key][2], lambda v: np.round(v * 100, RISK_DECIMALS))
+        )
 
     return DataFrame(
         {
@@ -120,15 +129,18 @@ def _build_regressor_plot_df(
     for key, label in complications_dict.items():
         if not st.session_state[key] or key not in REGRESSOR_KEYS:
             continue
+        if key not in op_average or key not in st.session_state.output_dists:
+            st.warning(f"No results are available for {label}.")
+            continue
         labels.append(label)
         dist = st.session_state.output_dists[key]
-        prediction.append(round(dist.median()[0]))  # To get an integer
+        prediction.append(np.ceil(dist.median()[0]))  # To get an integer
         l, u = dist.interval(0.95)
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
-        average.append(np.round(op_average[key][0]))
-        lower.append(_ci_value(op_average[key][1], np.ceil))
-        upper.append(_ci_value(op_average[key][2], np.ceil))
+        average.append(int(np.round(op_average[key][0])))
+        lower.append(int(_ci_value(op_average[key][1], np.round)))
+        upper.append(int(_ci_value(op_average[key][2], np.round)))
 
     return DataFrame(
         {
@@ -154,13 +166,13 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with a 'Risk status' column ("Higher" or "Lower").
+        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal").
     """
-    plot_df["Risk status"] = plot_df.apply(
-        lambda row: (
-            "Higher" if row["Risk percentage"] > row["Population average"] else "Lower"
-        ),
-        axis=1,
+    # Compare at the displayed precision, so equal looking values are not "Higher"
+    risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
+    average = plot_df["Population average"].round(RISK_DECIMALS)
+    plot_df["Risk status"] = np.select(
+        [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
     )
     return plot_df
 
@@ -168,8 +180,9 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
 def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     """Add the 'Risk status' and 'Favourable' columns to the regressor data.
 
-    A prediction above the population average is "Higher", otherwise "Lower".
-    More days alive and out of hospital is favourable, while a longer stay is not.
+    A prediction above the population average is "Higher", below it "Lower" and
+    the same as it "Equal". More days alive and out of hospital is favourable,
+    while a longer stay is not. An equal prediction is neither.
 
     Parameters
     ----------
@@ -181,9 +194,13 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     pandas.DataFrame
         The same DataFrame with 'Risk status' and 'Favourable' columns.
     """
-    higher = plot_df["Median prediction"] > plot_df["Population average"]
+    prediction = plot_df["Median prediction"]
+    average = plot_df["Population average"]
+    higher = prediction > average
     daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
-    plot_df["Risk status"] = higher.map({True: "Higher", False: "Lower"})
+    plot_df["Risk status"] = np.select(
+        [higher, prediction < average], ["Higher", "Lower"], default="Equal"
+    )
     plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
     return plot_df
 
@@ -262,19 +279,21 @@ def _y_encoding() -> alt.Y:
     )
 
 
-def _regressor_status_color() -> alt.condition:
+def _regressor_status_color():
     """Create the red / green condition used by the regressor text layers.
 
     Returns
     -------
-    altair.condition
-        Green if the prediction is favourable compared to the population average,
-        else red.
+    altair.Then
+        Black if the prediction equals the population average, green if it is
+        favourable compared to it, else red.
     """
-    return alt.condition(
-        alt.datum["Favourable"],
-        alt.value(COLOR_GREEN),
-        alt.value(COLOR_RED),
+    return (
+        alt.when(alt.datum["Risk status"] == "Equal")
+        .then(alt.value(COLOR_BLACK))
+        .when(alt.datum["Favourable"])
+        .then(alt.value(COLOR_GREEN))
+        .otherwise(alt.value(COLOR_RED))
     )
 
 
@@ -283,13 +302,16 @@ def _status_color():
 
     Returns
     -------
-    altair.condition
-        Red if the patient risk is above the population average, else green.
+    altair.Then
+        Black if the patient risk equals the population average, red if it is above,
+        else green.
     """
-    return alt.condition(
-        alt.datum["Risk percentage"] > alt.datum["Population average"],
-        alt.value(COLOR_RED),
-        alt.value(COLOR_GREEN),
+    return (
+        alt.when(alt.datum["Risk status"] == "Equal")
+        .then(alt.value(COLOR_BLACK))
+        .when(alt.datum["Risk status"] == "Higher")
+        .then(alt.value(COLOR_RED))
+        .otherwise(alt.value(COLOR_GREEN))
     )
 
 
@@ -325,7 +347,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
 def _average_point_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the circle marking the population average.
+    """Build the tick marking the population average.
 
     Parameters
     ----------
@@ -359,7 +381,7 @@ def _average_point_layer(
 def _patient_diamond_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color, x_max
 ) -> alt.Chart:
-    """Build the patient risk bars, red if above average and green otherwise.
+    """Build the diamond marking the patient risk.
 
     Parameters
     ----------
@@ -379,12 +401,7 @@ def _patient_diamond_layer(
     """
     return (
         alt.Chart(plot_df)
-        .transform_calculate(
-            Legend=(
-                "datum['Risk percentage'] > datum['Population average'] "
-                f"? '{LEGEND_PATIENT}' : '{LEGEND_PATIENT}'"
-            )
-        )
+        .transform_calculate(Legend=f"'{LEGEND_PATIENT}'")
         .mark_point(filled=True, shape="diamond", size=250, opacity=1)
         .encode(
             x=alt.X(
@@ -428,7 +445,7 @@ def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text=alt.Text("Risk percentage:Q", format=".1f"),
+            text=alt.Text("Risk percentage:Q", format=f".{RISK_DECIMALS}f"),
             color=_status_color(),
         )
     )
@@ -474,7 +491,7 @@ def _risk_status_text_layer(
 def _median_prediction_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the circle marking the patient's median prediction.
+    """Build the diamond marking the patient's median prediction.
 
     Parameters
     ----------
@@ -629,7 +646,7 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     altair.LayerChart
         The configured layered chart.
     """
-    x_max = plot_df.max(numeric_only=True).max() * 1.1
+    x_max = max(plot_df.max(numeric_only=True).max() * 1.1, 1)  # Never a 0 width axis
     y_enc = _y_encoding()
     legend_color = _legend_color()
 
@@ -707,13 +724,15 @@ def _build_regressor_chart(
 # --------------------------------------------------------------------------- #
 # Table
 # --------------------------------------------------------------------------- #
-def _format_average(row: Series) -> str:
+def _format_average(row: Series, decimals: int = 1) -> str:
     """Format the population average with its confidence interval.
 
     Parameters
     ----------
     row : pandas.Series
         Row with 'Population average', 'Lower CI' and 'Upper CI'.
+    decimals : int, default 1
+        Number of decimals to display.
 
     Returns
     -------
@@ -722,11 +741,11 @@ def _format_average(row: Series) -> str:
         available"`` if the interval could not be computed.
     """
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{row['Population average']:.1f}, 95% CI not available"
+        return f"{row['Population average']:.{decimals}f}, 95% CI not available"
 
     return (
-        f"{row['Population average']:.1f}, "
-        f"95% CI [{row['Lower CI']:.1f}, {row['Upper CI']:.1f}]"
+        f"{row['Population average']:.{decimals}f}, "
+        f"95% CI [{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]"
     )
 
 
@@ -763,7 +782,9 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
         Table with the outcome, patient risk, population average and risk status.
     """
     display_df = plot_df.copy()
-    display_df["Population average"] = display_df.apply(_format_average, axis=1)
+    display_df["Population average"] = display_df.apply(
+        _format_average, axis=1, decimals=RISK_DECIMALS
+    )
     return display_df[
         ["Complications", "Risk percentage", "Population average", "Risk status"]
     ]
@@ -785,7 +806,9 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
-    display_df["Population average"] = display_df.apply(_format_average, axis=1)
+    display_df["Population average"] = display_df.apply(
+        _format_average, axis=1, decimals=0
+    )
     return display_df[
         [
             "Complications",
@@ -800,7 +823,7 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
 # --------------------------------------------------------------------------- #
 # Streamlit rendering
 # --------------------------------------------------------------------------- #
-def _hide_chart_toolbar() -> None:
+def hide_chart_toolbar() -> None:
     """Hide the table view and zoom options on Streamlit elements."""
     st.markdown(
         """
@@ -828,13 +851,16 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         CSS style for each cell in the row.
     """
     styles = ["color: black"] * len(row)
-    colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
+    if row["Risk status"] == "Equal":
+        colour = COLOR_BLACK
+    else:
+        colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
     styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
     return styles
 
 
 def _highlight_medical_risk(row: Series) -> list[str]:
-    """Highlight the risk status in red or green and bold font.
+    """Highlight the risk status in red, green or black and bold font.
 
     Parameters
     ----------
@@ -850,11 +876,8 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     styles = ["color: black"] * len(row)
 
     risk_col_index = row.index.get_loc("Risk status")
-    if row["Risk status"] == "Higher":
-        # Find the index of the column you want to color
-        styles[risk_col_index] = f"color: {COLOR_RED}; font-weight: bold"
-    else:
-        styles[risk_col_index] = f"color: {COLOR_GREEN}; font-weight: bold"
+    colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN, "Equal": COLOR_BLACK}
+    styles[risk_col_index] = f"color: {colours[row['Risk status']]}; font-weight: bold"
 
     return styles
 
@@ -873,9 +896,9 @@ def _render_table(
     """
     if classifier_table is not None:
         st.dataframe(
-            classifier_table.style.format({"Risk percentage": "{:.1f}%"}).apply(
-                _highlight_medical_risk, axis=1
-            ),
+            classifier_table.style.format(
+                {"Risk percentage": f"{{:.{RISK_DECIMALS}f}}%"}
+            ).apply(_highlight_medical_risk, axis=1),
             column_config={
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
@@ -898,7 +921,8 @@ def _render_table(
             hide_index=True,
             width="stretch",
         )
-    st.info("Sort the table columns by clicking on the column name")
+    if classifier_table is not None or regressor_table is not None:
+        st.info("Sort the table columns by clicking on the column name")
 
 
 def _render_chart(
@@ -1009,7 +1033,6 @@ def data_visualisation(
     if not plot_df.empty:  # all labels are unticked
         plot_df = _add_risk_status(plot_df)
 
-        _hide_chart_toolbar()
         classifier_chart = _build_chart(plot_df)
 
         classifier_table = _build_table(plot_df)

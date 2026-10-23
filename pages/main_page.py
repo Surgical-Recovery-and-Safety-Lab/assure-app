@@ -8,6 +8,7 @@ import streamlit as st
 from numpy import array, zeros
 
 from src.app_fn import (
+    get_report_date,
     init_outcome_toggles,
     load_averages,
     load_pipeline,
@@ -15,11 +16,12 @@ from src.app_fn import (
     show_consent_page,
     sync_complication_toggles,
     sync_health_outcome_toggles,
+    sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
-from src.constants import LABEL_MAP
+from src.constants import LABEL_MAP, UNAVAILABLE_KEYS
 from src.reporting import create_pdf_report
-from src.visualisation import data_visualisation
+from src.visualisation import data_visualisation, hide_chart_toolbar
 
 main_col1, _ = st.columns([0.7, 0.3])
 
@@ -28,7 +30,7 @@ with main_col1:
         show_consent_page()
     else:
         input_features = main_page_layout()
-        is_ready = None not in input_features  # Define the is_ready flag
+        is_ready = input_features is not None  # Define the is_ready flag
 
         with st.spinner("Loading model and data..."):
             pipeline = load_pipeline()
@@ -37,7 +39,7 @@ with main_col1:
 
         run = st.button("Run model", disabled=not is_ready)
         info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
-        if is_ready:
+        if input_features is not None:
             if run:
                 # Run classifier
                 outcomes = pipeline.mp_config.data.outcomes
@@ -64,6 +66,12 @@ with main_col1:
                         )
                     )
 
+                # Keep what the results were computed from, so they stay consistent
+                # if the inputs are edited afterwards
+                st.session_state.run_inputs = input_features
+                st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[
+                    0
+                ]
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
@@ -73,11 +81,23 @@ with main_col1:
             with info_col:
                 st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run:
-        cat_l2 = input_features["CATEGORY_LEVEL_2"].iloc[0]  # Get only value
+    if (
+        st.session_state.model_run
+        and st.session_state.consent
+        and st.session_state.run_category is not None
+    ):
+        cat_l2 = st.session_state.run_category  # Category the model was run with
 
         # If the model has been run
         st.header("Results", divider="rainbow")
+        hide_chart_toolbar()
+        if input_features is None or not input_features.equals(
+            st.session_state.run_inputs
+        ):
+            st.warning(
+                "The inputs have changed since the model was last run. The results "
+                "below are for the previous inputs."
+            )
         st.write("""Select one of the tabs below to view the desired results.""")
         st.write("""
                  The outcomes can be toggled on and off using the switches. The
@@ -90,7 +110,12 @@ with main_col1:
                 visualisation by selecting the display type.
                 """)
 
-        op_average = averages[cat_l2]
+        op_average = averages.get(cat_l2)
+        if op_average is None:
+            st.error(
+                "Population averages are not available for this operation category."
+            )
+            st.stop()
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
@@ -109,7 +134,7 @@ with main_col1:
             st.subheader("Mortality outcomes")
 
             # Create mortality outcomes layout
-            all_toggle = st.toggle(
+            st.toggle(
                 mortality_outcomes_dict["MORTALITY_OUTCOMES"],
                 key="MORTALITY_OUTCOMES",
                 on_change=sync_mortality_outcome_toggles,
@@ -119,20 +144,15 @@ with main_col1:
                 for key in mortality_outcomes_dict:
                     if key == "MORTALITY_OUTCOMES":
                         continue
-                    toggle = st.toggle(
+                    st.toggle(
                         mortality_outcomes_dict[key],
                         key=key,
+                        on_change=sync_master_toggle,
+                        args=("MORTALITY_OUTCOMES",),
                     )
 
-            # Empty list to store mortality outcomes to plot
-            mortality_labels = []
-            mortality_outcomes_proba = []
-            mortality_average = []
-            mortality_lower = []
-            mortality_upper = []
-
             # Create the graph/table toggle
-            mortality_display_option = st.pills(
+            st.pills(
                 "**Display type**",
                 key="mortality_display_option",
                 options=display_options.keys(),
@@ -141,17 +161,19 @@ with main_col1:
                 default="graph",
             )
 
-            mortality_chart, mortality_table, _, _, _ = data_visualisation(
-                mortality_outcomes_dict,
-                op_average,
-                display=st.session_state.mortality_display_option,
+            mortality_chart, mortality_table, *_mortality_regressors = (
+                data_visualisation(
+                    mortality_outcomes_dict,
+                    op_average,
+                    display=st.session_state.mortality_display_option,
+                )
             )
 
         with comp_tab:
             # Create complications layout
             st.subheader("Postoperative complications")
 
-            all_toggle = st.toggle(
+            st.toggle(
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
                 on_change=sync_complication_toggles,
@@ -173,20 +195,15 @@ with main_col1:
                         if key == "COMPLICATIONS":
                             continue
                         else:
-                            toggle = st.toggle(
+                            st.toggle(
                                 complications_dict[key],
                                 key=key,
+                                on_change=sync_master_toggle,
+                                args=("COMPLICATIONS",),
                             )
 
-                # Empty list to store complications to plot
-                comp_labels = []
-                comp_outcomes_proba = []
-                comp_average = []
-                comp_lower = []
-                comp_upper = []
-
                 # Create the graph/table toggle
-                comp_display_option = st.pills(
+                st.pills(
                     "**Display type**",
                     key="comp_display_option",
                     options=display_options.keys(),
@@ -195,7 +212,7 @@ with main_col1:
                     default="graph",
                 )
 
-                comp_chart, comp_table, _, _, _ = data_visualisation(
+                comp_chart, comp_table, *_comp_regressors = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,
@@ -205,7 +222,7 @@ with main_col1:
             st.subheader("Health Service use")
 
             # Create health outcomes layout
-            all_toggle = st.toggle(
+            st.toggle(
                 health_outcomes_dict["HEALTH_OUTCOMES"],
                 key="HEALTH_OUTCOMES",
                 on_change=sync_health_outcome_toggles,
@@ -222,25 +239,20 @@ with main_col1:
                     with col:
                         if key == "HEALTH_OUTCOMES":
                             continue
-                        if key in ["DAOH", "LOS", "FTR"]:
-                            toggle = st.toggle(  # Disable because coming soon
+                        if key in UNAVAILABLE_KEYS:
+                            st.toggle(  # Disable because coming soon
                                 health_outcomes_dict[key], key=key, disabled=True
                             )
                         else:
-                            toggle = st.toggle(
+                            st.toggle(
                                 health_outcomes_dict[key],
                                 key=key,
+                                on_change=sync_master_toggle,
+                                args=("HEALTH_OUTCOMES",),
                             )
 
-                # Empty list to store health outcomes to plot
-                health_labels = []
-                health_outcomes_proba = []
-                health_average = []
-                health_lower = []
-                health_upper = []
-
                 # Create the graph/table toggle
-                health_display_option = st.pills(
+                st.pills(
                     "**Display type**",
                     key="health_display_option",
                     options=display_options.keys(),
@@ -261,16 +273,23 @@ with main_col1:
                     display=st.session_state.health_display_option,
                 )
 
-        pdf_bytes = create_pdf_report(
-            [mortality_chart, comp_chart, health_chart],
-            [mortality_table, comp_table, health_table],
-            regressor_charts=[daoh_chart, los_chart],
-            regressor_table=regressor_table,
-        )
+        # The report is only generated when the button is clicked, since rendering
+        # the charts is slow and the script reruns on every interaction
+        report_date = get_report_date()
+
+        def build_report() -> bytes:
+            return create_pdf_report(
+                [mortality_chart, comp_chart, health_chart],
+                [mortality_table, comp_table, health_table],
+                regressor_charts=[daoh_chart, los_chart],
+                regressor_table=regressor_table,
+                report_date=report_date,
+            )
+
         st.download_button(
             label="Download PDF report",
-            data=pdf_bytes,
+            data=build_report,
             file_name="patient_risk_report.pdf",
-            mime="application/octet-stream",
+            mime="application/pdf",
             icon=":material/download:",
         )

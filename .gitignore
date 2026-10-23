@@ -2,3 +2,4 @@ __pycache__/
 assets/models/
 assets/*.csv
 .streamlit/secrets.toml
+.venv

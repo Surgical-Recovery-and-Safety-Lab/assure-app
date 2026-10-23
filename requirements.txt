@@ -1,7 +1,9 @@
 medpipe==0.4.0.dev2
 altair==6.0.0
-fpdf2==2.8.7
 joblib==1.5.3
+numpy==2.5.4
+pandas==2.3.3
+requests==2.34.2
 streamlit==1.54.0
 vl-convert-python==1.9.0.post1
 weasyprint==68.1
