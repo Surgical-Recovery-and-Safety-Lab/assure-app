@@ -281,15 +281,19 @@ with main_col1:
                     display=st.session_state.health_display_option,
                 )
 
-        pdf_bytes = create_pdf_report(
-            [mortality_chart, comp_chart, health_chart],
-            [mortality_table, comp_table, health_table],
-            regressor_charts=[daoh_chart, los_chart],
-            regressor_table=regressor_table,
-        )
+        # The report is only generated when the button is clicked, since rendering
+        # the charts is slow and the script reruns on every interaction
+        def build_report() -> bytes:
+            return create_pdf_report(
+                [mortality_chart, comp_chart, health_chart],
+                [mortality_table, comp_table, health_table],
+                regressor_charts=[daoh_chart, los_chart],
+                regressor_table=regressor_table,
+            )
+
         st.download_button(
             label="Download PDF report",
-            data=pdf_bytes,
+            data=build_report,
             file_name="patient_risk_report.pdf",
             mime="application/octet-stream",
             icon=":material/download:",
