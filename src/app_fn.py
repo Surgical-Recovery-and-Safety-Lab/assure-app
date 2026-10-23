@@ -21,6 +21,7 @@ from .constants import (
     OPERATIONS,
     REGRESSOR,
     SEND_EMAIL_TIMEOUT,
+    UNAVAILABLE_KEYS,
 )
 
 
@@ -82,7 +83,7 @@ def sync_mortality_outcome_toggles() -> None:
 def sync_health_outcome_toggles() -> None:
     """Sync the health service outcome toggles with the 'all' toggle."""
     for key in LABEL_MAP["HEALTH_OUTCOMES"]:
-        if key in ["HEALTH_OUTCOMES", "FTR", "LOS", "DAOH"]:
+        if key == "HEALTH_OUTCOMES" or key in UNAVAILABLE_KEYS:
             continue
         st.session_state[key] = st.session_state.HEALTH_OUTCOMES
 
@@ -109,7 +110,7 @@ def sync_master_toggle(master_key: str) -> None:
     sub_keys = [
         key
         for key in LABEL_MAP[master_key]
-        if key not in [master_key, "FTR", "LOS", "DAOH"]  # Not available yet
+        if key != master_key and key not in UNAVAILABLE_KEYS
     ]
     st.session_state[master_key] = all(st.session_state[key] for key in sub_keys)
 
@@ -123,7 +124,7 @@ def init_outcome_toggles() -> None:
         # Initialize all SUB-TOGGLES in that group to True as well
         for sub_key in LABEL_MAP[master_key]:
             if sub_key not in st.session_state:
-                if sub_key in ["FTR", "DAOH", "LOS"]:
+                if sub_key in UNAVAILABLE_KEYS:
                     continue
                 st.session_state[sub_key] = True
 

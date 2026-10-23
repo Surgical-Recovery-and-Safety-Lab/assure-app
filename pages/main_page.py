@@ -18,7 +18,7 @@ from src.app_fn import (
     sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
-from src.constants import LABEL_MAP
+from src.constants import LABEL_MAP, UNAVAILABLE_KEYS
 from src.reporting import create_pdf_report
 from src.visualisation import data_visualisation, hide_chart_toolbar
 
@@ -248,7 +248,7 @@ with main_col1:
                     with col:
                         if key == "HEALTH_OUTCOMES":
                             continue
-                        if key in ["DAOH", "LOS", "FTR"]:
+                        if key in UNAVAILABLE_KEYS:
                             toggle = st.toggle(  # Disable because coming soon
                                 health_outcomes_dict[key], key=key, disabled=True
                             )
