@@ -20,6 +20,7 @@ from .constants import (
     LEGEND_MEDIAN,
     LEGEND_PATIENT,
     REGRESSOR_KEYS,
+    RISK_DECIMALS,
 )
 
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
@@ -77,10 +78,14 @@ def _build_classifier_plot_df(
             st.warning(f"No results are available for {label}.")
             continue
         labels.append(label)
-        patient_risk.append(st.session_state.output_proba[key])
-        average.append(op_average[key][0] * 100)
-        lower.append(_ci_value(op_average[key][1], lambda v: v * 100))
-        upper.append(_ci_value(op_average[key][2], lambda v: v * 100))
+        patient_risk.append(np.round(st.session_state.output_proba[key], RISK_DECIMALS))
+        average.append(np.round(op_average[key][0] * 100, RISK_DECIMALS))
+        lower.append(
+            _ci_value(op_average[key][1], lambda v: np.round(v * 100, RISK_DECIMALS))
+        )
+        upper.append(
+            _ci_value(op_average[key][2], lambda v: np.round(v * 100, RISK_DECIMALS))
+        )
 
     return DataFrame(
         {
@@ -129,7 +134,7 @@ def _build_regressor_plot_df(
             continue
         labels.append(label)
         dist = st.session_state.output_dists[key]
-        prediction.append(round(dist.median()[0]))  # To get an integer
+        prediction.append(np.ceil(dist.median()[0]))  # To get an integer
         l, u = dist.interval(0.95)
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
@@ -164,8 +169,8 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
         The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal").
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
-    risk = plot_df["Risk percentage"].round(1)
-    average = plot_df["Population average"].round(1)
+    risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
+    average = plot_df["Population average"].round(RISK_DECIMALS)
     plot_df["Risk status"] = np.select(
         [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
     )
@@ -440,7 +445,7 @@ def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text=alt.Text("Risk percentage:Q", format=".1f"),
+            text=alt.Text("Risk percentage:Q", format=f".{RISK_DECIMALS}f"),
             color=_status_color(),
         )
     )
@@ -719,13 +724,15 @@ def _build_regressor_chart(
 # --------------------------------------------------------------------------- #
 # Table
 # --------------------------------------------------------------------------- #
-def _format_average(row: Series) -> str:
+def _format_average(row: Series, decimals: int = 1) -> str:
     """Format the population average with its confidence interval.
 
     Parameters
     ----------
     row : pandas.Series
         Row with 'Population average', 'Lower CI' and 'Upper CI'.
+    decimals : int, default 1
+        Number of decimals to display.
 
     Returns
     -------
@@ -734,11 +741,11 @@ def _format_average(row: Series) -> str:
         available"`` if the interval could not be computed.
     """
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{row['Population average']:.1f}, 95% CI not available"
+        return f"{row['Population average']:.{decimals}f}, 95% CI not available"
 
     return (
-        f"{row['Population average']:.1f}, "
-        f"95% CI [{row['Lower CI']:.1f}, {row['Upper CI']:.1f}]"
+        f"{row['Population average']:.{decimals}f}, "
+        f"95% CI [{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]"
     )
 
 
@@ -775,7 +782,9 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
         Table with the outcome, patient risk, population average and risk status.
     """
     display_df = plot_df.copy()
-    display_df["Population average"] = display_df.apply(_format_average, axis=1)
+    display_df["Population average"] = display_df.apply(
+        _format_average, axis=1, decimals=RISK_DECIMALS
+    )
     return display_df[
         ["Complications", "Risk percentage", "Population average", "Risk status"]
     ]
@@ -885,9 +894,9 @@ def _render_table(
     """
     if classifier_table is not None:
         st.dataframe(
-            classifier_table.style.format({"Risk percentage": "{:.1f}%"}).apply(
-                _highlight_medical_risk, axis=1
-            ),
+            classifier_table.style.format(
+                {"Risk percentage": f"{{:.{RISK_DECIMALS}f}}%"}
+            ).apply(_highlight_medical_risk, axis=1),
             column_config={
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",

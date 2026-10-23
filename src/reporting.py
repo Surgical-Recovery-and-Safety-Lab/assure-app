@@ -10,7 +10,7 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
-from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED
+from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED, RISK_DECIMALS
 
 FONTS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 
@@ -74,7 +74,7 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
         f"""
         <tr>
             <td>{escape(str(r.get("Complications", r.get("Outcome", "N/A"))))}</td>
-            <td>{r["Risk percentage"]:.1f}</td>
+            <td>{r["Risk percentage"]:.{RISK_DECIMALS}f}</td>
             <td>{escape(str(r["Population average"]))}</td>
             <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Risk status"])}</td>
         </tr>
