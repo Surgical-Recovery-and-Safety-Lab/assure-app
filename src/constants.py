@@ -1,21 +1,19 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 constants.py
 
 Constants for the app.
 """
 
-MODEL_NAME = "assure_v0.1.1.joblib"
-MODEL = "assets/models/" + MODEL_NAME
+CLASSIFIER = "assets/models/classifier/v2"
+REGRESSOR = "assets/models/regressor/v2"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
 COLUMNS = [
     "AGE",
-    "ETHNICITY",
-    "SEX",
-    "ASA",
+    "ETHNICITY_ORIGINAL",
+    "SEX_ORIGINAL",
+    "ASA_ORIGINAL",
     "PRIOR_CANCER",
     "ADMISSION_ACUITY",
     "ADMISSION_SOURCE",
@@ -35,14 +33,15 @@ LABEL_MAP = {
         "HEALTH_OUTCOMES": "Toggle all",
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
+        "DAOH_90": "Days alive and out of hospital",
+        "POSTOP_LOS": "Length of stay",
         "FTR": "Failure to rescue (coming soon)",
-        "DAOH": "DAOH (coming soon)",
-        "LOS": "Length of stay (coming soon)",
     },
     "COMPLICATIONS": {
         "COMPLICATIONS": "Toggle all complications",
-        "AKI": "AKI",
         "ANY_COMP": "Any complication",
+        "REOP": "Reoperation",
+        "AKI": "AKI",
         "CARDIAC_ARRHYTHMIA": "Cardiac arrhythmia",
         "DELIRIUM": "Delirium",
         "GI_BLEEDING": "GI bleeding",
@@ -59,26 +58,16 @@ LABEL_MAP = {
         "VTE": "VTE",
     },
 }
-MODEL_MAP = {
-    "MORTALITY_30D": "recalibrator",
-    "MORTALITY_90D": "predictor",
-    "MORTALITY_1Y": "recalibrator",
-    "READMIT_ACUTE_30D": "predictor",
-    "READMIT_ACUTE_90D": "predictor",
-    "ANY_COMP": "predictor",
-    "SSI": "predictor",
-    "VTE": "predictor",
-    "SEPSIS": "predictor",
-    "RESPIRATORY_FAILURE": "recalibrator",
-    "SHOCK": "predictor",
-    "STROKE": "recalibrator",
-    "AKI": "predictor",
-    "CARDIAC_ARRHYTHMIA": "predictor",
-    "DELIRIUM": "predictor",
-    "GI_BLEEDING": "predictor",
-    "HAEMORRHAGE": "recalibrator",
-    "IMPLANT_GRAFT": "predictor",
-    "MYOCARDIAL_EVENT": "predictor",
-    "PNEUMONIA": "predictor",
-    "UTI": "recalibrator",
-}
+LEGEND_AVERAGE = "Population average (95% CI)"
+LEGEND_PATIENT = "Patient risk"
+LEGEND_LOWER = "Patient risk (lower)"
+LEGEND_HIGHER = "Patient risk (higher)"
+LEGEND_MEDIAN = "Median prediction (95% PI)"
+EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
+REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
+# Hex values rather than names, since Streamlit remaps colour names to its theme
+COLOR_RED = "#ff0000"
+COLOR_GREEN = "#008000"
+COLOR_GREY = "#808080"
+COLOR_BLUE = "#0000ff"
+COLOR_BLACK = "#000000"
