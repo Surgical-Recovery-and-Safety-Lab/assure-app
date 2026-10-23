@@ -26,6 +26,6 @@ jobs:
             cd assure-app/
             git pull origin deploy
             source ~/.venv/assure-app/bin/activate
-            pip install -r requirements.txt
-            cp -r /home/$USER/assure-test/assets/. /home/$USER/assure-app/assets/
+            pip install -r requirements.txt -c constraints.txt
+            bash scripts/sync_assets.sh /home/$USER/assure-test
             sudo systemctl restart assure-app.service

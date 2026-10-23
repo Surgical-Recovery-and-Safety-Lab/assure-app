@@ -26,5 +26,5 @@ jobs:
             cd assure-test/
             git pull origin main
             source ~/.venv/assure-test/bin/activate
-            pip install -r requirements.txt
+            pip install -r requirements.txt -c constraints.txt
             sudo systemctl restart assure-test.service
