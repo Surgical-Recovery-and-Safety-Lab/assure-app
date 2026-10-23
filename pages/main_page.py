@@ -131,7 +131,7 @@ with main_col1:
             st.subheader("Mortality outcomes")
 
             # Create mortality outcomes layout
-            all_toggle = st.toggle(
+            st.toggle(
                 mortality_outcomes_dict["MORTALITY_OUTCOMES"],
                 key="MORTALITY_OUTCOMES",
                 on_change=sync_mortality_outcome_toggles,
@@ -141,22 +141,16 @@ with main_col1:
                 for key in mortality_outcomes_dict:
                     if key == "MORTALITY_OUTCOMES":
                         continue
-                    toggle = st.toggle(
+                    st.toggle(
                         mortality_outcomes_dict[key],
                         key=key,
                         on_change=sync_master_toggle,
                         args=("MORTALITY_OUTCOMES",),
                     )
 
-            # Empty list to store mortality outcomes to plot
-            mortality_labels = []
-            mortality_outcomes_proba = []
-            mortality_average = []
-            mortality_lower = []
-            mortality_upper = []
 
             # Create the graph/table toggle
-            mortality_display_option = st.pills(
+            st.pills(
                 "**Display type**",
                 key="mortality_display_option",
                 options=display_options.keys(),
@@ -175,7 +169,7 @@ with main_col1:
             # Create complications layout
             st.subheader("Postoperative complications")
 
-            all_toggle = st.toggle(
+            st.toggle(
                 complications_dict["COMPLICATIONS"],
                 key="COMPLICATIONS",
                 on_change=sync_complication_toggles,
@@ -197,22 +191,16 @@ with main_col1:
                         if key == "COMPLICATIONS":
                             continue
                         else:
-                            toggle = st.toggle(
+                            st.toggle(
                                 complications_dict[key],
                                 key=key,
                                 on_change=sync_master_toggle,
                                 args=("COMPLICATIONS",),
                             )
 
-                # Empty list to store complications to plot
-                comp_labels = []
-                comp_outcomes_proba = []
-                comp_average = []
-                comp_lower = []
-                comp_upper = []
 
                 # Create the graph/table toggle
-                comp_display_option = st.pills(
+                st.pills(
                     "**Display type**",
                     key="comp_display_option",
                     options=display_options.keys(),
@@ -231,7 +219,7 @@ with main_col1:
             st.subheader("Health Service use")
 
             # Create health outcomes layout
-            all_toggle = st.toggle(
+            st.toggle(
                 health_outcomes_dict["HEALTH_OUTCOMES"],
                 key="HEALTH_OUTCOMES",
                 on_change=sync_health_outcome_toggles,
@@ -249,26 +237,20 @@ with main_col1:
                         if key == "HEALTH_OUTCOMES":
                             continue
                         if key in UNAVAILABLE_KEYS:
-                            toggle = st.toggle(  # Disable because coming soon
+                            st.toggle(  # Disable because coming soon
                                 health_outcomes_dict[key], key=key, disabled=True
                             )
                         else:
-                            toggle = st.toggle(
+                            st.toggle(
                                 health_outcomes_dict[key],
                                 key=key,
                                 on_change=sync_master_toggle,
                                 args=("HEALTH_OUTCOMES",),
                             )
 
-                # Empty list to store health outcomes to plot
-                health_labels = []
-                health_outcomes_proba = []
-                health_average = []
-                health_lower = []
-                health_upper = []
 
                 # Create the graph/table toggle
-                health_display_option = st.pills(
+                st.pills(
                     "**Display type**",
                     key="health_display_option",
                     options=display_options.keys(),
