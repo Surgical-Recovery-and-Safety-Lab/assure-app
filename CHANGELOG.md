@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
+## [1.5.0] - 2026-10-23
+
+### Added
+* New regression outcomes for days alive and out of hospital and length of 
+stay.
+
+### Changed
+* Reviewed the data visualisation to have the patient as a point and the 
+population average as a rectangle.
+* The `Help` button for explaining the charts has been updated to `How to read
+the charts` and includes information about the regression outcomes.
+* Updated the model version from v1 to v2 for classifiers and regressors.
+
+### Fixed
+* Typo in the ethnicity input for Pacific Peoples.
+* Case when the CI are None.
+
 ## [1.4.0] - 2026-10-05
 
 ### Changed
@@ -113,6 +130,7 @@ loading functions
 
 
 [Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...HEAD
+[1.5.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...1.5.0
 [1.4.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...1.4.0
 [1.3.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.4...v1.3.0
