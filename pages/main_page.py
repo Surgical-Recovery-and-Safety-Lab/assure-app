@@ -15,6 +15,7 @@ from src.app_fn import (
     show_consent_page,
     sync_complication_toggles,
     sync_health_outcome_toggles,
+    sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
 from src.constants import LABEL_MAP
@@ -142,6 +143,8 @@ with main_col1:
                     toggle = st.toggle(
                         mortality_outcomes_dict[key],
                         key=key,
+                        on_change=sync_master_toggle,
+                        args=("MORTALITY_OUTCOMES",),
                     )
 
             # Empty list to store mortality outcomes to plot
@@ -196,6 +199,8 @@ with main_col1:
                             toggle = st.toggle(
                                 complications_dict[key],
                                 key=key,
+                                on_change=sync_master_toggle,
+                                args=("COMPLICATIONS",),
                             )
 
                 # Empty list to store complications to plot
@@ -250,6 +255,8 @@ with main_col1:
                             toggle = st.toggle(
                                 health_outcomes_dict[key],
                                 key=key,
+                                on_change=sync_master_toggle,
+                                args=("HEALTH_OUTCOMES",),
                             )
 
                 # Empty list to store health outcomes to plot

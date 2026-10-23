@@ -95,6 +95,25 @@ def sync_complication_toggles() -> None:
         st.session_state[key] = st.session_state.COMPLICATIONS
 
 
+def sync_master_toggle(master_key: str) -> None:
+    """Sync an 'all' toggle with the toggles it controls.
+
+    The 'all' toggle is on only if every toggle it controls is on.
+
+    Parameters
+    ----------
+    master_key : str
+        Session state key of the 'all' toggle, also the key of its group in the
+        label map.
+    """
+    sub_keys = [
+        key
+        for key in LABEL_MAP[master_key]
+        if key not in [master_key, "FTR", "LOS", "DAOH"]  # Not available yet
+    ]
+    st.session_state[master_key] = all(st.session_state[key] for key in sub_keys)
+
+
 def init_outcome_toggles() -> None:
     """Initialise the session state keys used for the outcome toggles."""
     for master_key in ["MORTALITY_OUTCOMES", "COMPLICATIONS", "HEALTH_OUTCOMES"]:
