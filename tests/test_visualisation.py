@@ -38,3 +38,9 @@ def test_format_average_decimals():
     assert _format_average(row, decimals=2) == "5.12, 95% CI [4.50, 6.79]"
     row["Lower CI"] = float("nan")
     assert _format_average(row, decimals=2) == "5.12, 95% CI not available"
+    assert _format_average(row, decimals=0) == "5, 95% CI not available"
+
+
+def test_format_average_integers():
+    row = pd.Series({"Population average": 5.0, "Lower CI": 4.0, "Upper CI": 6.0})
+    assert _format_average(row, decimals=0) == "5, 95% CI [4, 6]"

@@ -138,9 +138,9 @@ def _build_regressor_plot_df(
         l, u = dist.interval(0.95)
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
-        average.append(np.round(op_average[key][0]))
-        lower.append(_ci_value(op_average[key][1], np.round))
-        upper.append(_ci_value(op_average[key][2], np.round))
+        average.append(int(np.round(op_average[key][0])))
+        lower.append(int(_ci_value(op_average[key][1], np.round)))
+        upper.append(int(_ci_value(op_average[key][2], np.round)))
 
     return DataFrame(
         {
@@ -806,7 +806,9 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
-    display_df["Population average"] = display_df.apply(_format_average, axis=1)
+    display_df["Population average"] = display_df.apply(
+        _format_average, axis=1, decimals=0
+    )
     return display_df[
         [
             "Complications",
