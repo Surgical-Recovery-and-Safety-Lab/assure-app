@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 main_page.py
 
@@ -7,13 +5,9 @@ Streamlit ASSURE app main page.
 """
 
 import streamlit as st
-from numpy import array, expand_dims, zeros
-from pandas import DataFrame
+from numpy import array, zeros
 
-from app_fn import (
-    convert_dtypes,
-    create_pdf_report,
-    data_visualisation,
+from src.app_fn import (
     init_outcome_toggles,
     load_averages,
     load_pipeline,
@@ -23,7 +17,9 @@ from app_fn import (
     sync_health_outcome_toggles,
     sync_mortality_outcome_toggles,
 )
-from constants import COLUMNS, LABEL_MAP, MODEL_MAP
+from src.constants import LABEL_MAP
+from src.reporting import create_pdf_report
+from src.visualisation import data_visualisation
 
 main_col1, _ = st.columns([0.7, 0.3])
 
@@ -36,25 +32,39 @@ with main_col1:
 
         with st.spinner("Loading model and data..."):
             pipeline = load_pipeline()
+            regressor_pipeline = load_pipeline("regressor")
             averages = load_averages()
 
         run = st.button("Run model", disabled=not is_ready)
         info_col, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
         if is_ready:
             if run:
-                label_list = pipeline.outcomes
-                data = DataFrame(expand_dims(input_features, 1).T, columns=COLUMNS)
-                output_proba = zeros((len(label_list), 1, 2))
-                for i, label in enumerate(label_list):
+                # Run classifier
+                outcomes = pipeline.mp_config.data.outcomes
+                output_proba = zeros((len(outcomes), 1, 2))
+                for i, outcome in enumerate(outcomes):
                     output_proba[i, :, :] = pipeline.predict_proba(
-                        data, outcomes=label, estimator_type=MODEL_MAP[label]
+                        input_features, outcome=outcome
                     )[0]
+
                 st.session_state.output_proba = {
-                    label_list[i]: 100 * array(output_proba)[i, 0, 1]
-                    for i in range(len(label_list))
-                }
-                # Reshape to create dictionary with only positive probas
-                st.session_state.model_run = True
+                    outcomes[i]: 100 * array(output_proba)[i, 0, 1]
+                    for i in range(len(outcomes))
+                }  # Reshape to create dictionary with only positive probas
+
+                # Run regressor
+                outcomes = regressor_pipeline.mp_config.data.outcomes
+                st.session_state.output_dists = {}
+
+                for outcome in outcomes:
+                    st.session_state.output_dists[outcome] = (
+                        regressor_pipeline.predict_dist(
+                            input_features,
+                            outcome=outcome,
+                        )
+                    )
+
+                st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
                     "To generate results with new data, please click on 'Run model' again."
@@ -63,7 +73,9 @@ with main_col1:
             with info_col:
                 st.info("Please fill out all fields to enable the 'Run model' button.")
 
-    if st.session_state.model_run and input_features[8]:
+    if st.session_state.model_run:
+        cat_l2 = input_features["CATEGORY_LEVEL_2"].iloc[0]  # Get only value
+
         # If the model has been run
         st.header("Results", divider="rainbow")
         st.write("""Select one of the tabs below to view the desired results.""")
@@ -77,7 +89,8 @@ with main_col1:
                 The results can be viewed as a graph or as a table. Select the desired 
                 visualisation by selecting the display type.
                 """)
-        op_average = averages[input_features[8]]
+
+        op_average = averages[cat_l2]
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
@@ -103,7 +116,7 @@ with main_col1:
             )
 
             with st.container(horizontal=False):
-                for key in mortality_outcomes_dict.keys():
+                for key in mortality_outcomes_dict:
                     if key == "MORTALITY_OUTCOMES":
                         continue
                     toggle = st.toggle(
@@ -128,7 +141,7 @@ with main_col1:
                 default="graph",
             )
 
-            mortality_chart, mortality_table = data_visualisation(
+            mortality_chart, mortality_table, _, _, _ = data_visualisation(
                 mortality_outcomes_dict,
                 op_average,
                 display=st.session_state.mortality_display_option,
@@ -182,7 +195,7 @@ with main_col1:
                     default="graph",
                 )
 
-                comp_chart, comp_table = data_visualisation(
+                comp_chart, comp_table, _, _, _ = data_visualisation(
                     complications_dict,
                     op_average,
                     display=st.session_state.comp_display_option,
@@ -236,7 +249,13 @@ with main_col1:
                     default="graph",
                 )
 
-                health_chart, health_table = data_visualisation(
+                (
+                    health_chart,
+                    health_table,
+                    daoh_chart,
+                    los_chart,
+                    regressor_table,
+                ) = data_visualisation(
                     health_outcomes_dict,
                     op_average,
                     display=st.session_state.health_display_option,
@@ -245,6 +264,8 @@ with main_col1:
         pdf_bytes = create_pdf_report(
             [mortality_chart, comp_chart, health_chart],
             [mortality_table, comp_table, health_table],
+            regressor_charts=[daoh_chart, los_chart],
+            regressor_table=regressor_table,
         )
         st.download_button(
             label="Download PDF report",

@@ -1,4 +1,4 @@
 __pycache__/
-assets/models/*.joblib
+assets/models/
 assets/*.csv
 .streamlit/secrets.toml

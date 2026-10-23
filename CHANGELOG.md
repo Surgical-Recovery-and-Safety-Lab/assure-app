@@ -5,7 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [1.3.1] 2026-07-28
+## [1.4.0] - 2026-10-23
+
+### Changed
+* Bumped medpipe version from 0.3.1 to 0.4.0.dev2
+* Loading function now uses the new `MedpipeClassifier` or `MepipeRegressor`
+loading functions
+* Split the `data_visualisation` function into smaller functions placed in the new
+`visualisation.py` file
+* The PDF report shows 'No outcomes selected' is the user does not tick any outcomes
+* Reviewed the data visualisation to have the patient as a point and the 
+population average as a rectangle.
+* The `Help` button for explaining the charts has been updated to `How to read
+the charts` and includes information about the regression outcomes.
+* Updated the model version from v1 to v2 for classifiers and regressors.
+
+### Added
+* New data conversion function to make the format fit with the new medpipe version
+* The `MedpipeRegressor` inference
+* The `reoperation` complication to the list of complications
+* A legend for the graph representations
+* Encoded y values for graphical display to avoid truncating the complications
+* A `src/` folder that contains the helper functions
+* Visualisation for the regressor results DAOH and LOS as table and graph
+* Exporting regressor results to the PDF report
+* Created a `reporting.py` script for PDF report generation
+* Proper docstring and type hinting
+* New regression outcomes for days alive and out of hospital and length of 
+stay.
+
+### Removed
+* Removed old data type conversion function
+
+### Fixed
+* Typo in the ethnicity input for Pacific Peoples.
+* Case when the CI are None.
+
+## [1.3.1] - 2026-07-28
 
 ### Changed
 * Updated the workflow to test the app on the Nectar server
@@ -13,7 +49,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Changed layout of the mortality buttons from horizontal to vertical
 * Fixed visual bug between chart and graph
 
-## [1.3.0] 2026-07-27
+## [1.3.0] - 2026-07-27
 
 ### Added
 * Added CHANGELOG.md
@@ -23,13 +59,13 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Minor tweaks to adapt to API changes in medpipe
 * Changed model created using medpipe v0.3.1
 
-## [1.2.4] 2026-06-11
+## [1.2.4] - 2026-06-11
 
 ### Changed
 * Made the tabs bold font
 * Updated model version
 
-## [1.2.3] 2026-05-26
+## [1.2.3] - 2026-05-26
 
 ### Added
 * Search bar to identify category level 1 and 2, and operation severity
@@ -38,7 +74,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * New logos
 * Minor change to README.md
 
-## [1.2.1] 2026-05-11
+## [1.2.1] - 2026-05-11
 
 ### Added
 * Created a health service use tab with readmission outcomes
@@ -49,7 +85,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Minor verbiage change in the webapp text
 * Updated model version
 
-## [1.2.0] 2026-04-29
+## [1.2.0] - 2026-04-29
 
 ### Changed
 * Minor issues fixed
@@ -58,7 +94,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Improved graphical visualisation of results
 * Changed medpipe version
 
-## [1.1.0] 2026-04-23
+## [1.1.0] - 2026-04-23
 
 ### Added
 * Added pages and navigation side bar
@@ -68,20 +104,34 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 * Updated graph views
 * Small adjustments to make navigation easier
 
-## [1.0.1] 2026-04-15
+## [1.0.1] - 2026-04-15
 
 ### Changed
 * Minor bug fixes
 * UI changes to fit new number of complications
 
-## [1.0.0] 2026-04-15
+## [1.0.0] - 2026-04-15
 
 ### Changed
 * New interface
 * Reduced number of input parameters
 * Improved visulisation of results
 
-## [0.0.1] 2026-02-23
+## [0.0.1] - 2026-02-23
 
 ### Added
 * First version
+
+
+[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.1...1.4.0
+[1.3.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.4...v1.3.0
+[1.2.4]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.3...v1.2.4
+[1.2.3]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.1...v1.2.3
+[1.2.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v.1.1.0...v1.2.0
+[1.1.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.0.1...v.1.1.0
+[1.0.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/compare/v0.0.1...v1.0.0
+[0.0.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure/releases/tag/v0.0.1
