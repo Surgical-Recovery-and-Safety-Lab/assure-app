@@ -232,7 +232,7 @@ def main_page_layout() -> DataFrame | None:
             max_value=5,
             value=1,
         )
-    with asa_col2 and st.popover("Help", type="tertiary", icon=":material/help:"):
+    with asa_col2, st.popover("Help", type="tertiary", icon=":material/help:"):
         st.write("**Amercian Society of Anaesthesiology -- Physical Status Score**")
         st.markdown("""
                 1. Normal healthy patient
@@ -275,7 +275,7 @@ def main_page_layout() -> DataFrame | None:
             category_l2 = row["CATEGORY_LEVEL_2"]
             op_severity = int(row["OP_SEVERITY"])
 
-    with op_col2 and st.popover("Help", type="tertiary", icon=":material/help:"):
+    with op_col2, st.popover("Help", type="tertiary", icon=":material/help:"):
         st.write("**Operation search bar**")
         st.write("""
                 Start typing the operation name or description in the search bar to filter
