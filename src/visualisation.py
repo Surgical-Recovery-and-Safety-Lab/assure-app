@@ -133,8 +133,8 @@ def _build_regressor_plot_df(
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
         average.append(np.round(op_average[key][0]))
-        lower.append(_ci_value(op_average[key][1], np.ceil))
-        upper.append(_ci_value(op_average[key][2], np.ceil))
+        lower.append(_ci_value(op_average[key][1], np.round))
+        upper.append(_ci_value(op_average[key][2], np.round))
 
     return DataFrame(
         {
