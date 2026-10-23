@@ -6,7 +6,7 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
-from .constants import COLOR_GREEN, COLOR_RED
+from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED
 
 
 def _chart_to_base64(chart: alt.Chart | alt.LayerChart) -> str:
@@ -70,7 +70,7 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
             <td>{r.get("Complications", r.get("Outcome", "N/A"))}</td>
             <td>{r["Risk percentage"]:.1f}</td>
             <td>{r["Population average"]}</td>
-            <td class="status-{"higher" if r["Risk status"] == "Higher" else "lower"}">{r["Risk status"]}</td>
+            <td class="status-{r["Risk status"].lower()}">{r["Risk status"]}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -97,7 +97,7 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
             <td>{r["Complications"]}</td>
             <td>{r["Prediction"]}</td>
             <td>{r["Population average"]}</td>
-            <td class="status-{"lower" if r["Favourable"] else "higher"}">{r["Risk status"]}</td>
+            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{r["Risk status"]}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -257,6 +257,7 @@ def create_pdf_report(
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
         .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
+        .status-equal {{ color: {COLOR_BLACK}; font-weight: bold; }}
         .box {{
         background-color: #e8f4fd;
         border-radius: 5px;

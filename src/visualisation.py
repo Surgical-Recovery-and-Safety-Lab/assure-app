@@ -160,19 +160,23 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with a 'Risk status' column ("Higher" or "Lower").
+        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal").
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
-    higher = plot_df["Risk percentage"].round(1) > plot_df["Population average"].round(1)
-    plot_df["Risk status"] = higher.map({True: "Higher", False: "Lower"})
+    risk = plot_df["Risk percentage"].round(1)
+    average = plot_df["Population average"].round(1)
+    plot_df["Risk status"] = np.select(
+        [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
+    )
     return plot_df
 
 
 def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     """Add the 'Risk status' and 'Favourable' columns to the regressor data.
 
-    A prediction above the population average is "Higher", otherwise "Lower".
-    More days alive and out of hospital is favourable, while a longer stay is not.
+    A prediction above the population average is "Higher", below it "Lower" and
+    the same as it "Equal". More days alive and out of hospital is favourable,
+    while a longer stay is not. An equal prediction is neither.
 
     Parameters
     ----------
@@ -184,9 +188,13 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     pandas.DataFrame
         The same DataFrame with 'Risk status' and 'Favourable' columns.
     """
-    higher = plot_df["Median prediction"] > plot_df["Population average"]
+    prediction = plot_df["Median prediction"]
+    average = plot_df["Population average"]
+    higher = prediction > average
     daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
-    plot_df["Risk status"] = higher.map({True: "Higher", False: "Lower"})
+    plot_df["Risk status"] = np.select(
+        [higher, prediction < average], ["Higher", "Lower"], default="Equal"
+    )
     plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
     return plot_df
 
@@ -265,19 +273,21 @@ def _y_encoding() -> alt.Y:
     )
 
 
-def _regressor_status_color() -> alt.condition:
+def _regressor_status_color():
     """Create the red / green condition used by the regressor text layers.
 
     Returns
     -------
-    altair.condition
-        Green if the prediction is favourable compared to the population average,
-        else red.
+    altair.Then
+        Black if the prediction equals the population average, green if it is
+        favourable compared to it, else red.
     """
-    return alt.condition(
-        alt.datum["Favourable"],
-        alt.value(COLOR_GREEN),
-        alt.value(COLOR_RED),
+    return (
+        alt.when(alt.datum["Risk status"] == "Equal")
+        .then(alt.value(COLOR_BLACK))
+        .when(alt.datum["Favourable"])
+        .then(alt.value(COLOR_GREEN))
+        .otherwise(alt.value(COLOR_RED))
     )
 
 
@@ -286,13 +296,16 @@ def _status_color():
 
     Returns
     -------
-    altair.condition
-        Red if the patient risk is above the population average, else green.
+    altair.Then
+        Black if the patient risk equals the population average, red if it is above,
+        else green.
     """
-    return alt.condition(
-        alt.datum["Risk status"] == "Higher",
-        alt.value(COLOR_RED),
-        alt.value(COLOR_GREEN),
+    return (
+        alt.when(alt.datum["Risk status"] == "Equal")
+        .then(alt.value(COLOR_BLACK))
+        .when(alt.datum["Risk status"] == "Higher")
+        .then(alt.value(COLOR_RED))
+        .otherwise(alt.value(COLOR_GREEN))
     )
 
 
@@ -826,13 +839,16 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         CSS style for each cell in the row.
     """
     styles = ["color: black"] * len(row)
-    colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
+    if row["Risk status"] == "Equal":
+        colour = COLOR_BLACK
+    else:
+        colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
     styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
     return styles
 
 
 def _highlight_medical_risk(row: Series) -> list[str]:
-    """Highlight the risk status in red or green and bold font.
+    """Highlight the risk status in red, green or black and bold font.
 
     Parameters
     ----------
@@ -848,11 +864,8 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     styles = ["color: black"] * len(row)
 
     risk_col_index = row.index.get_loc("Risk status")
-    if row["Risk status"] == "Higher":
-        # Find the index of the column you want to color
-        styles[risk_col_index] = f"color: {COLOR_RED}; font-weight: bold"
-    else:
-        styles[risk_col_index] = f"color: {COLOR_GREEN}; font-weight: bold"
+    colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN, "Equal": COLOR_BLACK}
+    styles[risk_col_index] = f"color: {colours[row['Risk status']]}; font-weight: bold"
 
     return styles
 
