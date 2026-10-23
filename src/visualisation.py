@@ -290,7 +290,7 @@ def _status_color():
         Red if the patient risk is above the population average, else green.
     """
     return alt.condition(
-        alt.datum["Risk percentage"] > alt.datum["Population average"],
+        alt.datum["Risk status"] == "Higher",
         alt.value(COLOR_RED),
         alt.value(COLOR_GREEN),
     )
@@ -328,7 +328,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
 def _average_point_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the circle marking the population average.
+    """Build the tick marking the population average.
 
     Parameters
     ----------
@@ -362,7 +362,7 @@ def _average_point_layer(
 def _patient_diamond_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color, x_max
 ) -> alt.Chart:
-    """Build the patient risk bars, red if above average and green otherwise.
+    """Build the diamond marking the patient risk.
 
     Parameters
     ----------
@@ -382,12 +382,7 @@ def _patient_diamond_layer(
     """
     return (
         alt.Chart(plot_df)
-        .transform_calculate(
-            Legend=(
-                "datum['Risk percentage'] > datum['Population average'] "
-                f"? '{LEGEND_PATIENT}' : '{LEGEND_PATIENT}'"
-            )
-        )
+        .transform_calculate(Legend=f"'{LEGEND_PATIENT}'")
         .mark_point(filled=True, shape="diamond", size=250, opacity=1)
         .encode(
             x=alt.X(
@@ -477,7 +472,7 @@ def _risk_status_text_layer(
 def _median_prediction_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the circle marking the patient's median prediction.
+    """Build the diamond marking the patient's median prediction.
 
     Parameters
     ----------
@@ -632,7 +627,7 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     altair.LayerChart
         The configured layered chart.
     """
-    x_max = plot_df.max(numeric_only=True).max() * 1.1
+    x_max = max(plot_df.max(numeric_only=True).max() * 1.1, 1)  # Never a 0 width axis
     y_enc = _y_encoding()
     legend_color = _legend_color()
 
