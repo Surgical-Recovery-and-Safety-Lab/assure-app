@@ -1,3 +1,5 @@
+"""PDF report of the patient results for the web app."""
+
 import base64
 import time
 from html import escape
@@ -237,7 +239,12 @@ def create_pdf_report(
                 blocks.append(
                     _block_html(
                         reg_charts,
-                        ["Outcome", "Patient median prediction", "Population Avg", "Status"],
+                        [
+                            "Outcome",
+                            "Patient median prediction",
+                            "Population Avg",
+                            "Status",
+                        ],
                         _regressor_rows_html(reg_df),
                     )
                 )

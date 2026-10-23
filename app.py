@@ -23,7 +23,7 @@ if "run_inputs" not in st.session_state:
     st.session_state.run_inputs = None
     st.session_state.run_category = None
 if "consent" not in st.session_state:
-    # Session state varible for consent
+    # Session state variable for consent
     st.session_state.consent = False
 
 st.logo("assets/srs-logo.svg", size="large", icon_image="assets/srs-mark.svg")

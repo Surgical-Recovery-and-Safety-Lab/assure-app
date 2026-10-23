@@ -69,7 +69,9 @@ with main_col1:
                 # Keep what the results were computed from, so they stay consistent
                 # if the inputs are edited afterwards
                 st.session_state.run_inputs = input_features
-                st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[0]
+                st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[
+                    0
+                ]
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(

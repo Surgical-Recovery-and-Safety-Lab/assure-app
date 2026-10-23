@@ -1,6 +1,7 @@
 """Risk visualisation (chart and table) for the web app."""
 
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import altair as alt
 import numpy as np

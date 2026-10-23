@@ -15,9 +15,8 @@ from zoneinfo import ZoneInfo
 import joblib
 import requests
 import streamlit as st
-from pandas import DataFrame, read_csv
-
 from medpipe import MedpipeClassifier, MedpipeRegressor
+from pandas import DataFrame, read_csv
 
 from .constants import (
     AVERAGES,
@@ -147,8 +146,10 @@ def show_consent_page() -> None:
 
     st.write("""
     By using this tool, you agree to having the data you enter into the calculator
-    processed by our AI model. Your information is not stored and is deleted after
-    the window is closed.
+    processed by our AI model. Your information is only kept temporarily in the
+    memory of our server while your session is open. It is not saved to a database
+    or a file, and it is discarded when your session ends, for example when you
+    close the browser tab.
     """)
     st.write("""
     The model outputs are for informational purposes only and should not be used in
@@ -242,11 +243,11 @@ def main_page_layout() -> DataFrame | None:
         "**Admission source**",
         ["Routine", "Transfer"],
         index=0,
-        help="Is the patient transfered from another hospital?",
+        help="Is the patient transferred from another hospital?",
         horizontal=True,
     )
 
-    # Traum radio buttons
+    # Trauma radio buttons
     trauma = st.radio(
         "**Trauma**",
         index=1,
@@ -265,7 +266,7 @@ def main_page_layout() -> DataFrame | None:
             value=1,
         )
     with asa_col2, st.popover("Help", type="tertiary", icon=":material/help:"):
-        st.write("**Amercian Society of Anaesthesiology -- Physical Status Score**")
+        st.write("**American Society of Anesthesiologists -- Physical Status Score**")
         st.markdown("""
                 1. Normal healthy patient
                 2. Patient with mild systemic disease
@@ -311,7 +312,7 @@ def main_page_layout() -> DataFrame | None:
         st.write("**Operation search bar**")
         st.write("""
                 Start typing the operation name or description in the search bar to filter
-                the operation list. Once the correct operation is find select it from the
+                the operation list. Once the correct operation is found, select it from the
                 list. The surgical specialty, sub-specialty, and the operation severity
                 will be automatically filled for you.
                 If the operation name is too long leaving the cursor hovering over it
@@ -409,7 +410,9 @@ def validate_feedback(sender_email: str, subject: str, message: str) -> str | No
     """
     if not (sender_email and subject and message):
         return "Please fill out all fields."
-    if len(sender_email) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.fullmatch(sender_email):
+    if len(sender_email) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.fullmatch(
+        sender_email
+    ):
         return "Please enter a valid email address."
     if len(subject) > MAX_SUBJECT_LENGTH:
         return f"The subject must be at most {MAX_SUBJECT_LENGTH} characters."
