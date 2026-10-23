@@ -1,12 +1,18 @@
+"""PDF report of the patient results for the web app."""
+
 import base64
 import time
+from html import escape
+from pathlib import Path
 
 import altair as alt
 import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
-from .constants import COLOR_GREEN, COLOR_RED
+from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED
+
+FONTS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 
 
 def _chart_to_base64(chart: alt.Chart | alt.LayerChart) -> str:
@@ -41,7 +47,7 @@ def _empty_section_html(title: str) -> str:
     """
     return f"""
     <div class="report-section" style="page-break-inside: avoid;">
-        <div class="section-title">{title}</div>
+        <div class="section-title">{escape(title)}</div>
         <div class="box">
             <strong>No outcomes were selected</strong>
         </div>
@@ -67,10 +73,10 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
     return "".join(
         f"""
         <tr>
-            <td>{r.get("Complications", r.get("Outcome", "N/A"))}</td>
+            <td>{escape(str(r.get("Complications", r.get("Outcome", "N/A"))))}</td>
             <td>{r["Risk percentage"]:.1f}</td>
-            <td>{r["Population average"]}</td>
-            <td class="status-{"higher" if r["Risk status"] == "Higher" else "lower"}">{r["Risk status"]}</td>
+            <td>{escape(str(r["Population average"]))}</td>
+            <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Risk status"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -94,10 +100,10 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
     return "".join(
         f"""
         <tr>
-            <td>{r["Complications"]}</td>
-            <td>{r["Prediction"]}</td>
-            <td>{r["Population average"]}</td>
-            <td class="status-{"lower" if r["Favourable"] else "higher"}">{r["Risk status"]}</td>
+            <td>{escape(str(r["Complications"]))}</td>
+            <td>{escape(str(r["Prediction"]))}</td>
+            <td>{escape(str(r["Population average"]))}</td>
+            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Risk status"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -123,7 +129,7 @@ def _block_html(
     str
         HTML for the chart and table.
     """
-    header_cells = "".join(f"<th>{header}</th>" for header in headers)
+    header_cells = "".join(f"<th>{escape(header)}</th>" for header in headers)
     images = "".join(
         f"""
         <div style="text-align: center; margin-bottom: 20px;">
@@ -165,7 +171,7 @@ def _section_html(title: str, blocks: list[str]) -> str:
     """
     return f"""
     <div class="report-section">
-        <div class="section-title">{title}</div>
+        <div class="section-title">{escape(title)}</div>
         {"".join(blocks)}
     </div>
     <hr style="border: 1px solid #eee; margin: 40px 0;">
@@ -177,6 +183,7 @@ def create_pdf_report(
     tables: list[pd.DataFrame | None],
     regressor_charts: list[alt.Chart | alt.LayerChart | None] | None = None,
     regressor_table: pd.DataFrame | None = None,
+    report_date: str | None = None,
 ) -> bytes:
     """Create a pdf report from the plots and tables.
 
@@ -198,6 +205,9 @@ def create_pdf_report(
         Table of the regressor results, with 'Complications' and 'Prediction'
         columns.
 
+    report_date : str | None, default None
+        Date shown in the report header. Defaults to today's date on the server.
+
     Returns
     -------
     bytes
@@ -214,7 +224,7 @@ def create_pdf_report(
     ):
         blocks = []
 
-        if df is not None and not df.empty:
+        if chart is not None and df is not None and not df.empty:
             blocks.append(
                 _block_html(
                     [chart],
@@ -229,7 +239,12 @@ def create_pdf_report(
                 blocks.append(
                     _block_html(
                         reg_charts,
-                        ["Outcome", "Patient median prediction", "Population Avg", "Status"],
+                        [
+                            "Outcome",
+                            "Patient median prediction",
+                            "Population Avg",
+                            "Status",
+                        ],
                         _regressor_rows_html(reg_df),
                     )
                 )
@@ -239,7 +254,7 @@ def create_pdf_report(
         else:
             sections_html += _empty_section_html(title)
 
-    date = time.strftime("%B %d, %Y", time.localtime())
+    date = escape(report_date or time.strftime("%B %d, %Y", time.localtime()))
 
     # --- Final HTML Assembly ---
     html_content = f"""
@@ -247,8 +262,12 @@ def create_pdf_report(
     <html>
     <head>
     <style>
+        @font-face {{ font-family: 'DejaVu Sans'; font-weight: normal;
+            src: url('{(FONTS_DIR / "DejaVuSans.ttf").as_uri()}'); }}
+        @font-face {{ font-family: 'DejaVu Sans'; font-weight: bold;
+            src: url('{(FONTS_DIR / "DejaVuSans-Bold.ttf").as_uri()}'); }}
         @page {{ size: A4; margin: 15mm; }}
-        body {{ font-family: 'Segoe UI', sans-serif; color: #2c3e50; }}
+        body {{ font-family: 'DejaVu Sans', sans-serif; color: #2c3e50; }}
         .report-header {{ border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }}
         .section-title {{ font-size: 16pt; color: #2980b9; border-left: 5px solid #3498db; padding-left: 10px; margin: 20px 0; }}
         table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
@@ -257,6 +276,7 @@ def create_pdf_report(
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
         .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
+        .status-equal {{ color: {COLOR_BLACK}; font-weight: bold; }}
         .box {{
         background-color: #e8f4fd;
         border-radius: 5px;

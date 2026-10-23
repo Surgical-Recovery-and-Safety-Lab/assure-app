@@ -16,7 +16,7 @@ with about_col1:
         """)
     st.write("""
         This tool is designed to inform clinicians and patients about the surgical risks.
-        No data is **not** collected to train models and is **not** saved anywhere.
+        The data is **not** collected to train models and is **not** saved anywhere.
         """)
 
     button = st.button(type="primary", label="Calculate", icon="🎯")
@@ -25,7 +25,7 @@ with about_col1:
 
     st.header("About the SRS Lab", divider="rainbow")
     st.write(
-        """The Surigical Recovery and Safety (SRS) Lab is part of the Department of 
+        """The Surgical Recovery and Safety (SRS) Lab is part of the Department of 
         Surgery at the University of Auckland. Started in 2025, the lab focuses on improving 
         recovery after surgery and improving post-operative outcomes.
         """

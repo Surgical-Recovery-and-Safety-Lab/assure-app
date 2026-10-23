@@ -1,3 +1,6 @@
+[client]
+showErrorDetails = "none"  # Do not show tracebacks or error messages to users
+
 [theme]
 primaryColor="#F63366"
 backgroundColor="#FFFFFF"

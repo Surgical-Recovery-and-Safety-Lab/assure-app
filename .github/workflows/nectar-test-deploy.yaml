@@ -4,19 +4,27 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-test  # Never run two deploys of the same environment at once
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Test deploy via SSH
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2  # v1.2.5
         with:
           host: ${{ secrets.NECTAR_IP }}
           username: ${{ secrets.NECTAR_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            set -e  # Stop at the first failing command, so a broken deploy is not restarted
             cd assure-test/
             git pull origin main
             source ~/.venv/assure-test/bin/activate
-            pip install -r requirements.txt
+            pip install -r requirements.txt -c constraints.txt
             sudo systemctl restart assure-test.service

@@ -1,0 +1,32 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ main, app-dev ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt -c constraints.txt
+          pip install -r requirements-dev.txt
+      - name: Lint with ruff
+        run: ruff check .
+      - name: Check the formatting with ruff
+        run: ruff format --check .
+      - name: Check the types with mypy
+        run: mypy app.py pages src tests
+      - name: Check that the code compiles
+        run: python -m compileall -q app.py pages src
+      - name: Run the tests
+        run: python -m pytest tests

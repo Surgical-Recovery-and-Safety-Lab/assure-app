@@ -1,0 +1,6 @@
+[tool.mypy]
+explicit_package_bases = true  # src has no __init__.py
+# These libraries ship no type information
+[[tool.mypy.overrides]]
+module = ["joblib", "medpipe", "weasyprint", "vl_convert"]
+ignore_missing_imports = true
