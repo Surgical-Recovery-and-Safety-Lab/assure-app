@@ -295,6 +295,6 @@ with main_col1:
             label="Download PDF report",
             data=build_report,
             file_name="patient_risk_report.pdf",
-            mime="application/octet-stream",
+            mime="application/pdf",
             icon=":material/download:",
         )
