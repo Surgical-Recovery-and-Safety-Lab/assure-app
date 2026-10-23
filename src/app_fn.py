@@ -7,10 +7,9 @@ Streamlit ASSURE helper functions.
 from typing import Any, Literal
 
 import joblib
-import numpy as np
 import requests
 import streamlit as st
-from pandas import DataFrame, Series, read_csv
+from pandas import DataFrame, read_csv
 
 from medpipe import MedpipeClassifier, MedpipeRegressor
 
@@ -133,13 +132,14 @@ def show_consent_page() -> None:
         st.rerun()  # Rerun to immediately switch to the main app
 
 
-def main_page_layout() -> DataFrame:
+def main_page_layout() -> DataFrame | None:
     """Lay out the main page and collect the user inputs.
 
     Returns
     -------
-    pandas.DataFrame
-        Input features extracted from the user inputs, with correct types.
+    pandas.DataFrame | None
+        Input features extracted from the user inputs, with correct types. None
+        if some of the required fields have not been filled out.
     """
     st.header("Aotearoa's Smart SUrgical Risk Estimator")
 
@@ -302,6 +302,10 @@ def main_page_layout() -> DataFrame:
 
     st.markdown("---")
 
+    required = [age, ethnicity, sex, selected_operation]
+    if any(value is None for value in required) or not category_l2:
+        return None  # Not all fields have been filled out
+
     input_features = [
         age,
         ethnicity,
@@ -331,7 +335,11 @@ def convert_input_features(input_features: list[Any]) -> DataFrame:
     pandas.DataFrame
         Converted features into a data frame with correct typings.
     """
-    data = DataFrame(np.expand_dims(input_features, 1).T, columns=Series(COLUMNS))
+    # One row built from the list keeps each value's own type. Going through a
+    # numpy array would turn everything into strings, and bool("False") is True.
+    data = DataFrame([input_features], columns=COLUMNS)
+    data["AGE"] = data["AGE"].astype(int)
+    data["OP_SEVERITY"] = data["OP_SEVERITY"].astype(str)  # Categorical in the model
     data["ASA_ORIGINAL"] = data["ASA_ORIGINAL"].astype(float)
     data["TRAUMA"] = data["TRAUMA"].astype(bool)
     data["PRIOR_CANCER"] = data["PRIOR_CANCER"].astype(bool)
