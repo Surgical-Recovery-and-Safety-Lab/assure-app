@@ -20,7 +20,7 @@ from src.app_fn import (
 )
 from src.constants import LABEL_MAP
 from src.reporting import create_pdf_report
-from src.visualisation import data_visualisation
+from src.visualisation import data_visualisation, hide_chart_toolbar
 
 main_col1, _ = st.columns([0.7, 0.3])
 
@@ -87,6 +87,7 @@ with main_col1:
 
         # If the model has been run
         st.header("Results", divider="rainbow")
+        hide_chart_toolbar()
         if input_features is None or not input_features.equals(
             st.session_state.run_inputs
         ):

@@ -806,7 +806,7 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
 # --------------------------------------------------------------------------- #
 # Streamlit rendering
 # --------------------------------------------------------------------------- #
-def _hide_chart_toolbar() -> None:
+def hide_chart_toolbar() -> None:
     """Hide the table view and zoom options on Streamlit elements."""
     st.markdown(
         """
@@ -904,7 +904,8 @@ def _render_table(
             hide_index=True,
             width="stretch",
         )
-    st.info("Sort the table columns by clicking on the column name")
+    if classifier_table is not None or regressor_table is not None:
+        st.info("Sort the table columns by clicking on the column name")
 
 
 def _render_chart(
@@ -1015,7 +1016,6 @@ def data_visualisation(
     if not plot_df.empty:  # all labels are unticked
         plot_df = _add_risk_status(plot_df)
 
-        _hide_chart_toolbar()
         classifier_chart = _build_chart(plot_df)
 
         classifier_table = _build_table(plot_df)
