@@ -1,11 +1,11 @@
 """Risk visualisation (chart and table) for the web app."""
 
-from typing import Literal
+from typing import Callable, Literal
 
 import altair as alt
 import numpy as np
 import streamlit as st
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, isna
 
 from .constants import (
     COLOR_BLACK,
@@ -28,6 +28,26 @@ Y_AXIS_EXTENT = 210
 # --------------------------------------------------------------------------- #
 # Data preparation
 # --------------------------------------------------------------------------- #
+def _ci_value(value: float | None, transform: Callable[[float], float]) -> float:
+    """Transform a confidence interval bound, keeping missing bounds as NaN.
+
+    The bounds are None when there were too few samples to compute them.
+
+    Parameters
+    ----------
+    value : float | None
+        Confidence interval bound.
+    transform : Callable[[float], float]
+        Transformation applied to a bound that is available.
+
+    Returns
+    -------
+    float
+        The transformed bound, or NaN if it is missing.
+    """
+    return np.nan if value is None else transform(value)
+
+
 def _build_classifier_plot_df(
     complications_dict: dict[str, str],
     op_average: dict[str, tuple[float, float, float]],
@@ -55,8 +75,8 @@ def _build_classifier_plot_df(
         labels.append(label)
         patient_risk.append(st.session_state.output_proba[key])
         average.append(op_average[key][0] * 100)
-        lower.append(op_average[key][1] * 100)
-        upper.append(op_average[key][2] * 100)
+        lower.append(_ci_value(op_average[key][1], lambda v: v * 100))
+        upper.append(_ci_value(op_average[key][2], lambda v: v * 100))
 
     return DataFrame(
         {
@@ -107,8 +127,8 @@ def _build_regressor_plot_df(
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
         average.append(np.round(op_average[key][0]))
-        lower.append(np.ceil(op_average[key][1]))
-        upper.append(np.ceil(op_average[key][2]))
+        lower.append(_ci_value(op_average[key][1], np.ceil))
+        upper.append(_ci_value(op_average[key][2], np.ceil))
 
     return DataFrame(
         {
@@ -698,8 +718,12 @@ def _format_average(row: Series) -> str:
     Returns
     -------
     str
-        For example ``"12.3, 95% CI [10.1, 14.5]"``.
+        For example ``"12.3, 95% CI [10.1, 14.5]"``, or ``"12.3, 95% CI not
+        available"`` if the interval could not be computed.
     """
+    if isna(row["Lower CI"]) or isna(row["Upper CI"]):
+        return f"{row['Population average']:.1f}, 95% CI not available"
+
     return (
         f"{row['Population average']:.1f}, "
         f"95% CI [{row['Lower CI']:.1f}, {row['Upper CI']:.1f}]"
