@@ -139,8 +139,9 @@ def _build_regressor_plot_df(
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
         average.append(int(np.round(op_average[key][0])))
-        lower.append(int(_ci_value(op_average[key][1], np.round)))
-        upper.append(int(_ci_value(op_average[key][2], np.round)))
+        # Whole days, or NaN if there were too few samples to compute the interval
+        lower.append(_ci_value(op_average[key][1], lambda v: int(np.round(v))))
+        upper.append(_ci_value(op_average[key][2], lambda v: int(np.round(v))))
 
     return DataFrame(
         {
