@@ -288,7 +288,7 @@ def main_page_layout() -> DataFrame | None:
     category_l2 = ""
     op_severity = 0
 
-    search_options = operations_df["OP_DESC"].tolist()
+    search_options = sorted(operations_df["OP_DESC"], key=str.casefold)
 
     op_col1, op_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
 
