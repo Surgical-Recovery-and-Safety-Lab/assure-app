@@ -39,7 +39,7 @@ LABEL_MAP = {
         "HEALTH_OUTCOMES": "Toggle all",
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
-        "DAOH_90": "Days alive and out of hospital",
+        "DAOH_90": "Days alive and out of hospital (90 days)",
         "POSTOP_LOS": "Length of stay",
         "FTR": "Failure to rescue (coming soon)",
     },
