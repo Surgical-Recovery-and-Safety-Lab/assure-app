@@ -57,7 +57,6 @@ LABEL_MAP = {
         "PNEUMONIA": "Pneumonia",
         "RESPIRATORY_FAILURE": "Respiratory failure",
         "SEPSIS": "Sepsis",
-        "SHOCK": "Shock",
         "SSI": "SSI",
         "STROKE": "Stroke",
         "UTI": "UTI",
