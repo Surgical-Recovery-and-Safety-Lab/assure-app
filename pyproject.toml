@@ -7,6 +7,9 @@ name = "assure"
 version = "1.6.0"  # Single source of truth, read by src/constants.py. Keep in sync with CHANGELOG.md
 description = "Streamlit app for surgical risk prediction"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Surgical Recovery and Safety Lab" }]
 dependencies = [
     "medpipe==0.4.0",
     "altair==6.0.0",
