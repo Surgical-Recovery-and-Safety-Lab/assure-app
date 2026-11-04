@@ -215,6 +215,14 @@ with main_col1:
                     default="graph",
                 )
 
+                st.warning(
+                    "The data collection methods may have caused individual"
+                    " complications to be underrepresented in the training"
+                    " data. This can lead to predicted rates being lower than"
+                    " the expected clinical risk. **Results must be interpreted"
+                    " with care.**"
+                )
+
                 comp_chart, comp_table, *_comp_regressors = data_visualisation(
                     complications_dict,
                     op_average,
