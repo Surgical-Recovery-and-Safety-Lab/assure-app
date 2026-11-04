@@ -239,7 +239,8 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
         [higher, prediction < average], ["Higher", "Lower"], default="Equal"
     )
     plot_df["Status label"] = [
-        _status_label(*args) for args in zip(prediction, average, plot_df["Risk status"])
+        _status_label(*args)
+        for args in zip(prediction, average, plot_df["Risk status"])
     ]
     plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
     return plot_df
