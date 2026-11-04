@@ -83,8 +83,8 @@ SIMILAR_OPERATION_NOTE = (
     "the individual patient."
 )
 CAPPED_OUTCOMES_NOTE = (
-    "Days alive and out of hospital (DAOH) and postoperative length of stay "
-    "(LOS) are both capped at 90 days, so no value can exceed 90 days."
+    "Days alive and out of hospital and postoperative length of stay "
+    " are both capped at 90 days, so no value can exceed 90 days."
 )
 LEGEND_AVERAGE = "Similar-operation mean (95% CI)"
 LEGEND_PATIENT = "Patient risk"
