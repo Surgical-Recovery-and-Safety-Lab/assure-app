@@ -1,6 +1,6 @@
-# Exact versions of every package installed from requirements.txt, so deploys
-# are reproducible. Use with: pip install -r requirements.txt -c constraints.txt
-# Regenerate in a clean venv with: pip install -r requirements.txt && pip freeze
+# Exact versions of every package installed from pyproject.toml, so deploys
+# are reproducible. Use with: pip install -c constraints.txt .
+# Regenerate in a clean venv with: pip install . && pip freeze | grep -v "^assure"
 altair==6.0.0
 annotated-types==0.8.0
 attrs==26.1.0
@@ -32,7 +32,7 @@ lifelines==0.30.3
 llvmlite==0.50.0
 MarkupSafe==3.0.4
 matplotlib==3.11.2
-medpipe==0.4.0.dev2
+medpipe==0.4.0
 mpmath==1.3.0
 narwhals==2.27.1
 ngboost==0.5.11
