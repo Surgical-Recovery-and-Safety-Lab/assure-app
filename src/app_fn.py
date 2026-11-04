@@ -16,6 +16,7 @@ import joblib
 import requests
 import streamlit as st
 from medpipe import MedpipeClassifier, MedpipeRegressor
+from medpipe.metrics import MetricRegistry, MetricSpec
 from pandas import DataFrame, read_csv
 
 from .constants import (
@@ -55,6 +56,7 @@ def load_pipeline(
         return MedpipeClassifier.load(CLASSIFIER)
 
     else:
+        register_metrics()
         return MedpipeRegressor.load(REGRESSOR)
 
 
@@ -499,3 +501,37 @@ def send_email(sender_email: str, subject: str, message: str) -> bool:
         return False
 
     return response.status_code == 200
+
+
+def register_metrics() -> None:
+    """Register the `mae_median`, `marginal_calibration` and `pit_alpha` metrics.
+
+    These metrics are placeholders so the models can be loaded without causing
+    any errors. The true metrics are defined in the assure-eval repository of
+    the Surgical Recovery and Safety Lab on GitHub.
+
+    """
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="marginal_calibration",
+            func=max,
+            response_method="predict_dist",
+            display_name="Marginal calibration area",
+        )
+    )
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="pit_alpha",
+            func=max,
+            response_method="predict_dist",
+            display_name="PIT alpha",
+        )
+    )
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="mae_median",
+            func=max,
+            response_method="predict_dist",
+            display_name="MAE",
+        )
+    )
