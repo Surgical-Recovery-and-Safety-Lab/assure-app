@@ -72,6 +72,7 @@ with main_col1:
                 st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[
                     0
                 ]
+                st.session_state.run_op_sev = input_features["OP_SEVERITY"].iloc[0]
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
@@ -85,8 +86,10 @@ with main_col1:
         st.session_state.model_run
         and st.session_state.consent
         and st.session_state.run_category is not None
+        and st.session_state.run_op_sev is not None
     ):
         cat_l2 = st.session_state.run_category  # Category the model was run with
+        op_sev = st.session_state.run_op_sev
 
         # If the model has been run
         st.header("Results", divider="rainbow")
@@ -110,7 +113,7 @@ with main_col1:
                 visualisation by selecting the display type.
                 """)
 
-        op_average = averages.get(cat_l2)
+        op_average = averages.get((cat_l2, op_sev))
         if op_average is None:
             st.error(
                 "Population averages are not available for this operation category."

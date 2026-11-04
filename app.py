@@ -20,8 +20,10 @@ if "output_dists" not in st.session_state:
     st.session_state.output_dists = {}
 if "run_inputs" not in st.session_state:
     # Session state variables for the inputs and operation category of the last run
+    # and the operation severity
     st.session_state.run_inputs = None
     st.session_state.run_category = None
+    st.session_state.run_op_sev = None
 if "consent" not in st.session_state:
     # Session state variable for consent
     st.session_state.consent = False
