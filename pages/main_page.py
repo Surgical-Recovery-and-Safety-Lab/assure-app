@@ -11,7 +11,8 @@ from src.app_fn import (
     get_report_date,
     init_outcome_toggles,
     load_averages,
-    load_pipeline,
+    load_classifier,
+    load_regressor,
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
@@ -19,7 +20,13 @@ from src.app_fn import (
     sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
-from src.constants import LABEL_MAP, UNAVAILABLE_KEYS
+from src.constants import (
+    COMPLICATIONS_WARNING,
+    COMPLICATIONS_WARNING_EMPHASIS,
+    LABEL_MAP,
+    UNAVAILABLE_KEYS,
+    VERSION,
+)
 from src.reporting import create_pdf_report
 from src.visualisation import data_visualisation, hide_chart_toolbar
 
@@ -32,9 +39,9 @@ with main_col1:
         input_features = main_page_layout()
         is_ready = input_features is not None  # Define the is_ready flag
 
-        with st.spinner("Loading model and data..."):
-            pipeline = load_pipeline()
-            regressor_pipeline = load_pipeline("regressor")
+        with st.spinner("Loading models..."):
+            pipeline = load_classifier()
+            regressor_pipeline = load_regressor()
             averages = load_averages()
 
         run = st.button("Run model", disabled=not is_ready)
@@ -72,6 +79,7 @@ with main_col1:
                 st.session_state.run_category = input_features["CATEGORY_LEVEL_2"].iloc[
                     0
                 ]
+                st.session_state.run_op_sev = input_features["OP_SEVERITY"].iloc[0]
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
@@ -85,11 +93,14 @@ with main_col1:
         st.session_state.model_run
         and st.session_state.consent
         and st.session_state.run_category is not None
+        and st.session_state.run_op_sev is not None
     ):
         cat_l2 = st.session_state.run_category  # Category the model was run with
+        op_sev = st.session_state.run_op_sev
 
         # If the model has been run
         st.header("Results", divider="rainbow")
+        st.caption(f"Predictions made with version {VERSION}")
         hide_chart_toolbar()
         if input_features is None or not input_features.equals(
             st.session_state.run_inputs
@@ -110,7 +121,7 @@ with main_col1:
                 visualisation by selecting the display type.
                 """)
 
-        op_average = averages.get(cat_l2)
+        op_average = averages.get((cat_l2, op_sev))
         if op_average is None:
             st.error(
                 "Population averages are not available for this operation category."
@@ -212,6 +223,10 @@ with main_col1:
                     default="graph",
                 )
 
+                st.warning(
+                    f"{COMPLICATIONS_WARNING} **{COMPLICATIONS_WARNING_EMPHASIS}**"
+                )
+
                 comp_chart, comp_table, *_comp_regressors = data_visualisation(
                     complications_dict,
                     op_average,
@@ -264,8 +279,7 @@ with main_col1:
                 (
                     health_chart,
                     health_table,
-                    daoh_chart,
-                    los_chart,
+                    regressor_chart,
                     regressor_table,
                 ) = data_visualisation(
                     health_outcomes_dict,
@@ -281,7 +295,7 @@ with main_col1:
             return create_pdf_report(
                 [mortality_chart, comp_chart, health_chart],
                 [mortality_table, comp_table, health_table],
-                regressor_charts=[daoh_chart, los_chart],
+                regressor_chart=regressor_chart,
                 regressor_table=regressor_table,
                 report_date=report_date,
             )

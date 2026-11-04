@@ -10,7 +10,17 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
-from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED, RISK_DECIMALS
+from .constants import (
+    CAPPED_OUTCOMES_NOTE,
+    COLOR_BLACK,
+    COLOR_GREEN,
+    COLOR_RED,
+    COMPLICATIONS_WARNING,
+    COMPLICATIONS_WARNING_EMPHASIS,
+    RISK_DECIMALS,
+    SIMILAR_OPERATION_NOTE,
+    VERSION,
+)
 
 FONTS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 
@@ -52,7 +62,6 @@ def _empty_section_html(title: str) -> str:
             <strong>No outcomes were selected</strong>
         </div>
     </div>
-    <hr style="border: 1px solid #eee; margin: 40px 0;">
     """
 
 
@@ -62,8 +71,8 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
     Parameters
     ----------
     df : pandas.DataFrame
-        Table with 'Complications', 'Risk percentage', 'Population average' and
-        'Risk status' columns.
+        Table with 'Complications', 'Risk percentage', 'Similar-operation mean',
+        'Risk status' and 'Status label' columns.
 
     Returns
     -------
@@ -75,8 +84,8 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
         <tr>
             <td>{escape(str(r.get("Complications", r.get("Outcome", "N/A"))))}</td>
             <td>{r["Risk percentage"]:.{RISK_DECIMALS}f}</td>
-            <td>{escape(str(r["Population average"]))}</td>
-            <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Risk status"])}</td>
+            <td>{escape(str(r["Similar-operation mean"]))}</td>
+            <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Status label"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -89,8 +98,8 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
     Parameters
     ----------
     df : pandas.DataFrame
-        Table with 'Complications', 'Prediction', 'Population average',
-        'Risk status' and 'Favourable' columns.
+        Table with 'Complications', 'Prediction', 'Similar-operation mean',
+        'Risk status', 'Status label' and 'Favourable' columns.
 
     Returns
     -------
@@ -102,8 +111,8 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
         <tr>
             <td>{escape(str(r["Complications"]))}</td>
             <td>{escape(str(r["Prediction"]))}</td>
-            <td>{escape(str(r["Population average"]))}</td>
-            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Risk status"])}</td>
+            <td>{escape(str(r["Similar-operation mean"]))}</td>
+            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Status label"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -132,15 +141,15 @@ def _block_html(
     header_cells = "".join(f"<th>{escape(header)}</th>" for header in headers)
     images = "".join(
         f"""
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 20px; break-inside: avoid;">
             <img src="data:image/png;base64,{_chart_to_base64(chart)}"
-                 style="width: 100%; max-width: 650px;">
+                 style="max-width: 650px; max-height: 175mm; width: auto; height: auto;">
         </div>
         """
         for chart in charts
     )
     return f"""
-    <div style="page-break-inside: avoid;">
+    <div>
         {images}
         <table>
             <thead>
@@ -174,14 +183,13 @@ def _section_html(title: str, blocks: list[str]) -> str:
         <div class="section-title">{escape(title)}</div>
         {"".join(blocks)}
     </div>
-    <hr style="border: 1px solid #eee; margin: 40px 0;">
     """
 
 
 def create_pdf_report(
     charts: list[alt.Chart | alt.LayerChart | None],
     tables: list[pd.DataFrame | None],
-    regressor_charts: list[alt.Chart | alt.LayerChart | None] | None = None,
+    regressor_chart: alt.Chart | alt.LayerChart | None = None,
     regressor_table: pd.DataFrame | None = None,
     report_date: str | None = None,
 ) -> bytes:
@@ -197,10 +205,9 @@ def create_pdf_report(
     tables : list[pandas.DataFrame]
         Classifier tables for mortality, complications and health service use.
         An empty table produces no chart or table for that section.
-    regressor_charts : list[altair.Chart | None] | None, default None
-        Charts of the regressor results (one per outcome), shown above the
-        regressor table in the health service use section. Missing charts are
-        skipped.
+    regressor_chart : altair.Chart | None, default None
+        Chart of the regressor results, shown above the regressor table in the
+        health service use section. Skipped if missing.
     regressor_table : pandas.DataFrame | None, default None
         Table of the regressor results, with 'Complications' and 'Prediction'
         columns.
@@ -215,7 +222,7 @@ def create_pdf_report(
     """
     section_titles = ["Mortality outcomes", "Complications", "Health Service use"]
     # Regressor results only belong to the last section
-    reg_charts = [chart for chart in (regressor_charts or []) if chart is not None]
+    reg_charts = [] if regressor_chart is None else [regressor_chart]
     regressors = [None, None, (reg_charts, regressor_table)]
 
     sections_html = ""
@@ -228,7 +235,12 @@ def create_pdf_report(
             blocks.append(
                 _block_html(
                     [chart],
-                    ["Outcome", "Patient Risk (%)", "Population Avg (%)", "Status"],
+                    [
+                        "Outcome",
+                        "Patient Risk (%)",
+                        "Similar-operation mean (%)",
+                        "Status",
+                    ],
                     _classifier_rows_html(df),
                 )
             )
@@ -242,7 +254,7 @@ def create_pdf_report(
                         [
                             "Outcome",
                             "Patient median prediction",
-                            "Population Avg",
+                            "Similar-operation mean",
                             "Status",
                         ],
                         _regressor_rows_html(reg_df),
@@ -253,6 +265,15 @@ def create_pdf_report(
             sections_html += _section_html(title, blocks)
         else:
             sections_html += _empty_section_html(title)
+
+    # The complications warning only matters if complications are in the report
+    complications_df = tables[1]
+    warning_html = ""
+    if complications_df is not None and not complications_df.empty:
+        warning_html = (
+            f"<li><strong>Warning:</strong> {escape(COMPLICATIONS_WARNING)} "
+            f"<strong>{escape(COMPLICATIONS_WARNING_EMPHASIS)}</strong></li>"
+        )
 
     date = escape(report_date or time.strftime("%B %d, %Y", time.localtime()))
 
@@ -273,6 +294,9 @@ def create_pdf_report(
         table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
         th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
         td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
+        thead {{ display: table-header-group; }}  /* repeat on each page */
+        tr {{ break-inside: avoid; }}
+        .section-title {{ break-after: avoid; }}
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
         .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
@@ -282,14 +306,30 @@ def create_pdf_report(
         border-radius: 5px;
         padding: 15px;
         font-size: 10pt;
-        margin-top: 30px;
+        margin: 0 0 30px 0;
         }}
+        /* Every section after the first starts on a new page */
+        .report-section ~ .report-section {{ break-before: page; }}
+        .notes p {{ margin: 0 0 6px 0; }}
+        .notes ul {{ margin: 0; padding-left: 18px; }}
+        .notes li {{ margin-bottom: 4px; }}
     </style>
     </head>
     <body>
         <div class="report-header">
             <h1>Clinical Risk Assessment Report</h1>
-            <p><strong>Comprehensive Patient Summary</strong> | Date: {date}</p>
+            <p><strong>Comprehensive Patient Summary</strong> | Date: {date} | Version: {escape(VERSION)}</p>
+        </div>
+        <div class="box notes">
+            <p><strong>How to read this report</strong></p>
+            <ul>
+                <li>{escape(SIMILAR_OPERATION_NOTE)}</li>
+                <li>{escape(CAPPED_OUTCOMES_NOTE)}</li>
+                {warning_html}
+                <li>The 95% CI is the confidence interval of the similar-operation
+                mean. The 95% PI is the range in which the patient's true value is
+                expected to fall with 95% probability.</li>
+            </ul>
         </div>
         {sections_html}
     </body>

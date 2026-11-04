@@ -9,13 +9,13 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import joblib
 import requests
 import streamlit as st
-from medpipe import MedpipeClassifier, MedpipeRegressor
+from medpipe import MedpipeClassifier, MedpipeRegressor, MetricRegistry, MetricSpec
 from pandas import DataFrame, read_csv
 
 from .constants import (
@@ -36,26 +36,28 @@ from .constants import (
 
 
 @st.cache_resource(show_spinner=False)
-def load_pipeline(
-    pipeline_type: Literal["classifier", "regressor"] = "classifier",
-) -> MedpipeClassifier | MedpipeRegressor:
-    """Load a MedpipeClassifier or MedpipeRegressor pipeline.
-
-    Parameters
-    ----------
-    pipeline_type : {"classifier", "regressor"}, default "classifier"
-        Pipeline type to load.
+def load_classifier() -> MedpipeClassifier:
+    """Load the classifier pipeline.
 
     Returns
     -------
-    MedpipeClassifier | MedpipeRegressor
+    MedpipeClassifier
         The loaded pipeline.
     """
-    if pipeline_type == "classifier":
-        return MedpipeClassifier.load(CLASSIFIER)
+    return MedpipeClassifier.load(CLASSIFIER)
 
-    else:
-        return MedpipeRegressor.load(REGRESSOR)
+
+@st.cache_resource(show_spinner=False)
+def load_regressor() -> MedpipeRegressor:
+    """Load the regressor pipeline.
+
+    Returns
+    -------
+    MedpipeRegressor
+        The loaded pipeline.
+    """
+    register_metrics()
+    return MedpipeRegressor.load(REGRESSOR)
 
 
 @st.cache_resource(show_spinner=False)
@@ -288,7 +290,7 @@ def main_page_layout() -> DataFrame | None:
     category_l2 = ""
     op_severity = 0
 
-    search_options = operations_df["OP_DESC"].tolist()
+    search_options = sorted(operations_df["OP_DESC"], key=str.casefold)
 
     op_col1, op_col2 = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
 
@@ -499,3 +501,37 @@ def send_email(sender_email: str, subject: str, message: str) -> bool:
         return False
 
     return response.status_code == 200
+
+
+def register_metrics() -> None:
+    """Register the `mae_median`, `marginal_calibration` and `pit_alpha` metrics.
+
+    These metrics are placeholders so the models can be loaded without causing
+    any errors. The true metrics are defined in the assure-eval repository of
+    the Surgical Recovery and Safety Lab on GitHub.
+
+    """
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="marginal_calibration",
+            func=max,
+            response_method="predict_dist",
+            display_name="Marginal calibration area",
+        )
+    )
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="pit_alpha",
+            func=max,
+            response_method="predict_dist",
+            display_name="PIT alpha",
+        )
+    )
+    MetricRegistry.register_spec(
+        MetricSpec(
+            name="mae_median",
+            func=max,
+            response_method="predict_dist",
+            display_name="MAE",
+        )
+    )
