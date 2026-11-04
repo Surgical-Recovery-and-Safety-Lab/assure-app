@@ -5,14 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
-## [1.5.2] - 2026-11-02
+## [1.6.0] - 2026-11-02
+
+### Added
+* The ratio between the risk and the population average is added to the risk
+status.
+* A warning message about the complications which may be underrepresented in 
+the data leading to lower than expected rates.
+* A version number to the `constants.py` file that is displayed in the PDF
+report and the results page.
+* An Apache-2.0 license. 
+* A footer to the sidemenu which displays the version number and the copyright.
+* The `register_metrics` function from the `assure-eval` repository to register
+the regressor metrics and avoid errors when loading. They are placeholders not
+the actual metric functions.
 
 ### Changed
+* "Population average" is renamed "similar-operation mean" everywhere, since it
+is the mean of patients having an operation in the same sub-specialty with the
+same operation severity.
+* PDF report charts are capped in height so a section title is never left alone
+  on a page, and long tables split across pages with the header repeated.
+* Each section of the PDF report after the first starts on a new page.
+* The complications underrepresentation warning is also in the PDF report notes
+  when complications are included.
+* The PDF report starts with notes explaining the similar-operation mean, the
+95% CI and PI, and that DAOH and LOS are capped at 90 days. The same
+explanations are in the "How to read the charts" popover.
+* Days alive and out of hospital and length of stay are shown on one chart
+(x axis 0-90 days) in the app and the PDF report.
+* Dependencies moved from `requirements.txt` and `requirements-dev.txt` into
+`pyproject.toml` (dev tools are the `dev` extra), which now also holds the app
+version that `VERSION` is read from. CI and deploys use
+`pip install -c constraints.txt .`.
 * Operation list is now sorted alphabetically.
+* Made the DAOH limit of 90 days explicit.
+* Operation severity is also used to provide a population average.
+* Clean up list of operations.
+* Now using medpipe version 0.4.0 instead of 0.4.0.dev2. 
+* Moved the requirements into the `pyproject.toml` file.
+* Bumped regressor and classifier models from v2 to v3.
 
 ### Fixed
 * Bug in the display that was raised when a NaN value was found in the operation
 averages.
+* Text displayed when loading the models.
 
 ## [1.5.1] - 2026-10-24
 
@@ -221,8 +258,8 @@ stay.
 * First version
 
 
-[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.2...HEAD
-[1.5.2]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.1...1.5.2
+[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.1...1.6.0
 [1.5.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.3.1...1.4.0
