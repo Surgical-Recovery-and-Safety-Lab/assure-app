@@ -16,8 +16,8 @@ def _read_version() -> str:
 
 VERSION = _read_version()
 CHANGELOG_URL = "https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/blob/main/CHANGELOG.md"
-CLASSIFIER = "assets/models/classifier/v2"
-REGRESSOR = "assets/models/regressor/v2"
+CLASSIFIER = "assets/models/classifier/v3"
+REGRESSOR = "assets/models/regressor/v3"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
