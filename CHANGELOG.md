@@ -42,7 +42,7 @@ version that `VERSION` is read from. CI and deploys use
 * Made the DAOH limit of 90 days explicit.
 * Operation severity is also used to provide a population average.
 * Clean up list of operations.
-* Now using medpipe version 0.4.0 instead of 0.4.0.dev2. 
+* Now using medpipe version 0.4.1 instead of 0.4.0.dev2. 
 * Moved the requirements into the `pyproject.toml` file.
 * Bumped regressor and classifier models from v2 to v3.
 
