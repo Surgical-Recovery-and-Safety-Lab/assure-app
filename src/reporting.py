@@ -62,7 +62,6 @@ def _empty_section_html(title: str) -> str:
             <strong>No outcomes were selected</strong>
         </div>
     </div>
-    <hr style="border: 1px solid #eee; margin: 40px 0;">
     """
 
 
@@ -142,15 +141,15 @@ def _block_html(
     header_cells = "".join(f"<th>{escape(header)}</th>" for header in headers)
     images = "".join(
         f"""
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 20px; break-inside: avoid;">
             <img src="data:image/png;base64,{_chart_to_base64(chart)}"
-                 style="width: 100%; max-width: 650px;">
+                 style="max-width: 650px; max-height: 175mm; width: auto; height: auto;">
         </div>
         """
         for chart in charts
     )
     return f"""
-    <div style="page-break-inside: avoid;">
+    <div>
         {images}
         <table>
             <thead>
@@ -184,7 +183,6 @@ def _section_html(title: str, blocks: list[str]) -> str:
         <div class="section-title">{escape(title)}</div>
         {"".join(blocks)}
     </div>
-    <hr style="border: 1px solid #eee; margin: 40px 0;">
     """
 
 
@@ -296,6 +294,9 @@ def create_pdf_report(
         table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
         th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
         td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
+        thead {{ display: table-header-group; }}  /* repeat on each page */
+        tr {{ break-inside: avoid; }}
+        .section-title {{ break-after: avoid; }}
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
         .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
         .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
@@ -307,6 +308,8 @@ def create_pdf_report(
         font-size: 10pt;
         margin: 0 0 30px 0;
         }}
+        /* Every section after the first starts on a new page */
+        .report-section ~ .report-section {{ break-before: page; }}
         .notes p {{ margin: 0 0 6px 0; }}
         .notes ul {{ margin: 0; padding-left: 18px; }}
         .notes li {{ margin-bottom: 4px; }}
