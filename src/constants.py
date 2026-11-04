@@ -4,8 +4,17 @@ constants.py
 Constants for the app.
 """
 
-# Keep in sync with the latest release in CHANGELOG.md
-VERSION = "1.6.0"
+import tomllib
+from pathlib import Path
+
+
+def _read_version() -> str:
+    """Read the app version from pyproject.toml, the single source of truth."""
+    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
+        return str(tomllib.load(f)["project"]["version"])
+
+
+VERSION = _read_version()
 CLASSIFIER = "assets/models/classifier/v2"
 REGRESSOR = "assets/models/regressor/v2"
 AVERAGES_NAME = "op-averages.joblib"
