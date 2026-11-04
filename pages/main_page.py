@@ -19,7 +19,13 @@ from src.app_fn import (
     sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
-from src.constants import LABEL_MAP, UNAVAILABLE_KEYS, VERSION
+from src.constants import (
+    COMPLICATIONS_WARNING,
+    COMPLICATIONS_WARNING_EMPHASIS,
+    LABEL_MAP,
+    UNAVAILABLE_KEYS,
+    VERSION,
+)
 from src.reporting import create_pdf_report
 from src.visualisation import data_visualisation, hide_chart_toolbar
 
@@ -217,11 +223,7 @@ with main_col1:
                 )
 
                 st.warning(
-                    "The data collection methods may have caused individual"
-                    " complications to be underrepresented in the training"
-                    " data. This can lead to predicted rates being lower than"
-                    " the expected clinical risk. **Results must be interpreted"
-                    " with care.**"
+                    f"{COMPLICATIONS_WARNING} **{COMPLICATIONS_WARNING_EMPHASIS}**"
                 )
 
                 comp_chart, comp_table, *_comp_regressors = data_visualisation(

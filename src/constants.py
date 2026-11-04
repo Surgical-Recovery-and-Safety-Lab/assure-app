@@ -86,6 +86,12 @@ CAPPED_OUTCOMES_NOTE = (
     "Days alive and out of hospital and postoperative length of stay "
     " are both capped at 90 days, so no value can exceed 90 days."
 )
+COMPLICATIONS_WARNING = (
+    "The data collection methods may have caused individual complications to be "
+    "underrepresented in the training data. This can lead to predicted rates being "
+    "lower than the expected clinical risk."
+)
+COMPLICATIONS_WARNING_EMPHASIS = "Results must be interpreted with care."
 LEGEND_AVERAGE = "Similar-operation mean (95% CI)"
 LEGEND_PATIENT = "Patient risk"
 LEGEND_MEDIAN = "Median prediction (95% PI)"

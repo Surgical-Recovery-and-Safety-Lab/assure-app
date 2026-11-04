@@ -15,6 +15,8 @@ from .constants import (
     COLOR_BLACK,
     COLOR_GREEN,
     COLOR_RED,
+    COMPLICATIONS_WARNING,
+    COMPLICATIONS_WARNING_EMPHASIS,
     RISK_DECIMALS,
     SIMILAR_OPERATION_NOTE,
     VERSION,
@@ -266,6 +268,15 @@ def create_pdf_report(
         else:
             sections_html += _empty_section_html(title)
 
+    # The complications warning only matters if complications are in the report
+    complications_df = tables[1]
+    warning_html = ""
+    if complications_df is not None and not complications_df.empty:
+        warning_html = (
+            f"<li><strong>Warning:</strong> {escape(COMPLICATIONS_WARNING)} "
+            f"<strong>{escape(COMPLICATIONS_WARNING_EMPHASIS)}</strong></li>"
+        )
+
     date = escape(report_date or time.strftime("%B %d, %Y", time.localtime()))
 
     # --- Final HTML Assembly ---
@@ -311,6 +322,7 @@ def create_pdf_report(
             <ul>
                 <li>{escape(SIMILAR_OPERATION_NOTE)}</li>
                 <li>{escape(CAPPED_OUTCOMES_NOTE)}</li>
+                {warning_html}
                 <li>The 95% CI is the confidence interval of the similar-operation
                 mean. The 95% PI is the range in which the patient's true value is
                 expected to fall with 95% probability.</li>
