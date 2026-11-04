@@ -11,7 +11,8 @@ from src.app_fn import (
     get_report_date,
     init_outcome_toggles,
     load_averages,
-    load_pipeline,
+    load_classifier,
+    load_regressor,
     main_page_layout,
     show_consent_page,
     sync_complication_toggles,
@@ -39,8 +40,8 @@ with main_col1:
         is_ready = input_features is not None  # Define the is_ready flag
 
         with st.spinner("Loading models..."):
-            pipeline = load_pipeline()
-            regressor_pipeline = load_pipeline("regressor")
+            pipeline = load_classifier()
+            regressor_pipeline = load_regressor()
             averages = load_averages()
 
         run = st.button("Run model", disabled=not is_ready)

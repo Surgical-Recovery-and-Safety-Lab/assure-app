@@ -9,14 +9,13 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import joblib
 import requests
 import streamlit as st
-from medpipe import MedpipeClassifier, MedpipeRegressor
-from medpipe.metrics import MetricRegistry, MetricSpec
+from medpipe import MedpipeClassifier, MedpipeRegressor, MetricRegistry, MetricSpec
 from pandas import DataFrame, read_csv
 
 from .constants import (
@@ -37,27 +36,28 @@ from .constants import (
 
 
 @st.cache_resource(show_spinner=False)
-def load_pipeline(
-    pipeline_type: Literal["classifier", "regressor"] = "classifier",
-) -> MedpipeClassifier | MedpipeRegressor:
-    """Load a MedpipeClassifier or MedpipeRegressor pipeline.
-
-    Parameters
-    ----------
-    pipeline_type : {"classifier", "regressor"}, default "classifier"
-        Pipeline type to load.
+def load_classifier() -> MedpipeClassifier:
+    """Load the classifier pipeline.
 
     Returns
     -------
-    MedpipeClassifier | MedpipeRegressor
+    MedpipeClassifier
         The loaded pipeline.
     """
-    if pipeline_type == "classifier":
-        return MedpipeClassifier.load(CLASSIFIER)
+    return MedpipeClassifier.load(CLASSIFIER)
 
-    else:
-        register_metrics()
-        return MedpipeRegressor.load(REGRESSOR)
+
+@st.cache_resource(show_spinner=False)
+def load_regressor() -> MedpipeRegressor:
+    """Load the regressor pipeline.
+
+    Returns
+    -------
+    MedpipeRegressor
+        The loaded pipeline.
+    """
+    register_metrics()
+    return MedpipeRegressor.load(REGRESSOR)
 
 
 @st.cache_resource(show_spinner=False)
