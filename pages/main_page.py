@@ -32,7 +32,7 @@ with main_col1:
         input_features = main_page_layout()
         is_ready = input_features is not None  # Define the is_ready flag
 
-        with st.spinner("Loading model and data..."):
+        with st.spinner("Loading models..."):
             pipeline = load_pipeline()
             regressor_pipeline = load_pipeline("regressor")
             averages = load_averages()
