@@ -9,6 +9,7 @@ import streamlit as st
 from pandas import DataFrame, Series, isna
 
 from .constants import (
+    CAPPED_OUTCOMES_NOTE,
     COLOR_BLACK,
     COLOR_BLUE,
     COLOR_GREEN,
@@ -22,6 +23,7 @@ from .constants import (
     REGRESSOR_KEYS,
     REGRESSOR_X_MAX,
     RISK_DECIMALS,
+    SIMILAR_OPERATION_NOTE,
 )
 
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
@@ -92,7 +94,7 @@ def _build_classifier_plot_df(
         {
             "Complications": labels,
             "Risk percentage": patient_risk,
-            "Population average": average,
+            "Similar-operation mean": average,
             "Lower CI": lower,
             "Upper CI": upper,
         }
@@ -150,7 +152,7 @@ def _build_regressor_plot_df(
             "Median prediction": prediction,
             "Lower PI": pi_lower,
             "Upper PI": pi_upper,
-            "Population average": average,
+            "Similar-operation mean": average,
             "Lower CI": lower,
             "Upper CI": upper,
         }
@@ -168,9 +170,9 @@ def _status_label(value: float, average: float, status: str) -> str:
     value : float
         Patient risk or median prediction.
     average : float
-        Population average.
+        Similar-operation mean.
     status : {"Higher", "Lower", "Equal"}
-        How the value compares to the population average.
+        How the value compares to the similar-operation mean.
 
     Returns
     -------
@@ -200,11 +202,11 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     -------
     pandas.DataFrame
         The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal")
-        and a 'Status label' column that adds the ratio to the population average.
+        and a 'Status label' column that adds the ratio to the similar-operation mean.
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
     risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
-    average = plot_df["Population average"].round(RISK_DECIMALS)
+    average = plot_df["Similar-operation mean"].round(RISK_DECIMALS)
     plot_df["Risk status"] = np.select(
         [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
     )
@@ -217,7 +219,7 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
 def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     """Add the 'Risk status', 'Status label' and 'Favourable' columns.
 
-    A prediction above the population average is "Higher", below it "Lower" and
+    A prediction above the similar-operation mean is "Higher", below it "Lower" and
     the same as it "Equal". More days alive and out of hospital is favourable,
     while a longer stay is not. An equal prediction is neither.
 
@@ -230,10 +232,10 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     -------
     pandas.DataFrame
         The same DataFrame with 'Risk status', 'Status label' (which adds the ratio
-        to the population average) and 'Favourable' columns.
+        to the similar-operation mean) and 'Favourable' columns.
     """
     prediction = plot_df["Median prediction"]
-    average = plot_df["Population average"]
+    average = plot_df["Similar-operation mean"]
     higher = prediction > average
     daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
     plot_df["Risk status"] = np.select(
@@ -327,7 +329,7 @@ def _regressor_status_color():
     Returns
     -------
     altair.Then
-        Black if the prediction equals the population average, green if it is
+        Black if the prediction equals the similar-operation mean, green if it is
         favourable compared to it, else red.
     """
     return (
@@ -345,7 +347,7 @@ def _status_color():
     Returns
     -------
     altair.Then
-        Black if the patient risk equals the population average, red if it is above,
+        Black if the patient risk equals the similar-operation mean, red if it is above,
         else green.
     """
     return (
@@ -389,7 +391,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
 def _average_point_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the tick marking the population average.
+    """Build the tick marking the similar-operation mean.
 
     Parameters
     ----------
@@ -403,7 +405,7 @@ def _average_point_layer(
     Returns
     -------
     altair.Chart
-        Population average layer.
+        Similar-operation mean layer.
     """
     return (
         alt.Chart(plot_df)
@@ -412,10 +414,10 @@ def _average_point_layer(
             bandSize=10, thickness=2, height=15, opacity=0.75
         )  # colour comes from the encoding
         .encode(
-            x="Population average:Q",
+            x="Similar-operation mean:Q",
             y=y_enc,
             color=legend_color,
-            tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
+            tooltip=["Complications", "Similar-operation mean", "Lower CI", "Upper CI"],
         )
     )
 
@@ -698,7 +700,7 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     return (
         layers.properties(
             height=alt.Step(30),  # consistent breathing room per row
-            title="Patient risk vs. Population average (95% CI)",
+            title="Patient risk vs. Similar-operation mean (95% CI)",
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -758,12 +760,12 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
 # Table
 # --------------------------------------------------------------------------- #
 def _format_average(row: Series, decimals: int = 1) -> str:
-    """Format the population average with its confidence interval.
+    """Format the similar-operation mean with its confidence interval.
 
     Parameters
     ----------
     row : pandas.Series
-        Row with 'Population average', 'Lower CI' and 'Upper CI'.
+        Row with 'Similar-operation mean', 'Lower CI' and 'Upper CI'.
     decimals : int, default 1
         Number of decimals to display.
 
@@ -774,10 +776,10 @@ def _format_average(row: Series, decimals: int = 1) -> str:
         available"`` if the interval could not be computed.
     """
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{row['Population average']:.{decimals}f}, 95% CI not available"
+        return f"{row['Similar-operation mean']:.{decimals}f}, 95% CI not available"
 
     return (
-        f"{row['Population average']:.{decimals}f}, "
+        f"{row['Similar-operation mean']:.{decimals}f}, "
         f"95% CI [{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]"
     )
 
@@ -812,17 +814,17 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Table with the outcome, patient risk, population average and risk status.
+        Table with the outcome, patient risk, similar-operation mean and risk status.
     """
     display_df = plot_df.copy()
-    display_df["Population average"] = display_df.apply(
+    display_df["Similar-operation mean"] = display_df.apply(
         _format_average, axis=1, decimals=RISK_DECIMALS
     )
     return display_df[
         [
             "Complications",
             "Risk percentage",
-            "Population average",
+            "Similar-operation mean",
             "Risk status",
             "Status label",
         ]
@@ -845,14 +847,14 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
-    display_df["Population average"] = display_df.apply(
+    display_df["Similar-operation mean"] = display_df.apply(
         _format_average, axis=1, decimals=0
     )
     return display_df[
         [
             "Complications",
             "Prediction",
-            "Population average",
+            "Similar-operation mean",
             "Risk status",
             "Status label",
             "Favourable",
@@ -942,7 +944,7 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
-                "Population average": "Population average",
+                "Similar-operation mean": "Similar-operation mean",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
             },
@@ -955,7 +957,7 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
-                "Population average": "Population average",
+                "Similar-operation mean": "Similar-operation mean",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
                 "Favourable": None,  # only used for the colours
@@ -995,16 +997,17 @@ def _render_chart(
         ):
             st.write(
                 "The charts above show the current patient's risk relative to the "
-                "average population risk for the selected operation."
+                "similar-operation mean for the selected operation."
             )
+            st.write(SIMILAR_OPERATION_NOTE)
             st.write(
-                "The grey bar and shading represent the average population "
-                "risk and 95% confidence intervals."
+                "The grey bar and shading represent the similar-operation mean "
+                "and its 95% confidence interval."
             )
             st.write(
                 "The blue diamond represent the current patient's risk, with the "
                 "exact value specified on the right side of the graph. If the "
-                "patient's outcome is better than the population average, the "
+                "patient's outcome is better than the similar-operation mean, the "
                 "text will be green, otherwise, it will be red."
             )
             st.write(
@@ -1014,6 +1017,7 @@ def _render_chart(
                 "two values. If there are none, they are the same as the median "
                 "prediction."
             )
+            st.write(CAPPED_OUTCOMES_NOTE)
 
 
 # --------------------------------------------------------------------------- #

@@ -19,7 +19,7 @@ def test_classifier_status_compares_at_displayed_precision():
     plot_df = pd.DataFrame(
         {
             "Risk percentage": [5.004, 5.2, 4.0],
-            "Population average": [5.0, 5.0, 5.0],
+            "Similar-operation mean": [5.0, 5.0, 5.0],
         }
     )
     status = _add_risk_status(plot_df)["Risk status"].tolist()
@@ -32,7 +32,7 @@ def test_regressor_status_and_favourable():
         {
             "Complications": [labels["DAOH_90"]] * 2 + [labels["POSTOP_LOS"]] * 2,
             "Median prediction": [80, 70, 5, 3],
-            "Population average": [75, 75, 5, 4],
+            "Similar-operation mean": [75, 75, 5, 4],
         }
     )
     result = _add_regressor_status(plot_df)
@@ -43,7 +43,9 @@ def test_regressor_status_and_favourable():
 
 
 def test_format_average_decimals():
-    row = pd.Series({"Population average": 5.1234, "Lower CI": 4.5, "Upper CI": 6.789})
+    row = pd.Series(
+        {"Similar-operation mean": 5.1234, "Lower CI": 4.5, "Upper CI": 6.789}
+    )
     assert _format_average(row, decimals=2) == "5.12, 95% CI [4.50, 6.79]"
     row["Lower CI"] = float("nan")
     assert _format_average(row, decimals=2) == "5.12, 95% CI not available"
@@ -51,7 +53,7 @@ def test_format_average_decimals():
 
 
 def test_format_average_integers():
-    row = pd.Series({"Population average": 5.0, "Lower CI": 4.0, "Upper CI": 6.0})
+    row = pd.Series({"Similar-operation mean": 5.0, "Lower CI": 4.0, "Upper CI": 6.0})
     assert _format_average(row, decimals=0) == "5, 95% CI [4, 6]"
 
 
@@ -75,5 +77,5 @@ def test_regressor_plot_df_with_missing_confidence_interval():
         present = _build_regressor_plot_df(labels, {"POSTOP_LOS": (5.4, 3.6, 7.2)})
 
     assert missing[["Lower CI", "Upper CI"]].isna().all(axis=None)
-    assert missing["Population average"].iloc[0] == 5
+    assert missing["Similar-operation mean"].iloc[0] == 5
     assert present[["Lower CI", "Upper CI"]].iloc[0].tolist() == [4, 7]

@@ -75,7 +75,17 @@ LABEL_MAP = {
         "VTE": "VTE",
     },
 }
-LEGEND_AVERAGE = "Population average (95% CI)"
+SIMILAR_OPERATION_NOTE = (
+    "The similar-operation mean is the average outcome of patients who "
+    "underwent an operation in the same sub-specialty with the same operation "
+    "severity as the planned operation. It describes the type of operation, not "
+    "the individual patient."
+)
+CAPPED_OUTCOMES_NOTE = (
+    "Days alive and out of hospital (DAOH) and postoperative length of stay "
+    "(LOS) are both capped at 90 days, so no value can exceed 90 days."
+)
+LEGEND_AVERAGE = "Similar-operation mean (95% CI)"
 LEGEND_PATIENT = "Patient risk"
 LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
