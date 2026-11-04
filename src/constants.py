@@ -4,8 +4,20 @@ constants.py
 Constants for the app.
 """
 
-CLASSIFIER = "assets/models/classifier/v2"
-REGRESSOR = "assets/models/regressor/v2"
+import tomllib
+from pathlib import Path
+
+
+def _read_version() -> str:
+    """Read the app version from pyproject.toml, the single source of truth."""
+    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
+        return str(tomllib.load(f)["project"]["version"])
+
+
+VERSION = _read_version()
+CHANGELOG_URL = "https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/blob/main/CHANGELOG.md"
+CLASSIFIER = "assets/models/classifier/v3"
+REGRESSOR = "assets/models/regressor/v3"
 AVERAGES_NAME = "op-averages.joblib"
 OPERATIONS = "assets/operations.csv"
 AVERAGES = "assets/models/" + AVERAGES_NAME
@@ -39,7 +51,7 @@ LABEL_MAP = {
         "HEALTH_OUTCOMES": "Toggle all",
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
-        "DAOH_90": "Days alive and out of hospital",
+        "DAOH_90": "Days alive and out of hospital (90 days)",
         "POSTOP_LOS": "Length of stay",
         "FTR": "Failure to rescue (coming soon)",
     },
@@ -64,10 +76,27 @@ LABEL_MAP = {
         "VTE": "VTE",
     },
 }
-LEGEND_AVERAGE = "Population average (95% CI)"
+SIMILAR_OPERATION_NOTE = (
+    "The similar-operation mean is the average outcome of patients who "
+    "underwent an operation in the same sub-specialty with the same operation "
+    "severity as the planned operation. It describes the type of operation, not "
+    "the individual patient."
+)
+CAPPED_OUTCOMES_NOTE = (
+    "Days alive and out of hospital and postoperative length of stay "
+    " are both capped at 90 days, so no value can exceed 90 days."
+)
+COMPLICATIONS_WARNING = (
+    "The data collection methods may have caused individual complications to be "
+    "underrepresented in the training data. This can lead to predicted rates being "
+    "lower than the expected clinical risk."
+)
+COMPLICATIONS_WARNING_EMPHASIS = "Results must be interpreted with care."
+LEGEND_AVERAGE = "Similar-operation mean (95% CI)"
 LEGEND_PATIENT = "Patient risk"
 LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
+REGRESSOR_X_MAX = 90  # Days, both regressor outcomes are capped at 90
 REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
 RISK_DECIMALS = 2  # Decimals of the classifier percentages that are plotted and shown
 UNAVAILABLE_KEYS = ["FTR"]  # Outcomes that are coming soon, their toggle is disabled

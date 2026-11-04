@@ -9,6 +9,7 @@ import streamlit as st
 from pandas import DataFrame, Series, isna
 
 from .constants import (
+    CAPPED_OUTCOMES_NOTE,
     COLOR_BLACK,
     COLOR_BLUE,
     COLOR_GREEN,
@@ -20,7 +21,9 @@ from .constants import (
     LEGEND_MEDIAN,
     LEGEND_PATIENT,
     REGRESSOR_KEYS,
+    REGRESSOR_X_MAX,
     RISK_DECIMALS,
+    SIMILAR_OPERATION_NOTE,
 )
 
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
@@ -91,7 +94,7 @@ def _build_classifier_plot_df(
         {
             "Complications": labels,
             "Risk percentage": patient_risk,
-            "Population average": average,
+            "Similar-operation mean": average,
             "Lower CI": lower,
             "Upper CI": upper,
         }
@@ -139,8 +142,9 @@ def _build_regressor_plot_df(
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
         pi_upper.append(np.ceil(u[0]))  # To get an integer
         average.append(int(np.round(op_average[key][0])))
-        lower.append(int(_ci_value(op_average[key][1], np.round)))
-        upper.append(int(_ci_value(op_average[key][2], np.round)))
+        # Whole days, or NaN if there were too few samples to compute the interval
+        lower.append(_ci_value(op_average[key][1], lambda v: int(np.round(v))))
+        upper.append(_ci_value(op_average[key][2], lambda v: int(np.round(v))))
 
     return DataFrame(
         {
@@ -148,15 +152,46 @@ def _build_regressor_plot_df(
             "Median prediction": prediction,
             "Lower PI": pi_lower,
             "Upper PI": pi_upper,
-            "Population average": average,
+            "Similar-operation mean": average,
             "Lower CI": lower,
             "Upper CI": upper,
         }
     )
 
 
+def _status_label(value: float, average: float, status: str) -> str:
+    """Build the status text with the ratio between the value and the average.
+
+    The ratio is always at least one, taking the larger value over the smaller
+    one, so a status of "Lower" reads for example ``"×1.20 lower"``.
+
+    Parameters
+    ----------
+    value : float
+        Patient risk or median prediction.
+    average : float
+        Similar-operation mean.
+    status : {"Higher", "Lower", "Equal"}
+        How the value compares to the similar-operation mean.
+
+    Returns
+    -------
+    str
+        For example ``"×1.50 higher"``. Just the status if the ratio is undefined,
+        which happens when the smaller of the two values is zero.
+    """
+    if status == "Equal":
+        return status
+
+    smaller, larger = sorted([value, average])
+    if smaller == 0:
+        return status
+
+    return f"×{larger / smaller:.{RISK_DECIMALS}f} {status.lower()}"
+
+
 def _add_risk_status(plot_df: DataFrame) -> DataFrame:
-    """Add a 'Risk status' column for a quick visual cue.
+    """Add the 'Risk status' and 'Status label' columns for a quick visual cue.
 
     Parameters
     ----------
@@ -166,21 +201,25 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal").
+        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal")
+        and a 'Status label' column that adds the ratio to the similar-operation mean.
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
     risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
-    average = plot_df["Population average"].round(RISK_DECIMALS)
+    average = plot_df["Similar-operation mean"].round(RISK_DECIMALS)
     plot_df["Risk status"] = np.select(
         [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
     )
+    plot_df["Status label"] = [
+        _status_label(*args) for args in zip(risk, average, plot_df["Risk status"])
+    ]
     return plot_df
 
 
 def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
-    """Add the 'Risk status' and 'Favourable' columns to the regressor data.
+    """Add the 'Risk status', 'Status label' and 'Favourable' columns.
 
-    A prediction above the population average is "Higher", below it "Lower" and
+    A prediction above the similar-operation mean is "Higher", below it "Lower" and
     the same as it "Equal". More days alive and out of hospital is favourable,
     while a longer stay is not. An equal prediction is neither.
 
@@ -192,15 +231,20 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with 'Risk status' and 'Favourable' columns.
+        The same DataFrame with 'Risk status', 'Status label' (which adds the ratio
+        to the similar-operation mean) and 'Favourable' columns.
     """
     prediction = plot_df["Median prediction"]
-    average = plot_df["Population average"]
+    average = plot_df["Similar-operation mean"]
     higher = prediction > average
     daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
     plot_df["Risk status"] = np.select(
         [higher, prediction < average], ["Higher", "Lower"], default="Equal"
     )
+    plot_df["Status label"] = [
+        _status_label(*args)
+        for args in zip(prediction, average, plot_df["Risk status"])
+    ]
     plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
     return plot_df
 
@@ -285,7 +329,7 @@ def _regressor_status_color():
     Returns
     -------
     altair.Then
-        Black if the prediction equals the population average, green if it is
+        Black if the prediction equals the similar-operation mean, green if it is
         favourable compared to it, else red.
     """
     return (
@@ -303,7 +347,7 @@ def _status_color():
     Returns
     -------
     altair.Then
-        Black if the patient risk equals the population average, red if it is above,
+        Black if the patient risk equals the similar-operation mean, red if it is above,
         else green.
     """
     return (
@@ -347,7 +391,7 @@ def _error_bars_layer(plot_df: DataFrame, y_enc: alt.Y) -> alt.Chart:
 def _average_point_layer(
     plot_df: DataFrame, y_enc: alt.Y, legend_color: alt.Color
 ) -> alt.Chart:
-    """Build the tick marking the population average.
+    """Build the tick marking the similar-operation mean.
 
     Parameters
     ----------
@@ -361,7 +405,7 @@ def _average_point_layer(
     Returns
     -------
     altair.Chart
-        Population average layer.
+        Similar-operation mean layer.
     """
     return (
         alt.Chart(plot_df)
@@ -370,10 +414,10 @@ def _average_point_layer(
             bandSize=10, thickness=2, height=15, opacity=0.75
         )  # colour comes from the encoding
         .encode(
-            x="Population average:Q",
+            x="Similar-operation mean:Q",
             y=y_enc,
             color=legend_color,
-            tooltip=["Complications", "Population average", "Lower CI", "Upper CI"],
+            tooltip=["Complications", "Similar-operation mean", "Lower CI", "Upper CI"],
         )
     )
 
@@ -454,7 +498,7 @@ def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
 def _risk_status_text_layer(
     plot_df: DataFrame, y_enc: alt.Y, x_max: float
 ) -> alt.Chart:
-    """Build the 'Higher' / 'Lower' label shown next to the risk value.
+    """Build the status label shown next to the risk value, e.g. '×1.50 higher'.
 
     Parameters
     ----------
@@ -482,7 +526,7 @@ def _risk_status_text_layer(
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text="Risk status:N",
+            text="Status label:N",
             color=_status_color(),
         )
     )
@@ -518,11 +562,6 @@ def _median_prediction_layer(
             tooltip=["Complications", "Median prediction", "Lower PI", "Upper PI"],
         )
     )
-
-
-def _regressor_x_max(outcome: Literal["DAOH_90", "POSTOP_LOS"]) -> int:
-    """Return the upper limit of the x axis for a regressor outcome."""
-    return 89 if outcome == "DAOH_90" else 30
 
 
 def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> alt.Chart:
@@ -599,7 +638,7 @@ def _prediction_value_text_layer(
 def _prediction_status_text_layer(
     plot_df: DataFrame, y_enc: alt.Y, x_max: float
 ) -> alt.Chart:
-    """Build the 'Higher' / 'Lower' label shown next to the prediction.
+    """Build the status label shown next to the prediction, e.g. '×1.50 higher'.
 
     Parameters
     ----------
@@ -627,7 +666,7 @@ def _prediction_status_text_layer(
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text="Risk status:N",
+            text="Status label:N",
             color=_regressor_status_color(),
         )
     )
@@ -661,7 +700,7 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     return (
         layers.properties(
             height=alt.Step(30),  # consistent breathing room per row
-            title="Patient risk vs. Population average (95% CI)",
+            title="Patient risk vs. Similar-operation mean (95% CI)",
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -673,10 +712,10 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     )
 
 
-def _build_regressor_chart(
-    plot_df: DataFrame, outcome: Literal["DAOH_90", "POSTOP_LOS"]
-) -> alt.LayerChart:
+def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
     """Combine all layers for the regressor plot into the final chart.
+
+    Both outcomes are capped at 90 days, so they share one chart and one axis.
 
     Parameters
     ----------
@@ -689,13 +728,9 @@ def _build_regressor_chart(
     altair.LayerChart
         The configured layered chart.
     """
-    x_max = _regressor_x_max(outcome)
+    x_max = REGRESSOR_X_MAX
     y_enc = _y_encoding()
     legend_color = _regressor_legend_color()
-    if outcome == "DAOH_90":
-        title = "Days alive and out of hospital patient median prediction (95% PI)"
-    else:
-        title = "Postoperative length of stay patient median prediction (95% PI)"
 
     layers = (
         _error_bars_layer(plot_df, y_enc)
@@ -709,7 +744,7 @@ def _build_regressor_chart(
     return (
         layers.properties(
             height=alt.Step(30),  # consistent breathing room per row
-            title=title,
+            title="Patient median prediction (95% PI)",
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -725,12 +760,12 @@ def _build_regressor_chart(
 # Table
 # --------------------------------------------------------------------------- #
 def _format_average(row: Series, decimals: int = 1) -> str:
-    """Format the population average with its confidence interval.
+    """Format the similar-operation mean with its confidence interval.
 
     Parameters
     ----------
     row : pandas.Series
-        Row with 'Population average', 'Lower CI' and 'Upper CI'.
+        Row with 'Similar-operation mean', 'Lower CI' and 'Upper CI'.
     decimals : int, default 1
         Number of decimals to display.
 
@@ -741,10 +776,10 @@ def _format_average(row: Series, decimals: int = 1) -> str:
         available"`` if the interval could not be computed.
     """
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{row['Population average']:.{decimals}f}, 95% CI not available"
+        return f"{row['Similar-operation mean']:.{decimals}f}, 95% CI not available"
 
     return (
-        f"{row['Population average']:.{decimals}f}, "
+        f"{row['Similar-operation mean']:.{decimals}f}, "
         f"95% CI [{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]"
     )
 
@@ -779,14 +814,20 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        Table with the outcome, patient risk, population average and risk status.
+        Table with the outcome, patient risk, similar-operation mean and risk status.
     """
     display_df = plot_df.copy()
-    display_df["Population average"] = display_df.apply(
+    display_df["Similar-operation mean"] = display_df.apply(
         _format_average, axis=1, decimals=RISK_DECIMALS
     )
     return display_df[
-        ["Complications", "Risk percentage", "Population average", "Risk status"]
+        [
+            "Complications",
+            "Risk percentage",
+            "Similar-operation mean",
+            "Risk status",
+            "Status label",
+        ]
     ]
 
 
@@ -806,15 +847,16 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
-    display_df["Population average"] = display_df.apply(
+    display_df["Similar-operation mean"] = display_df.apply(
         _format_average, axis=1, decimals=0
     )
     return display_df[
         [
             "Complications",
             "Prediction",
-            "Population average",
+            "Similar-operation mean",
             "Risk status",
+            "Status label",
             "Favourable",
         ]
     ]
@@ -855,7 +897,7 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         colour = COLOR_BLACK
     else:
         colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
-    styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
+    styles[row.index.get_loc("Status label")] = f"color: {colour}; font-weight: bold"
     return styles
 
 
@@ -875,7 +917,7 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     # Create a list of styles for the whole row (defaulting to black)
     styles = ["color: black"] * len(row)
 
-    risk_col_index = row.index.get_loc("Risk status")
+    risk_col_index = row.index.get_loc("Status label")
     colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN, "Equal": COLOR_BLACK}
     styles[risk_col_index] = f"color: {colours[row['Risk status']]}; font-weight: bold"
 
@@ -902,8 +944,9 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
-                "Population average": "Population average",
-                "Risk status": "Risk status",
+                "Similar-operation mean": "Similar-operation mean",
+                "Risk status": None,  # only used for the colours
+                "Status label": "Risk status",
             },
             hide_index=True,
             width="stretch",
@@ -914,8 +957,9 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
-                "Population average": "Population average",
-                "Risk status": "Risk status",
+                "Similar-operation mean": "Similar-operation mean",
+                "Risk status": None,  # only used for the colours
+                "Status label": "Risk status",
                 "Favourable": None,  # only used for the colours
             },
             hide_index=True,
@@ -927,8 +971,7 @@ def _render_table(
 
 def _render_chart(
     classifier_chart: alt.LayerChart | None,
-    daoh_chart: alt.LayerChart | None,
-    los_chart: alt.LayerChart | None,
+    regressor_chart: alt.LayerChart | None,
 ) -> None:
     """Display the chart with its explanatory text.
 
@@ -936,20 +979,16 @@ def _render_chart(
     ----------
     classifier_chart : altair.LayerChart
         Chart returned by `_build_chart`.
-    daoh_chart : altair.LayerChart
-        Days alive and out of hospital chart returned by `_build_regressor_chart`.
-    los_chart : altair.LayerChart
-        Length of stay chart returned by `_build_regressor_chart`.
+    regressor_chart : altair.LayerChart
+        Days alive and out of hospital and length of stay chart returned by
+        `_build_regressor_chart`.
     """
     show_help = False
     if classifier_chart is not None:
         st.altair_chart(classifier_chart)
         show_help = True
-    if daoh_chart is not None:
-        st.altair_chart(daoh_chart)
-        show_help = True
-    if los_chart is not None:
-        st.altair_chart(los_chart)
+    if regressor_chart is not None:
+        st.altair_chart(regressor_chart)
         show_help = True
 
     if show_help:
@@ -958,16 +997,17 @@ def _render_chart(
         ):
             st.write(
                 "The charts above show the current patient's risk relative to the "
-                "average population risk for the selected operation."
+                "similar-operation mean for the selected operation."
             )
+            st.write(SIMILAR_OPERATION_NOTE)
             st.write(
-                "The grey bar and shading represent the average population "
-                "risk and 95% confidence intervals."
+                "The grey bar and shading represent the similar-operation mean "
+                "and its 95% confidence interval."
             )
             st.write(
                 "The blue diamond represent the current patient's risk, with the "
                 "exact value specified on the right side of the graph. If the "
-                "patient's outcome is better than the population average, the "
+                "patient's outcome is better than the similar-operation mean, the "
                 "text will be green, otherwise, it will be red."
             )
             st.write(
@@ -977,6 +1017,7 @@ def _render_chart(
                 "two values. If there are none, they are the same as the median "
                 "prediction."
             )
+            st.write(CAPPED_OUTCOMES_NOTE)
 
 
 # --------------------------------------------------------------------------- #
@@ -989,7 +1030,6 @@ def data_visualisation(
 ) -> tuple[
     alt.LayerChart | None,
     DataFrame | None,
-    alt.LayerChart | None,
     alt.LayerChart | None,
     DataFrame | None,
 ]:
@@ -1012,10 +1052,9 @@ def data_visualisation(
         Chart plotting the graph results for classifiers.
     classifier_table : pandas.DataFrame | None
         Table displayed for classifiers.
-    daoh_chart : altair.Chart | None
-        Chart plotting the days alive and out of hospital prediction.
-    los_chart : altair.Chart | None
-        Chart plotting the length of stay prediction.
+    regressor_chart : altair.Chart | None
+        Chart plotting the days alive and out of hospital and length of stay
+        predictions.
     regressor_table : pandas.DataFrame | None
         Table displayed for regressors.
     """
@@ -1026,8 +1065,7 @@ def data_visualisation(
     classifier_chart = None
     classifier_table = None
     regressor_table = None
-    daoh_chart = None
-    los_chart = None
+    regressor_chart = None
 
     st.write("**Risk summary**")
     if not plot_df.empty:  # all labels are unticked
@@ -1040,23 +1078,11 @@ def data_visualisation(
     if not regressor_plot_df.empty:
         regressor_plot_df = _add_regressor_status(regressor_plot_df)
         regressor_table = _build_regressor_table(regressor_plot_df)
-        # Build one chart per outcome (DAOH and LOS), if it is ticked
-        outcome_labels = LABEL_MAP["HEALTH_OUTCOMES"]
-        daoh = regressor_plot_df.loc[
-            regressor_plot_df["Complications"] == outcome_labels["DAOH_90"]
-        ]
-        los = regressor_plot_df.loc[
-            regressor_plot_df["Complications"] == outcome_labels["POSTOP_LOS"]
-        ]
-
-        if not daoh.empty:
-            daoh_chart = _build_regressor_chart(daoh, outcome="DAOH_90")
-        if not los.empty:
-            los_chart = _build_regressor_chart(los, outcome="POSTOP_LOS")
+        regressor_chart = _build_regressor_chart(regressor_plot_df)
 
     if display == "table":
         _render_table(classifier_table, regressor_table)
     else:
-        _render_chart(classifier_chart, daoh_chart, los_chart)
+        _render_chart(classifier_chart, regressor_chart)
 
-    return classifier_chart, classifier_table, daoh_chart, los_chart, regressor_table
+    return classifier_chart, classifier_table, regressor_chart, regressor_table

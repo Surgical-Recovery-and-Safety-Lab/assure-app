@@ -6,6 +6,8 @@ Streamlit ASSURE app.
 
 import streamlit as st
 
+from src.constants import CHANGELOG_URL, VERSION
+
 st.set_page_config(page_title="ASSURE", page_icon="assets/srs-mark.svg", layout="wide")
 
 # Define session state variables
@@ -20,8 +22,10 @@ if "output_dists" not in st.session_state:
     st.session_state.output_dists = {}
 if "run_inputs" not in st.session_state:
     # Session state variables for the inputs and operation category of the last run
+    # and the operation severity
     st.session_state.run_inputs = None
     st.session_state.run_category = None
+    st.session_state.run_op_sev = None
 if "consent" not in st.session_state:
     # Session state variable for consent
     st.session_state.consent = False
@@ -36,4 +40,11 @@ if pg.title != "Calculator":
     # The calculator inputs are reset when leaving the page, so the results
     # computed from them must be discarded too
     st.session_state.model_run = False
+
+with st.sidebar:
+    # Pinned below the navigation on every page
+    st.caption(
+        f"v{VERSION} · [Changelog]({CHANGELOG_URL})  \n"
+        "© 2026 Surgical Recovery and Safety Lab"
+    )
 pg.run()
