@@ -79,6 +79,7 @@ LEGEND_AVERAGE = "Population average (95% CI)"
 LEGEND_PATIENT = "Patient risk"
 LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
+REGRESSOR_X_MAX = 90  # Days, both regressor outcomes are capped at 90
 REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
 RISK_DECIMALS = 2  # Decimals of the classifier percentages that are plotted and shown
 UNAVAILABLE_KEYS = ["FTR"]  # Outcomes that are coming soon, their toggle is disabled

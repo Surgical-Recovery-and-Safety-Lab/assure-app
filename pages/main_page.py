@@ -276,8 +276,7 @@ with main_col1:
                 (
                     health_chart,
                     health_table,
-                    daoh_chart,
-                    los_chart,
+                    regressor_chart,
                     regressor_table,
                 ) = data_visualisation(
                     health_outcomes_dict,
@@ -293,7 +292,7 @@ with main_col1:
             return create_pdf_report(
                 [mortality_chart, comp_chart, health_chart],
                 [mortality_table, comp_table, health_table],
-                regressor_charts=[daoh_chart, los_chart],
+                regressor_chart=regressor_chart,
                 regressor_table=regressor_table,
                 report_date=report_date,
             )
