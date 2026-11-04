@@ -19,7 +19,7 @@ from src.app_fn import (
     sync_master_toggle,
     sync_mortality_outcome_toggles,
 )
-from src.constants import LABEL_MAP, UNAVAILABLE_KEYS
+from src.constants import LABEL_MAP, UNAVAILABLE_KEYS, VERSION
 from src.reporting import create_pdf_report
 from src.visualisation import data_visualisation, hide_chart_toolbar
 
@@ -93,6 +93,7 @@ with main_col1:
 
         # If the model has been run
         st.header("Results", divider="rainbow")
+        st.caption(f"Predictions made with version {VERSION}")
         hide_chart_toolbar()
         if input_features is None or not input_features.equals(
             st.session_state.run_inputs

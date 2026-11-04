@@ -4,6 +4,8 @@ constants.py
 Constants for the app.
 """
 
+# Keep in sync with the latest release in CHANGELOG.md
+VERSION = "1.6.0"
 CLASSIFIER = "assets/models/classifier/v2"
 REGRESSOR = "assets/models/regressor/v2"
 AVERAGES_NAME = "op-averages.joblib"

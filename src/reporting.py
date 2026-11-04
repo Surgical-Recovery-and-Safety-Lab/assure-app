@@ -10,7 +10,7 @@ import pandas as pd
 import vl_convert as vlc
 from weasyprint import HTML
 
-from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED, RISK_DECIMALS
+from .constants import COLOR_BLACK, COLOR_GREEN, COLOR_RED, RISK_DECIMALS, VERSION
 
 FONTS_DIR = Path(__file__).resolve().parents[1] / "assets" / "fonts"
 
@@ -289,7 +289,7 @@ def create_pdf_report(
     <body>
         <div class="report-header">
             <h1>Clinical Risk Assessment Report</h1>
-            <p><strong>Comprehensive Patient Summary</strong> | Date: {date}</p>
+            <p><strong>Comprehensive Patient Summary</strong> | Date: {date} | Version: {escape(VERSION)}</p>
         </div>
         {sections_html}
     </body>
