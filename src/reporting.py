@@ -62,8 +62,8 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
     Parameters
     ----------
     df : pandas.DataFrame
-        Table with 'Complications', 'Risk percentage', 'Population average' and
-        'Risk status' columns.
+        Table with 'Complications', 'Risk percentage', 'Population average',
+        'Risk status' and 'Status label' columns.
 
     Returns
     -------
@@ -76,7 +76,7 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
             <td>{escape(str(r.get("Complications", r.get("Outcome", "N/A"))))}</td>
             <td>{r["Risk percentage"]:.{RISK_DECIMALS}f}</td>
             <td>{escape(str(r["Population average"]))}</td>
-            <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Risk status"])}</td>
+            <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Status label"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -90,7 +90,7 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
     ----------
     df : pandas.DataFrame
         Table with 'Complications', 'Prediction', 'Population average',
-        'Risk status' and 'Favourable' columns.
+        'Risk status', 'Status label' and 'Favourable' columns.
 
     Returns
     -------
@@ -103,7 +103,7 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
             <td>{escape(str(r["Complications"]))}</td>
             <td>{escape(str(r["Prediction"]))}</td>
             <td>{escape(str(r["Population average"]))}</td>
-            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Risk status"])}</td>
+            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Status label"])}</td>
         </tr>
         """
         for _, r in df.iterrows()

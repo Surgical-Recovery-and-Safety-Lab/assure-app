@@ -156,8 +156,39 @@ def _build_regressor_plot_df(
     )
 
 
+def _status_label(value: float, average: float, status: str) -> str:
+    """Build the status text with the ratio between the value and the average.
+
+    The ratio is always at least one, taking the larger value over the smaller
+    one, so a status of "Lower" reads for example ``"×1.20 lower"``.
+
+    Parameters
+    ----------
+    value : float
+        Patient risk or median prediction.
+    average : float
+        Population average.
+    status : {"Higher", "Lower", "Equal"}
+        How the value compares to the population average.
+
+    Returns
+    -------
+    str
+        For example ``"×1.50 higher"``. Just the status if the ratio is undefined,
+        which happens when the smaller of the two values is zero.
+    """
+    if status == "Equal":
+        return status
+
+    smaller, larger = sorted([value, average])
+    if smaller == 0:
+        return status
+
+    return f"×{larger / smaller:.{RISK_DECIMALS}f} {status.lower()}"
+
+
 def _add_risk_status(plot_df: DataFrame) -> DataFrame:
-    """Add a 'Risk status' column for a quick visual cue.
+    """Add the 'Risk status' and 'Status label' columns for a quick visual cue.
 
     Parameters
     ----------
@@ -167,7 +198,8 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal").
+        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal")
+        and a 'Status label' column that adds the ratio to the population average.
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
     risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
@@ -175,11 +207,14 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     plot_df["Risk status"] = np.select(
         [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
     )
+    plot_df["Status label"] = [
+        _status_label(*args) for args in zip(risk, average, plot_df["Risk status"])
+    ]
     return plot_df
 
 
 def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
-    """Add the 'Risk status' and 'Favourable' columns to the regressor data.
+    """Add the 'Risk status', 'Status label' and 'Favourable' columns.
 
     A prediction above the population average is "Higher", below it "Lower" and
     the same as it "Equal". More days alive and out of hospital is favourable,
@@ -193,7 +228,8 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with 'Risk status' and 'Favourable' columns.
+        The same DataFrame with 'Risk status', 'Status label' (which adds the ratio
+        to the population average) and 'Favourable' columns.
     """
     prediction = plot_df["Median prediction"]
     average = plot_df["Population average"]
@@ -202,6 +238,9 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     plot_df["Risk status"] = np.select(
         [higher, prediction < average], ["Higher", "Lower"], default="Equal"
     )
+    plot_df["Status label"] = [
+        _status_label(*args) for args in zip(prediction, average, plot_df["Risk status"])
+    ]
     plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
     return plot_df
 
@@ -455,7 +494,7 @@ def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
 def _risk_status_text_layer(
     plot_df: DataFrame, y_enc: alt.Y, x_max: float
 ) -> alt.Chart:
-    """Build the 'Higher' / 'Lower' label shown next to the risk value.
+    """Build the status label shown next to the risk value, e.g. '×1.50 higher'.
 
     Parameters
     ----------
@@ -483,7 +522,7 @@ def _risk_status_text_layer(
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text="Risk status:N",
+            text="Status label:N",
             color=_status_color(),
         )
     )
@@ -600,7 +639,7 @@ def _prediction_value_text_layer(
 def _prediction_status_text_layer(
     plot_df: DataFrame, y_enc: alt.Y, x_max: float
 ) -> alt.Chart:
-    """Build the 'Higher' / 'Lower' label shown next to the prediction.
+    """Build the status label shown next to the prediction, e.g. '×1.50 higher'.
 
     Parameters
     ----------
@@ -628,7 +667,7 @@ def _prediction_status_text_layer(
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text="Risk status:N",
+            text="Status label:N",
             color=_regressor_status_color(),
         )
     )
@@ -787,7 +826,13 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
         _format_average, axis=1, decimals=RISK_DECIMALS
     )
     return display_df[
-        ["Complications", "Risk percentage", "Population average", "Risk status"]
+        [
+            "Complications",
+            "Risk percentage",
+            "Population average",
+            "Risk status",
+            "Status label",
+        ]
     ]
 
 
@@ -816,6 +861,7 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
             "Prediction",
             "Population average",
             "Risk status",
+            "Status label",
             "Favourable",
         ]
     ]
@@ -856,7 +902,7 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         colour = COLOR_BLACK
     else:
         colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
-    styles[row.index.get_loc("Risk status")] = f"color: {colour}; font-weight: bold"
+    styles[row.index.get_loc("Status label")] = f"color: {colour}; font-weight: bold"
     return styles
 
 
@@ -876,7 +922,7 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     # Create a list of styles for the whole row (defaulting to black)
     styles = ["color: black"] * len(row)
 
-    risk_col_index = row.index.get_loc("Risk status")
+    risk_col_index = row.index.get_loc("Status label")
     colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN, "Equal": COLOR_BLACK}
     styles[risk_col_index] = f"color: {colours[row['Risk status']]}; font-weight: bold"
 
@@ -904,7 +950,8 @@ def _render_table(
                 "Complications": "Outcome",
                 "Risk percentage": "Patient risk",
                 "Population average": "Population average",
-                "Risk status": "Risk status",
+                "Risk status": None,  # only used for the colours
+                "Status label": "Risk status",
             },
             hide_index=True,
             width="stretch",
@@ -916,7 +963,8 @@ def _render_table(
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
                 "Population average": "Population average",
-                "Risk status": "Risk status",
+                "Risk status": None,  # only used for the colours
+                "Status label": "Risk status",
                 "Favourable": None,  # only used for the colours
             },
             hide_index=True,
