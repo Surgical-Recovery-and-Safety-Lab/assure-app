@@ -12,7 +12,7 @@ and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spe
 
 ### Changed
 * Reduced the risk decimal from 2 to 1.
-* Increased spacing betwen risk text value and risk status.
+* Increased spacing between risk text value and risk status.
 * The diamond for the visual display is now thinner and empty to make the 
 prediction intervals easier to see.
 * The prediction interval bars are black and on top of the diamonds.
