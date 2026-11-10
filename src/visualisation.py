@@ -20,6 +20,8 @@ from .constants import (
     LEGEND_AVERAGE,
     LEGEND_MEDIAN,
     LEGEND_PATIENT,
+    PATIENT_MARKER_SHAPE,
+    PATIENT_MARKER_SIZE,
     REGRESSOR_KEYS,
     REGRESSOR_X_MAX,
     RISK_DECIMALS,
@@ -446,7 +448,13 @@ def _patient_diamond_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_PATIENT}'")
-        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
+        .mark_point(
+            filled=False,
+            shape=PATIENT_MARKER_SHAPE,
+            size=PATIENT_MARKER_SIZE,
+            strokeWidth=2,
+            opacity=1,
+        )
         .encode(
             x=alt.X(
                 "Risk percentage:Q",
@@ -486,10 +494,13 @@ def _risk_value_text_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
             fontWeight="bold",
             clip=False,
         )
+        .transform_calculate(
+            value_label=f"format(datum['Risk percentage'], '.{RISK_DECIMALS}f') + '%'"
+        )
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text=alt.Text("Risk percentage:Q", format=f".{RISK_DECIMALS}f"),
+            text="value_label:N",
             color=_status_color(),
         )
     )
@@ -519,7 +530,7 @@ def _risk_status_text_layer(
         .mark_text(
             align="left",
             baseline="middle",
-            dx=40,  # same anchor as the value text, shifted right
+            dx=60,  # same anchor as the value text, shifted right
             fontWeight="bold",
             clip=False,
         )
@@ -554,7 +565,13 @@ def _median_prediction_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_MEDIAN}'")
-        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
+        .mark_point(
+            filled=False,
+            shape=PATIENT_MARKER_SHAPE,
+            size=PATIENT_MARKER_SIZE,
+            strokeWidth=2,
+            opacity=1,
+        )
         .encode(
             x="Median prediction:Q",
             y=y_enc,
@@ -584,7 +601,7 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
     return (
         alt.Chart(plot_df)
         .mark_errorbar(
-            color=COLOR_BLUE, thickness=2, opacity=1
+            color=COLOR_BLACK, thickness=2, opacity=1
         )  # explicit, since it isn't colour-encoded
         .encode(
             x=alt.X(
@@ -626,10 +643,13 @@ def _prediction_value_text_layer(
             fontWeight="bold",
             clip=False,
         )
+        .transform_calculate(
+            value_label="format(datum['Median prediction'], '.0f') + ' days'"
+        )
         .encode(
             x=alt.datum(x_max),
             y=y_enc,
-            text=alt.Text("Median prediction:Q", format=".0f"),
+            text="value_label:N",
             color=_regressor_status_color(),
         )
     )
@@ -659,7 +679,7 @@ def _prediction_status_text_layer(
         .mark_text(
             align="left",
             baseline="middle",
-            dx=40,  # same anchor as the value text, shifted right
+            dx=65,  # same anchor as the value text, shifted right
             fontWeight="bold",
             clip=False,
         )
@@ -734,9 +754,9 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
 
     layers = (
         _error_bars_layer(plot_df, y_enc)
-        + _prediction_bars_layer(plot_df, y_enc, x_max)
         + _average_point_layer(plot_df, y_enc, legend_color)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
+        + _prediction_bars_layer(plot_df, y_enc, x_max)
         + _prediction_value_text_layer(plot_df, y_enc, x_max)
         + _prediction_status_text_layer(plot_df, y_enc, x_max)
     )
@@ -759,7 +779,7 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
 # --------------------------------------------------------------------------- #
 # Table
 # --------------------------------------------------------------------------- #
-def _format_average(row: Series, decimals: int = 1) -> str:
+def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
     """Format the similar-operation mean with its confidence interval.
 
     Parameters
@@ -768,19 +788,22 @@ def _format_average(row: Series, decimals: int = 1) -> str:
         Row with 'Similar-operation mean', 'Lower CI' and 'Upper CI'.
     decimals : int, default 1
         Number of decimals to display.
+    unit : str, default ""
+        Unit appended once after the interval, e.g. ``"%"`` or ``" days"``.
 
     Returns
     -------
     str
-        For example ``"12.3, 95% CI [10.1, 14.5]"``, or ``"12.3, 95% CI not
+        For example ``"12.3, 95% CI [10.1, 14.5]%"``, or ``"12.3%, 95% CI not
         available"`` if the interval could not be computed.
     """
+    mean = f"{row['Similar-operation mean']:.{decimals}f}"
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{row['Similar-operation mean']:.{decimals}f}, 95% CI not available"
+        return f"{mean}{unit}, 95% CI not available"
 
     return (
-        f"{row['Similar-operation mean']:.{decimals}f}, "
-        f"95% CI [{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]"
+        f"{mean}, 95% CI "
+        f"[{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]{unit}"
     )
 
 
@@ -818,7 +841,7 @@ def _build_table(plot_df: DataFrame) -> DataFrame:
     """
     display_df = plot_df.copy()
     display_df["Similar-operation mean"] = display_df.apply(
-        _format_average, axis=1, decimals=RISK_DECIMALS
+        _format_average, axis=1, decimals=RISK_DECIMALS, unit="%"
     )
     return display_df[
         [
@@ -848,7 +871,7 @@ def _build_regressor_table(plot_df: DataFrame) -> DataFrame:
     display_df = plot_df.copy()
     display_df["Prediction"] = display_df.apply(_format_prediction, axis=1)
     display_df["Similar-operation mean"] = display_df.apply(
-        _format_average, axis=1, decimals=0
+        _format_average, axis=1, decimals=0, unit=" days"
     )
     return display_df[
         [
@@ -1011,7 +1034,7 @@ def _render_chart(
                 "text will be green, otherwise, it will be red."
             )
             st.write(
-                "For days alive and out of hospital and length of stay, the blue "
+                "For days alive and out of hospital and length of stay, the black "
                 "bars around the diamond represent the 95% prediction interval. "
                 "There is a 95% chance that the true value will be between the "
                 "two values. If there are none, they are the same as the median "

@@ -1,6 +1,6 @@
 [project]
 name = "assure"
-version = "1.6.1"  # Single source of truth, read by src/constants.py. Keep in sync with CHANGELOG.md
+version = "1.6.2"  # Single source of truth, read by src/constants.py. Keep in sync with CHANGELOG.md
 description = "Streamlit app for surgical risk prediction"
 requires-python = ">=3.12"
 license = "Apache-2.0"
