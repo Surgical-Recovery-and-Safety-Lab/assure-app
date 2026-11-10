@@ -775,21 +775,21 @@ def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
     decimals : int, default 1
         Number of decimals to display.
     unit : str, default ""
-        Unit appended to the mean and interval bounds, e.g. ``"%"`` or ``" days"``.
+        Unit appended once after the interval, e.g. ``"%"`` or ``" days"``.
 
     Returns
     -------
     str
-        For example ``"12.3%, 95% CI [10.1%, 14.5%]"``, or ``"12.3%, 95% CI not
+        For example ``"12.3, 95% CI [10.1, 14.5]%"``, or ``"12.3%, 95% CI not
         available"`` if the interval could not be computed.
     """
-    mean = f"{row['Similar-operation mean']:.{decimals}f}{unit}"
+    mean = f"{row['Similar-operation mean']:.{decimals}f}"
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
-        return f"{mean}, 95% CI not available"
+        return f"{mean}{unit}, 95% CI not available"
 
     return (
         f"{mean}, 95% CI "
-        f"[{row['Lower CI']:.{decimals}f}{unit}, {row['Upper CI']:.{decimals}f}{unit}]"
+        f"[{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]{unit}"
     )
 
 
