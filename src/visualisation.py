@@ -20,6 +20,8 @@ from .constants import (
     LEGEND_AVERAGE,
     LEGEND_MEDIAN,
     LEGEND_PATIENT,
+    PATIENT_MARKER_SHAPE,
+    PATIENT_MARKER_SIZE,
     REGRESSOR_KEYS,
     REGRESSOR_X_MAX,
     RISK_DECIMALS,
@@ -446,7 +448,13 @@ def _patient_diamond_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_PATIENT}'")
-        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
+        .mark_point(
+            filled=False,
+            shape=PATIENT_MARKER_SHAPE,
+            size=PATIENT_MARKER_SIZE,
+            strokeWidth=2,
+            opacity=1,
+        )
         .encode(
             x=alt.X(
                 "Risk percentage:Q",
@@ -557,7 +565,13 @@ def _median_prediction_layer(
     return (
         alt.Chart(plot_df)
         .transform_calculate(Legend=f"'{LEGEND_MEDIAN}'")
-        .mark_point(filled=True, shape="diamond", size=250, opacity=1)
+        .mark_point(
+            filled=False,
+            shape=PATIENT_MARKER_SHAPE,
+            size=PATIENT_MARKER_SIZE,
+            strokeWidth=2,
+            opacity=1,
+        )
         .encode(
             x="Median prediction:Q",
             y=y_enc,
@@ -587,7 +601,7 @@ def _prediction_bars_layer(plot_df: DataFrame, y_enc: alt.Y, x_max: float) -> al
     return (
         alt.Chart(plot_df)
         .mark_errorbar(
-            color=COLOR_BLUE, thickness=2, opacity=1
+            color=COLOR_BLACK, thickness=2, opacity=1
         )  # explicit, since it isn't colour-encoded
         .encode(
             x=alt.X(
