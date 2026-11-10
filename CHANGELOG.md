@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
+## [1.6.2] - 2026-11-11
+
+### Added 
+* The units (% or days) for the risk text value in plots and tables.
+
+### Changed
+* Reduced the risk decimal from 2 to 1.
+* Increased spacing between risk text value and risk status.
+* The diamond for the visual display is now thinner and empty to make the 
+prediction intervals easier to see.
+* The prediction interval bars are black and on top of the diamonds.
+
+### Fixed
+* Formatting for the similar-operation mean table display to have the units
+only displayed once.
+
 ## [1.6.1] - 2026-11-09
 
 ### Changed
@@ -264,7 +280,8 @@ stay.
 * First version
 
 
-[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.2...HEAD
+[v1.6.]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.1...v1.6.2
 [v1.6.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.0...v1.5.1

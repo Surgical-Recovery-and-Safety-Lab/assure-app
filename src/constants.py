@@ -98,7 +98,11 @@ LEGEND_MEDIAN = "Median prediction (95% PI)"
 EXCLUDED_KEYS = ["COMPLICATIONS", "MORTALITY_OUTCOMES", "HEALTH_OUTCOMES"]
 REGRESSOR_X_MAX = 90  # Days, both regressor outcomes are capped at 90
 REGRESSOR_KEYS = ["DAOH_90", "POSTOP_LOS"]
-RISK_DECIMALS = 2  # Decimals of the classifier percentages that are plotted and shown
+# Tall, narrow diamond (SVG path in a [-1, 1] box): width is 0.4x the height, so it
+# stays easy to spot without covering the interval and the mean tick
+PATIENT_MARKER_SHAPE = "M0,-1.5L0.6,0L0,1.5L-0.6,0Z"
+PATIENT_MARKER_SIZE = 100  # Scales the whole shape, tune together with the shape
+RISK_DECIMALS = 1  # Decimals of the classifier percentages that are plotted and shown
 UNAVAILABLE_KEYS = ["FTR"]  # Outcomes that are coming soon, their toggle is disabled
 # Hex values rather than names, since Streamlit remaps colour names to its theme
 COLOR_RED = "#ff0000"
