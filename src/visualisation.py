@@ -740,9 +740,9 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
 
     layers = (
         _error_bars_layer(plot_df, y_enc)
-        + _prediction_bars_layer(plot_df, y_enc, x_max)
         + _average_point_layer(plot_df, y_enc, legend_color)
         + _median_prediction_layer(plot_df, y_enc, legend_color)
+        + _prediction_bars_layer(plot_df, y_enc, x_max)
         + _prediction_value_text_layer(plot_df, y_enc, x_max)
         + _prediction_status_text_layer(plot_df, y_enc, x_max)
     )
