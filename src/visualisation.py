@@ -1034,7 +1034,7 @@ def _render_chart(
                 "text will be green, otherwise, it will be red."
             )
             st.write(
-                "For days alive and out of hospital and length of stay, the blue "
+                "For days alive and out of hospital and length of stay, the black "
                 "bars around the diamond represent the 95% prediction interval. "
                 "There is a 95% chance that the true value will be between the "
                 "two values. If there are none, they are the same as the median "
