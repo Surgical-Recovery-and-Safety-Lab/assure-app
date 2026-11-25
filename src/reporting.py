@@ -85,7 +85,7 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
         f"""
         <tr>
             <td>{escape(str(r.get("Complications", r.get("Outcome", "N/A"))))}</td>
-            <td>{r["Risk percentage"]:.{RISK_DECIMALS}f}</td>
+            <td>{r["Risk percentage"]:.{RISK_DECIMALS}f}%</td>
             <td>{escape(str(r["Similar-operation mean"]))}</td>
             <td class="status-{escape(r["Risk status"].lower())}">{escape(r["Status label"])}</td>
         </tr>
