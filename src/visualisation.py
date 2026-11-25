@@ -870,8 +870,7 @@ def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
         return f"{mean}{unit}, 95% CI not available"
 
     return (
-        f"{mean}, 95% CI "
-        f"[{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]{unit}"
+        f"{mean} (95% CI {row['Lower CI']:.{decimals}f}-{row['Upper CI']:.{decimals}f})"
     )
 
 
