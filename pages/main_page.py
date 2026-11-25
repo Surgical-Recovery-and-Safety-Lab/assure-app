@@ -121,12 +121,14 @@ with main_col1:
                 visualisation by selecting the display type.
                 """)
 
+        # Some operation categories have no averages, the patient results are
+        # still shown, just without the similar-operation means
         op_average = averages.get((cat_l2, op_sev))
         if op_average is None:
             st.error(
-                "Population averages are not available for this operation category."
+                "Similar-operation means are not available for this operation "
+                "category. The results below only show the patient's predictions."
             )
-            st.stop()
         display_options = {"graph": "Graph", "table": "Table"}
         init_outcome_toggles()
         mortality_tab, comp_tab, health_tab = st.tabs(
@@ -298,6 +300,7 @@ with main_col1:
                 regressor_chart=regressor_chart,
                 regressor_table=regressor_table,
                 report_date=report_date,
+                with_average=op_average is not None,
             )
 
         st.download_button(
