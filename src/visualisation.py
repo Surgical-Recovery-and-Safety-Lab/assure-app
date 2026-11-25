@@ -859,7 +859,7 @@ def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
     Returns
     -------
     str
-        For example ``"12.3, 95% CI [10.1, 14.5]%"``, ``"12.3%, 95% CI not
+        For example ``"12.3% (95% CI 10.1-14.5)"``, ``"12.3%, 95% CI not
         available"`` if the interval could not be computed, or ``"Not available"``
         if there is no mean.
     """
@@ -869,9 +869,7 @@ def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
         return f"{mean}{unit}, 95% CI not available"
 
-    return (
-        f"{mean} (95% CI {row['Lower CI']:.{decimals}f}-{row['Upper CI']:.{decimals}f})"
-    )
+    return f"{mean}{unit} (95% CI {row['Lower CI']:.{decimals}f}-{row['Upper CI']:.{decimals}f})"
 
 
 def _format_prediction(row: Series) -> str:
@@ -885,11 +883,11 @@ def _format_prediction(row: Series) -> str:
     Returns
     -------
     str
-        For example ``"12.3, 95% PI [10.1, 14.5]"``.
+        For example ``"12.3 days (95% PI 10.1-14.5)"``.
     """
     return (
-        f"{row['Median prediction']:.0f}, "
-        f"95% PI [{row['Lower PI']:.0f}, {row['Upper PI']:.0f}] days"
+        f"{row['Median prediction']:.0f} days "
+        f"(95% PI {row['Lower PI']:.0f}-{row['Upper PI']:.0f})"
     )
 
 
