@@ -49,15 +49,17 @@ def test_format_average_decimals():
     row = pd.Series(
         {"Similar-operation mean": 5.1234, "Lower CI": 4.5, "Upper CI": 6.789}
     )
-    assert _format_average(row, decimals=2) == "5.12% (95% CI 4.50-6.79)"
+    assert _format_average(row, decimals=2, unit="%") == "5.12% (95% CI 4.50-6.79)"
     row["Lower CI"] = float("nan")
     assert _format_average(row, decimals=2) == "5.12, 95% CI not available"
-    assert _format_average(row, decimals=0) == "5, 95% CI not available"
+    assert (
+        _format_average(row, decimals=0, unit=" days") == "5 days, 95% CI not available"
+    )
 
 
 def test_format_average_integers():
     row = pd.Series({"Similar-operation mean": 5.0, "Lower CI": 4.0, "Upper CI": 6.0})
-    assert _format_average(row, decimals=0) == "5% (95% CI 4-6)"
+    assert _format_average(row, decimals=0) == "5 (95% CI 4-6)"
 
 
 class FakeState(dict):
