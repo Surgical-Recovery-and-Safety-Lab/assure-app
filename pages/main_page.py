@@ -80,6 +80,7 @@ with main_col1:
                     0
                 ]
                 st.session_state.run_op_sev = input_features["OP_SEVERITY"].iloc[0]
+                st.session_state.run_operation = st.session_state.operation
                 st.session_state.model_run = True  # Models have now been run
             with info_col:
                 st.info(
@@ -292,6 +293,10 @@ with main_col1:
         # The report is only generated when the button is clicked, since rendering
         # the charts is slow and the script reruns on every interaction
         report_date = get_report_date()
+        # Session state cannot be read inside the callable, which runs outside
+        # the script when the button is clicked
+        run_inputs = st.session_state.run_inputs
+        run_operation = st.session_state.get("run_operation")
 
         def build_report() -> bytes:
             return create_pdf_report(
@@ -301,6 +306,8 @@ with main_col1:
                 regressor_table=regressor_table,
                 report_date=report_date,
                 with_average=op_average is not None,
+                patient_inputs=run_inputs,
+                operation=run_operation,
             )
 
         st.download_button(

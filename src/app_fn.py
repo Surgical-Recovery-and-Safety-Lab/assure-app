@@ -22,6 +22,7 @@ from .constants import (
     AVERAGES,
     CLASSIFIER,
     COLUMNS,
+    ETHNICITY_LABELS,
     LABEL_MAP,
     MAX_EMAIL_LENGTH,
     MAX_MESSAGE_LENGTH,
@@ -31,6 +32,7 @@ from .constants import (
     REGRESSOR,
     SEND_COOLDOWN,
     SEND_EMAIL_TIMEOUT,
+    SEX_LABELS,
     UNAVAILABLE_KEYS,
 )
 
@@ -193,30 +195,22 @@ def main_page_layout() -> DataFrame | None:
         )
 
     # Sex radio buttons
-    sex_map = {"M": "Male", "F": "Female"}
     sex = st.radio(
         "**Sex at birth**",
-        options=sex_map.keys(),
-        format_func=lambda x: sex_map[x],
+        options=SEX_LABELS.keys(),
+        format_func=lambda x: SEX_LABELS[x],
         index=None,
         help="Patient sex **at birth**",
         horizontal=True,
     )
 
     # Ethnicity selectbox
-    ethnicity_map = {
-        "Asian": "Asian",
-        "European": "NZ European",
-        "Māori": "Māori",
-        "MELAA/Other": "MELAA/Other",
-        "Pacific Peoples": "Pacific",
-    }
     ethnicity_col1, _ = st.columns([3, 1], vertical_alignment="bottom", gap="medium")
     with ethnicity_col1:
         ethnicity = st.selectbox(
             "**Ethnicity**",
-            options=ethnicity_map.keys(),
-            format_func=lambda x: ethnicity_map[x],
+            options=ETHNICITY_LABELS.keys(),
+            format_func=lambda x: ETHNICITY_LABELS[x],
             index=None,
             placeholder="Select ethnicity",
         )
@@ -300,6 +294,7 @@ def main_page_layout() -> DataFrame | None:
             options=search_options,
             index=None,
             placeholder="Type to search...",
+            key="operation",  # Read when the model is run, for the report
         )
 
         if selected_operation:

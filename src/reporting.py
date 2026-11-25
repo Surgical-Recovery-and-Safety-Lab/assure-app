@@ -17,7 +17,9 @@ from .constants import (
     COLOR_RED,
     COMPLICATIONS_WARNING,
     COMPLICATIONS_WARNING_EMPHASIS,
+    ETHNICITY_LABELS,
     RISK_DECIMALS,
+    SEX_LABELS,
     SIMILAR_OPERATION_NOTE,
     VERSION,
 )
@@ -182,7 +184,7 @@ def _block_html(
     """
 
 
-def _section_html(title: str, blocks: list[str]) -> str:
+def _section_html(title: str, blocks: list[str], css_class: str = "") -> str:
     """Build the HTML for a report section made of one or more blocks.
 
     Parameters
@@ -190,7 +192,9 @@ def _section_html(title: str, blocks: list[str]) -> str:
     title : str
         Section title.
     blocks : list[str]
-        HTML blocks returned by `_block_html`.
+        HTML blocks, such as those returned by `_block_html`.
+    css_class : str, default ""
+        Extra CSS class added to the section.
 
     Returns
     -------
@@ -198,11 +202,62 @@ def _section_html(title: str, blocks: list[str]) -> str:
         HTML for the section.
     """
     return f"""
-    <div class="report-section">
+    <div class="report-section {css_class}">
         <div class="section-title">{escape(title)}</div>
         {"".join(blocks)}
     </div>
     """
+
+
+def _patient_summary_html(inputs: pd.DataFrame, operation: str | None) -> str:
+    """Build the HTML text summary of the patient and the operation.
+
+    Parameters
+    ----------
+    inputs : pandas.DataFrame
+        One-row input features the model was run with, as returned by
+        `convert_input_features`.
+    operation : str | None
+        Description of the selected operation. Left out if missing.
+
+    Returns
+    -------
+    str
+        HTML for the patient summary section.
+    """
+    row = inputs.iloc[0]
+    sex = SEX_LABELS.get(row["SEX_ORIGINAL"], row["SEX_ORIGINAL"]).lower()
+    ethnicity = ETHNICITY_LABELS.get(
+        row["ETHNICITY_ORIGINAL"], row["ETHNICITY_ORIGINAL"]
+    )
+    cancer = "with" if row["PRIOR_CANCER"] else "without"
+    patient = (
+        f"{int(row['AGE'])}-year-old {ethnicity} {sex} with an ASA score "
+        f"{int(row['ASA_ORIGINAL'])} and {cancer} prior cancer."
+    )
+
+    source = (
+        "transferred from another hospital"
+        if row["ADMISSION_SOURCE"] == "Transfer"
+        else "routine admission source"
+    )
+    trauma = "related to trauma" if row["TRAUMA"] else "not related to trauma"
+    category = (
+        f"{row['CATEGORY_LEVEL_1']}, {row['CATEGORY_LEVEL_2']}, "
+        f"severity {row['OP_SEVERITY']}"
+    )
+    name = f"{operation} ({category})" if operation else category.capitalize()
+    surgery = f"{name}. {row['ADMISSION_ACUITY']} surgery, {source}, {trauma}."
+
+    blocks = [
+        f"""
+        <div class="subsection-title">Patient information</div>
+        <p>{escape(patient)}</p>
+        <div class="subsection-title">Operation information</div>
+        <p>{escape(surgery)}</p>
+        """
+    ]
+    return _section_html("ASSURE inputs summary", blocks, css_class="patient-summary")
 
 
 def create_pdf_report(
@@ -212,6 +267,8 @@ def create_pdf_report(
     regressor_table: pd.DataFrame | None = None,
     report_date: str | None = None,
     with_average: bool = True,
+    patient_inputs: pd.DataFrame | None = None,
+    operation: str | None = None,
 ) -> bytes:
     """Create a pdf report from the plots and tables.
 
@@ -237,6 +294,11 @@ def create_pdf_report(
     with_average : bool, default True
         Whether the similar-operation means are available for the operation. If
         not, the report says so in its notes.
+    patient_inputs : pandas.DataFrame | None, default None
+        One-row input features the model was run with, summarised after the
+        notes. The summary is left out if missing.
+    operation : str | None, default None
+        Description of the selected operation, shown in the patient summary.
 
     Returns
     -------
@@ -306,6 +368,10 @@ def create_pdf_report(
             "predictions.</li>"
         )
 
+    summary_html = ""
+    if patient_inputs is not None and not patient_inputs.empty:
+        summary_html = _patient_summary_html(patient_inputs, operation)
+
     date = escape(report_date or time.strftime("%B %d, %Y", time.localtime()))
 
     # --- Final HTML Assembly ---
@@ -341,8 +407,10 @@ def create_pdf_report(
         font-size: 10pt;
         margin: 0 0 30px 0;
         }}
-        /* Every section after the first starts on a new page */
-        .report-section ~ .report-section {{ break-before: page; }}
+        /* Every results section after the first starts on a new page */
+        .report-section:not(.patient-summary) ~ .report-section {{ break-before: page; }}
+        .subsection-title {{ font-size: 12pt; font-weight: bold; color: #2980b9; margin: 12px 0 6px 0; }}
+        .patient-summary p {{ font-size: 10pt; margin: 0 0 10px 0; }}
         .notes p {{ margin: 0 0 6px 0; }}
         .notes ul {{ margin: 0; padding-left: 18px; }}
         .notes li {{ margin-bottom: 4px; }}
@@ -365,6 +433,7 @@ def create_pdf_report(
                 expected to fall with 95% probability.</li>
             </ul>
         </div>
+        {summary_html}
         {sections_html}
     </body>
     </html>

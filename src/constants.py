@@ -27,6 +27,14 @@ MAX_SUBJECT_LENGTH = 150
 MAX_MESSAGE_LENGTH = 2000
 SEND_COOLDOWN = 60  # Seconds a session must wait between two messages
 MAX_SENDS_PER_HOUR = 20  # Messages accepted from all sessions together
+SEX_LABELS = {"M": "Male", "F": "Female"}
+ETHNICITY_LABELS = {
+    "Asian": "Asian",
+    "European": "NZ European",
+    "Māori": "Māori",
+    "MELAA/Other": "MELAA/Other",
+    "Pacific Peoples": "Pacific",
+}
 COLUMNS = [
     "AGE",
     "ETHNICITY_ORIGINAL",
