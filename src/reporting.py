@@ -92,6 +92,25 @@ def _classifier_rows_html(df: pd.DataFrame) -> str:
     )
 
 
+def _regressor_status_class(row: pd.Series) -> str:
+    """Pick the CSS class colouring the regressor status in the report.
+
+    Parameters
+    ----------
+    row : pandas.Series
+        Table row with 'Risk status' and 'Favourable' entries.
+
+    Returns
+    -------
+    str
+        "lower" (green) if favourable, "higher" (red) if not, else the status
+        itself in lower case ("equal" or "unavailable").
+    """
+    if row["Risk status"] not in ("Higher", "Lower"):
+        return row["Risk status"].lower()
+    return "lower" if row["Favourable"] else "higher"
+
+
 def _regressor_rows_html(df: pd.DataFrame) -> str:
     """Build the HTML table rows for the regressor results.
 
@@ -112,7 +131,7 @@ def _regressor_rows_html(df: pd.DataFrame) -> str:
             <td>{escape(str(r["Complications"]))}</td>
             <td>{escape(str(r["Prediction"]))}</td>
             <td>{escape(str(r["Similar-operation mean"]))}</td>
-            <td class="status-{"equal" if r["Risk status"] == "Equal" else "lower" if r["Favourable"] else "higher"}">{escape(r["Status label"])}</td>
+            <td class="status-{_regressor_status_class(r)}">{escape(r["Status label"])}</td>
         </tr>
         """
         for _, r in df.iterrows()
@@ -192,6 +211,7 @@ def create_pdf_report(
     regressor_chart: alt.Chart | alt.LayerChart | None = None,
     regressor_table: pd.DataFrame | None = None,
     report_date: str | None = None,
+    with_average: bool = True,
 ) -> bytes:
     """Create a pdf report from the plots and tables.
 
@@ -214,6 +234,9 @@ def create_pdf_report(
 
     report_date : str | None, default None
         Date shown in the report header. Defaults to today's date on the server.
+    with_average : bool, default True
+        Whether the similar-operation means are available for the operation. If
+        not, the report says so in its notes.
 
     Returns
     -------
@@ -275,6 +298,14 @@ def create_pdf_report(
             f"<strong>{escape(COMPLICATIONS_WARNING_EMPHASIS)}</strong></li>"
         )
 
+    average_html = ""
+    if not with_average:
+        average_html = (
+            "<li><strong>Similar-operation means are not available for this "
+            "operation category.</strong> The report only shows the patient's "
+            "predictions.</li>"
+        )
+
     date = escape(report_date or time.strftime("%B %d, %Y", time.localtime()))
 
     # --- Final HTML Assembly ---
@@ -301,6 +332,7 @@ def create_pdf_report(
         .status-higher {{ color: {COLOR_RED}; font-weight: bold; }}
         .status-lower {{ color: {COLOR_GREEN}; font-weight: bold; }}
         .status-equal {{ color: {COLOR_BLACK}; font-weight: bold; }}
+        .status-unavailable {{ color: {COLOR_BLACK}; }}
         .box {{
         background-color: #e8f4fd;
         border-radius: 5px;
@@ -325,6 +357,7 @@ def create_pdf_report(
             <ul>
                 <li>{escape(SIMILAR_OPERATION_NOTE)}</li>
                 <li>{escape(CAPPED_OUTCOMES_NOTE)}</li>
+                {average_html}
                 {warning_html}
                 <li>The 95% CI is the confidence interval of the similar-operation
                 mean. The 95% PI is the range in which the patient's true value is
