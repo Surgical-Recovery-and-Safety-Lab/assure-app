@@ -1031,10 +1031,13 @@ def _render_table(
         st.dataframe(
             classifier_table.style.format(
                 {"Risk percentage": f"{{:.{RISK_DECIMALS}f}}%"}
-            ).apply(_highlight_medical_risk, axis=1),
+            )
+            .apply(_highlight_medical_risk, axis=1)
+            .set_properties(subset=["Complications"], **{"font-weight": "bold"}),
             column_config={
                 "Complications": "Outcome",
-                "Risk percentage": "Patient risk",
+                # numbers are right-aligned by default
+                "Risk percentage": {"label": "Patient risk", "alignment": "left"},
                 "Similar-operation mean": "Similar-operation mean",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
@@ -1044,7 +1047,9 @@ def _render_table(
         )
     if regressor_table is not None:
         st.dataframe(
-            regressor_table.style.apply(_highlight_regressor_status, axis=1),
+            regressor_table.style.apply(
+                _highlight_regressor_status, axis=1
+            ).set_properties(subset=["Complications"], **{"font-weight": "bold"}),
             column_config={
                 "Complications": "Outcome",
                 "Prediction": "Patient median prediction",
