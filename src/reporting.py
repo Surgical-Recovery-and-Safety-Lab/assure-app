@@ -322,7 +322,7 @@ def create_pdf_report(
         body {{ font-family: 'DejaVu Sans', sans-serif; color: #2c3e50; }}
         .report-header {{ border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }}
         .section-title {{ font-size: 16pt; color: #2980b9; border-left: 5px solid #3498db; padding-left: 10px; margin: 20px 0; }}
-        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10pt; }}
         th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
         td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
         td:first-child {{ font-weight: bold; }}
