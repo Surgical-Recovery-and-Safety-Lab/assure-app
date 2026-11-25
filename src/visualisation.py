@@ -144,10 +144,10 @@ def _build_regressor_plot_df(
         mean, low, high = (None, None, None) if op_average is None else op_average[key]
         labels.append(label)
         dist = st.session_state.output_dists[key]
-        prediction.append(np.ceil(dist.median()[0]))  # To get an integer
+        prediction.append(np.ceil(dist.median()[0]) + 0.0)  # To get an integer
         l, u = dist.interval(0.95)
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
-        pi_upper.append(np.ceil(u[0]))  # To get an integer
+        pi_upper.append(np.ceil(u[0]) + 0.0)  # To get an integer
         # Whole days, or NaN if the mean or its interval is not available
         average.append(_ci_value(mean, lambda v: int(np.round(v))))
         lower.append(_ci_value(low, lambda v: int(np.round(v))))
