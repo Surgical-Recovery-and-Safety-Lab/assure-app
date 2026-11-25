@@ -276,8 +276,8 @@ def create_pdf_report(
                         reg_charts,
                         [
                             "Outcome",
-                            "Patient median prediction",
-                            "Similar-operation mean",
+                            "Patient median prediction (days)",
+                            "Similar-operation mean (days)",
                             "Status",
                         ],
                         _regressor_rows_html(reg_df),

@@ -1035,8 +1035,8 @@ def _render_table(
             column_config={
                 "Complications": "Outcome",
                 # numbers are right-aligned by default
-                "Risk percentage": {"label": "Patient risk", "alignment": "left"},
-                "Similar-operation mean": "Similar-operation mean",
+                "Risk percentage": {"label": "Patient risk (%)", "alignment": "left"},
+                "Similar-operation mean": "Similar-operation mean (%)",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
             },
@@ -1050,8 +1050,8 @@ def _render_table(
             ).set_properties(subset=["Complications"], **{"font-weight": "bold"}),
             column_config={
                 "Complications": "Outcome",
-                "Prediction": "Patient median prediction",
-                "Similar-operation mean": "Similar-operation mean",
+                "Prediction": "Patient median prediction (days)",
+                "Similar-operation mean": "Similar-operation mean (days)",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
                 "Favourable": None,  # only used for the colours
