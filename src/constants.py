@@ -110,3 +110,4 @@ COLOR_GREEN = "#008000"
 COLOR_GREY = "#808080"
 COLOR_BLUE = "#0000ff"
 COLOR_BLACK = "#000000"
+UNAVAILABLE_STATUS = "Unavailable"  # Risk status when the operation has no averages
