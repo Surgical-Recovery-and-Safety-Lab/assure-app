@@ -26,6 +26,7 @@ if "run_inputs" not in st.session_state:
     st.session_state.run_inputs = None
     st.session_state.run_category = None
     st.session_state.run_op_sev = None
+    st.session_state.run_operation = None
 if "consent" not in st.session_state:
     # Session state variable for consent
     st.session_state.consent = False
