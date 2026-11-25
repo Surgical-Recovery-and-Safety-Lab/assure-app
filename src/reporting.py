@@ -325,6 +325,7 @@ def create_pdf_report(
         table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
         th {{ background-color: #3498db; color: white; text-align: left; padding: 12px; }}
         td {{ padding: 10px; border-bottom: 1px solid #ecf0f1; }}
+        td:first-child {{ font-weight: bold; }}
         thead {{ display: table-header-group; }}  /* repeat on each page */
         tr {{ break-inside: avoid; }}
         .section-title {{ break-after: avoid; }}
