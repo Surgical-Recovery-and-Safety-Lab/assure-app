@@ -15,6 +15,7 @@ def _read_version() -> str:
 
 
 VERSION = _read_version()
+COPYRIGHT = "© 2026 Surgical Recovery and Safety Lab"
 CHANGELOG_URL = "https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/blob/main/CHANGELOG.md"
 CLASSIFIER = "assets/models/classifier/v3"
 REGRESSOR = "assets/models/regressor/v3"

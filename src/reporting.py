@@ -17,6 +17,7 @@ from .constants import (
     COLOR_RED,
     COMPLICATIONS_WARNING,
     COMPLICATIONS_WARNING_EMPHASIS,
+    COPYRIGHT,
     ETHNICITY_LABELS,
     RISK_DECIMALS,
     SEX_LABELS,
@@ -384,7 +385,16 @@ def create_pdf_report(
             src: url('{(FONTS_DIR / "DejaVuSans.ttf").as_uri()}'); }}
         @font-face {{ font-family: 'DejaVu Sans'; font-weight: bold;
             src: url('{(FONTS_DIR / "DejaVuSans-Bold.ttf").as_uri()}'); }}
-        @page {{ size: A4; margin: 15mm; }}
+        @page {{
+            size: A4;
+            margin: 15mm;
+            @bottom-center {{
+                content: "ASSURE {COPYRIGHT}";
+                font-family: 'DejaVu Sans', sans-serif;
+                font-size: 8pt;
+                color: #7f8c8d;
+            }}
+        }}
         body {{ font-family: 'DejaVu Sans', sans-serif; color: #2c3e50; }}
         .report-header {{ border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 30px; }}
         .section-title {{ font-size: 16pt; color: #2980b9; border-left: 5px solid #3498db; padding-left: 10px; margin: 20px 0; }}

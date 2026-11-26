@@ -6,7 +6,7 @@ Streamlit ASSURE app.
 
 import streamlit as st
 
-from src.constants import CHANGELOG_URL, VERSION
+from src.constants import CHANGELOG_URL, COPYRIGHT, VERSION
 
 st.set_page_config(page_title="ASSURE", page_icon="assets/srs-mark.svg", layout="wide")
 
@@ -44,8 +44,5 @@ if pg.title != "Calculator":
 
 with st.sidebar:
     # Pinned below the navigation on every page
-    st.caption(
-        f"v{VERSION} · [Changelog]({CHANGELOG_URL})  \n"
-        "© 2026 Surgical Recovery and Safety Lab"
-    )
+    st.caption(f"v{VERSION} · [Changelog]({CHANGELOG_URL})  \n{COPYRIGHT}")
 pg.run()
