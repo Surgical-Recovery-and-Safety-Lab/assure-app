@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning ([SemVer](https://semver.org/spec/v2.0.0.html)).
 
+## [1.6.3] - 2026-11-25
+
+### Added
+* An ASSURE inputs summary section in the PDF report which provides the information
+used to produce the results.
+* A footer to the PDF report that contains the copyright information.
+* ASSURE to the sidebar footer.
+
+### Changed
+* When an operation average is not available only the patient's information is
+displayed rather than stopping.
+* The formatting of the 95% CI and 95% PI to X{unit} (95% CI Y-Z).
+* The formatting of the tables to have bold outcomes, left-aligned values, and 
+units in the headers.
+* Renamed Length of stay to Length of stay (90 days).
+* The font size of the PDF tables to 9pt to make values easier to read.
+* Updated the operation averages.
+
+### Fixed
+* The operation list is now clean with no duplicates.
+* Bug that made some values of LOS or DOAH at 0 have a - sign in front.
+
 ## [1.6.2] - 2026-11-11
 
 ### Added 
@@ -281,7 +303,8 @@ stay.
 
 
 [Unreleased]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.2...HEAD
-[v1.6.]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.1...v1.6.2
+[v1.6.3]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.2...v1.6.3
+[v1.6.2]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.1...v1.6.2
 [v1.6.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.6.0...v1.6.1
 [1.6.0]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/compare/v1.5.0...v1.5.1

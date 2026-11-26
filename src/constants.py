@@ -15,6 +15,7 @@ def _read_version() -> str:
 
 
 VERSION = _read_version()
+COPYRIGHT = "© 2026 Surgical Recovery and Safety Lab"
 CHANGELOG_URL = "https://github.com/Surgical-Recovery-and-Safety-Lab/assure-app/blob/main/CHANGELOG.md"
 CLASSIFIER = "assets/models/classifier/v3"
 REGRESSOR = "assets/models/regressor/v3"
@@ -27,6 +28,14 @@ MAX_SUBJECT_LENGTH = 150
 MAX_MESSAGE_LENGTH = 2000
 SEND_COOLDOWN = 60  # Seconds a session must wait between two messages
 MAX_SENDS_PER_HOUR = 20  # Messages accepted from all sessions together
+SEX_LABELS = {"M": "Male", "F": "Female"}
+ETHNICITY_LABELS = {
+    "Asian": "Asian",
+    "European": "NZ European",
+    "Māori": "Māori",
+    "MELAA/Other": "MELAA/Other",
+    "Pacific Peoples": "Pacific",
+}
 COLUMNS = [
     "AGE",
     "ETHNICITY_ORIGINAL",
@@ -52,7 +61,7 @@ LABEL_MAP = {
         "READMIT_ACUTE_30D": "30-day acute readmission",
         "READMIT_ACUTE_90D": "90-day acute readmission",
         "DAOH_90": "Days alive and out of hospital (90 days)",
-        "POSTOP_LOS": "Length of stay",
+        "POSTOP_LOS": "Length of stay (90 days)",
         "FTR": "Failure to rescue (coming soon)",
     },
     "COMPLICATIONS": {
@@ -110,3 +119,4 @@ COLOR_GREEN = "#008000"
 COLOR_GREY = "#808080"
 COLOR_BLUE = "#0000ff"
 COLOR_BLACK = "#000000"
+UNAVAILABLE_STATUS = "Unavailable"  # Risk status when the operation has no averages
