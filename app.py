@@ -44,5 +44,5 @@ if pg.title != "Calculator":
 
 with st.sidebar:
     # Pinned below the navigation on every page
-    st.caption(f"v{VERSION} · [Changelog]({CHANGELOG_URL})  \n{COPYRIGHT}")
+    st.caption(f"ASSURE v{VERSION} · [Changelog]({CHANGELOG_URL})  \n{COPYRIGHT}")
 pg.run()
