@@ -26,6 +26,7 @@ from .constants import (
     REGRESSOR_X_MAX,
     RISK_DECIMALS,
     SIMILAR_OPERATION_NOTE,
+    UNAVAILABLE_STATUS,
 )
 
 # Pixels reserved for the y axis labels, wide enough for the longest outcome name
@@ -36,14 +37,15 @@ Y_AXIS_EXTENT = 210
 # Data preparation
 # --------------------------------------------------------------------------- #
 def _ci_value(value: float | None, transform: Callable[[float], float]) -> float:
-    """Transform a confidence interval bound, keeping missing bounds as NaN.
+    """Transform a similar-operation value, keeping missing values as NaN.
 
-    The bounds are None when there were too few samples to compute them.
+    The interval bounds are None when there were too few samples to compute them,
+    and every value is None when the operation has no averages.
 
     Parameters
     ----------
     value : float | None
-        Confidence interval bound.
+        Similar-operation mean or one of its confidence interval bounds.
     transform : Callable[[float], float]
         Transformation applied to a bound that is available.
 
@@ -57,7 +59,7 @@ def _ci_value(value: float | None, transform: Callable[[float], float]) -> float
 
 def _build_classifier_plot_df(
     complications_dict: dict[str, str],
-    op_average: dict[str, tuple[float, float, float]],
+    op_average: dict[str, tuple[float, float, float]] | None,
 ) -> DataFrame:
     """Collect the selected classifier complications into a DataFrame.
 
@@ -65,9 +67,10 @@ def _build_classifier_plot_df(
     ----------
     complications_dict : dict[str, str]
         Dictionary containing the complications and the corresponding plot label.
-    op_average : dict[str, tuple[float, float, float]]
+    op_average : dict[str, tuple[float, float, float]] | None
         Operation averages (mean, lower CI, upper CI) for each complication,
-        expressed as proportions.
+        expressed as proportions. None if there are no averages for the
+        operation, in which case the mean and its interval are NaN.
 
     Returns
     -------
@@ -75,22 +78,21 @@ def _build_classifier_plot_df(
         One row per ticked complication. Empty if nothing is ticked.
     """
     labels, patient_risk, average, lower, upper = [], [], [], [], []
+    no_average = (None, None, None)
 
     for key, label in complications_dict.items():
         if not st.session_state[key] or key in EXCLUDED_KEYS + REGRESSOR_KEYS:
             continue
-        if key not in op_average or key not in st.session_state.output_proba:
+        missing_average = op_average is not None and key not in op_average
+        if missing_average or key not in st.session_state.output_proba:
             st.warning(f"No results are available for {label}.")
             continue
+        mean, low, high = no_average if op_average is None else op_average[key]
         labels.append(label)
         patient_risk.append(np.round(st.session_state.output_proba[key], RISK_DECIMALS))
-        average.append(np.round(op_average[key][0] * 100, RISK_DECIMALS))
-        lower.append(
-            _ci_value(op_average[key][1], lambda v: np.round(v * 100, RISK_DECIMALS))
-        )
-        upper.append(
-            _ci_value(op_average[key][2], lambda v: np.round(v * 100, RISK_DECIMALS))
-        )
+        average.append(_ci_value(mean, lambda v: np.round(v * 100, RISK_DECIMALS)))
+        lower.append(_ci_value(low, lambda v: np.round(v * 100, RISK_DECIMALS)))
+        upper.append(_ci_value(high, lambda v: np.round(v * 100, RISK_DECIMALS)))
 
     return DataFrame(
         {
@@ -105,7 +107,7 @@ def _build_classifier_plot_df(
 
 def _build_regressor_plot_df(
     complications_dict: dict[str, str],
-    op_average: dict[str, tuple[float, float, float]],
+    op_average: dict[str, tuple[float, float, float]] | None,
 ) -> DataFrame:
     """Collect the selected regressor complications into a DataFrame.
 
@@ -113,9 +115,10 @@ def _build_regressor_plot_df(
     ----------
     complications_dict : dict[str, str]
         Dictionary containing the complications and the corresponding plot label.
-    op_average : dict[str, tuple[float, float, float]]
-        Operation averages (mean, lower CI, upper CI) for each complication,
-        expressed as proportions.
+    op_average : dict[str, tuple[float, float, float]] | None
+        Operation averages (mean, lower CI, upper CI) for each complication, in
+        days. None if there are no averages for the operation, in which case the
+        mean and its interval are NaN.
 
     Returns
     -------
@@ -134,19 +137,21 @@ def _build_regressor_plot_df(
     for key, label in complications_dict.items():
         if not st.session_state[key] or key not in REGRESSOR_KEYS:
             continue
-        if key not in op_average or key not in st.session_state.output_dists:
+        missing_average = op_average is not None and key not in op_average
+        if missing_average or key not in st.session_state.output_dists:
             st.warning(f"No results are available for {label}.")
             continue
+        mean, low, high = (None, None, None) if op_average is None else op_average[key]
         labels.append(label)
         dist = st.session_state.output_dists[key]
-        prediction.append(np.ceil(dist.median()[0]))  # To get an integer
+        prediction.append(np.ceil(dist.median()[0]) + 0.0)  # To get an integer
         l, u = dist.interval(0.95)
         pi_lower.append(np.ceil(l[0]) + 0.0)  # To get an integer
-        pi_upper.append(np.ceil(u[0]))  # To get an integer
-        average.append(int(np.round(op_average[key][0])))
-        # Whole days, or NaN if there were too few samples to compute the interval
-        lower.append(_ci_value(op_average[key][1], lambda v: int(np.round(v))))
-        upper.append(_ci_value(op_average[key][2], lambda v: int(np.round(v))))
+        pi_upper.append(np.ceil(u[0]) + 0.0)  # To get an integer
+        # Whole days, or NaN if the mean or its interval is not available
+        average.append(_ci_value(mean, lambda v: int(np.round(v))))
+        lower.append(_ci_value(low, lambda v: int(np.round(v))))
+        upper.append(_ci_value(high, lambda v: int(np.round(v))))
 
     return DataFrame(
         {
@@ -173,15 +178,18 @@ def _status_label(value: float, average: float, status: str) -> str:
         Patient risk or median prediction.
     average : float
         Similar-operation mean.
-    status : {"Higher", "Lower", "Equal"}
+    status : {"Higher", "Lower", "Equal", "Unavailable"}
         How the value compares to the similar-operation mean.
 
     Returns
     -------
     str
         For example ``"×1.50 higher"``. Just the status if the ratio is undefined,
-        which happens when the smaller of the two values is zero.
+        which happens when the smaller of the two values is zero, and "Not
+        available" if there is no mean to compare to.
     """
+    if status == UNAVAILABLE_STATUS:
+        return "Not available"
     if status == "Equal":
         return status
 
@@ -203,14 +211,17 @@ def _add_risk_status(plot_df: DataFrame) -> DataFrame:
     Returns
     -------
     pandas.DataFrame
-        The same DataFrame with a 'Risk status' column ("Higher", "Lower" or "Equal")
-        and a 'Status label' column that adds the ratio to the similar-operation mean.
+        The same DataFrame with a 'Risk status' column ("Higher", "Lower", "Equal",
+        or "Unavailable" if there is no mean) and a 'Status label' column that adds
+        the ratio to the similar-operation mean.
     """
     # Compare at the displayed precision, so equal looking values are not "Higher"
     risk = plot_df["Risk percentage"].round(RISK_DECIMALS)
     average = plot_df["Similar-operation mean"].round(RISK_DECIMALS)
     plot_df["Risk status"] = np.select(
-        [risk > average, risk < average], ["Higher", "Lower"], default="Equal"
+        [average.isna(), risk > average, risk < average],
+        [UNAVAILABLE_STATUS, "Higher", "Lower"],
+        default="Equal",
     )
     plot_df["Status label"] = [
         _status_label(*args) for args in zip(risk, average, plot_df["Risk status"])
@@ -222,8 +233,9 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     """Add the 'Risk status', 'Status label' and 'Favourable' columns.
 
     A prediction above the similar-operation mean is "Higher", below it "Lower" and
-    the same as it "Equal". More days alive and out of hospital is favourable,
-    while a longer stay is not. An equal prediction is neither.
+    the same as it "Equal", or "Unavailable" if there is no mean. More days alive
+    and out of hospital is favourable, while a longer stay is not. An equal
+    prediction is neither, and neither is one without a mean.
 
     Parameters
     ----------
@@ -240,36 +252,45 @@ def _add_regressor_status(plot_df: DataFrame) -> DataFrame:
     average = plot_df["Similar-operation mean"]
     higher = prediction > average
     daoh = plot_df["Complications"] == LABEL_MAP["HEALTH_OUTCOMES"]["DAOH_90"]
+    lower = prediction < average
     plot_df["Risk status"] = np.select(
-        [higher, prediction < average], ["Higher", "Lower"], default="Equal"
+        [average.isna(), higher, lower],
+        [UNAVAILABLE_STATUS, "Higher", "Lower"],
+        default="Equal",
     )
     plot_df["Status label"] = [
         _status_label(*args)
         for args in zip(prediction, average, plot_df["Risk status"])
     ]
-    plot_df["Favourable"] = higher == daoh  # higher is good for DAOH only
+    # Higher is good for DAOH only, and there is nothing to judge without a mean
+    plot_df["Favourable"] = (higher & daoh) | (lower & ~daoh)
     return plot_df
 
 
 # --------------------------------------------------------------------------- #
 # Shared chart encodings
 # --------------------------------------------------------------------------- #
-def _legend_color() -> alt.Color:
+def _legend_color(with_average: bool = True) -> alt.Color:
     """Create the colour encoding shared by the layers that feed the legend.
 
     The same field name and scale across layers merges them into one legend.
+
+    Parameters
+    ----------
+    with_average : bool, default True
+        Whether the similar-operation mean is plotted and belongs in the legend.
 
     Returns
     -------
     altair.Color
         Colour encoding on the ``Legend`` field.
     """
+    domain, colours = [LEGEND_AVERAGE, LEGEND_PATIENT], [COLOR_BLACK, COLOR_BLUE]
+    if not with_average:
+        domain, colours = domain[1:], colours[1:]
     return alt.Color(
         "Legend:N",
-        scale=alt.Scale(
-            domain=[LEGEND_AVERAGE, LEGEND_PATIENT],
-            range=[COLOR_BLACK, COLOR_BLUE],
-        ),
+        scale=alt.Scale(domain=domain, range=colours),
         legend=alt.Legend(
             title=None,
             orient="top",
@@ -279,22 +300,27 @@ def _legend_color() -> alt.Color:
     )
 
 
-def _regressor_legend_color() -> alt.Color:
+def _regressor_legend_color(with_average: bool = True) -> alt.Color:
     """Create the regressor colour encoding shared by the layers feeding the legend.
 
     The same field name and scale across layers merges them into one legend.
+
+    Parameters
+    ----------
+    with_average : bool, default True
+        Whether the similar-operation mean is plotted and belongs in the legend.
 
     Returns
     -------
     altair.Color
         Colour encoding on the ``Legend`` field.
     """
+    domain, colours = [LEGEND_AVERAGE, LEGEND_MEDIAN], [COLOR_BLACK, COLOR_BLUE]
+    if not with_average:
+        domain, colours = domain[1:], colours[1:]
     return alt.Color(
         "Legend:N",
-        scale=alt.Scale(
-            domain=[LEGEND_AVERAGE, LEGEND_MEDIAN],
-            range=[COLOR_BLACK, COLOR_BLUE],
-        ),
+        scale=alt.Scale(domain=domain, range=colours),
         legend=alt.Legend(
             title=None,
             orient="top",
@@ -331,11 +357,14 @@ def _regressor_status_color():
     Returns
     -------
     altair.Then
-        Black if the prediction equals the similar-operation mean, green if it is
-        favourable compared to it, else red.
+        Black if the prediction equals the similar-operation mean or there is no
+        mean, green if it is favourable compared to it, else red.
     """
+    compared = (alt.datum["Risk status"] == "Higher") | (
+        alt.datum["Risk status"] == "Lower"
+    )
     return (
-        alt.when(alt.datum["Risk status"] == "Equal")
+        alt.when(~compared)
         .then(alt.value(COLOR_BLACK))
         .when(alt.datum["Favourable"])
         .then(alt.value(COLOR_GREEN))
@@ -349,15 +378,15 @@ def _status_color():
     Returns
     -------
     altair.Then
-        Black if the patient risk equals the similar-operation mean, red if it is above,
-        else green.
+        Red if the patient risk is above the similar-operation mean, green if it is
+        below, else black (equal, or no mean to compare to).
     """
     return (
-        alt.when(alt.datum["Risk status"] == "Equal")
-        .then(alt.value(COLOR_BLACK))
-        .when(alt.datum["Risk status"] == "Higher")
+        alt.when(alt.datum["Risk status"] == "Higher")
         .then(alt.value(COLOR_RED))
-        .otherwise(alt.value(COLOR_GREEN))
+        .when(alt.datum["Risk status"] == "Lower")
+        .then(alt.value(COLOR_GREEN))
+        .otherwise(alt.value(COLOR_BLACK))
     )
 
 
@@ -692,8 +721,28 @@ def _prediction_status_text_layer(
     )
 
 
+def _has_average(plot_df: DataFrame) -> bool:
+    """Check whether the data has any similar-operation mean to plot.
+
+    Parameters
+    ----------
+    plot_df : pandas.DataFrame
+        Data to plot.
+
+    Returns
+    -------
+    bool
+        False if every similar-operation mean is missing, as happens when the
+        operation has no averages.
+    """
+    return bool(plot_df["Similar-operation mean"].notna().any())
+
+
 def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     """Combine all layers into the final chart.
+
+    Without similar-operation means, only the patient risk and its value are
+    plotted, as there is no mean, interval or comparison to show.
 
     Parameters
     ----------
@@ -707,20 +756,28 @@ def _build_chart(plot_df: DataFrame) -> alt.LayerChart:
     """
     x_max = max(plot_df.max(numeric_only=True).max() * 1.1, 1)  # Never a 0 width axis
     y_enc = _y_encoding()
-    legend_color = _legend_color()
+    with_average = _has_average(plot_df)
+    legend_color = _legend_color(with_average)
 
-    layers = (
-        _error_bars_layer(plot_df, y_enc)
-        + _average_point_layer(plot_df, y_enc, legend_color)
-        + _patient_diamond_layer(plot_df, y_enc, legend_color, x_max)
-        + _risk_value_text_layer(plot_df, y_enc, x_max)
-        + _risk_status_text_layer(plot_df, y_enc, x_max)
-    )
+    layers = [
+        _patient_diamond_layer(plot_df, y_enc, legend_color, x_max),
+        _risk_value_text_layer(plot_df, y_enc, x_max),
+    ]
+    title = "Patient risk"
+    if with_average:
+        layers = [
+            _error_bars_layer(plot_df, y_enc),
+            _average_point_layer(plot_df, y_enc, legend_color),
+            *layers,
+            _risk_status_text_layer(plot_df, y_enc, x_max),
+        ]
+        title = "Patient risk vs. Similar-operation mean (95% CI)"
 
     return (
-        layers.properties(
+        alt.layer(*layers)
+        .properties(
             height=alt.Step(30),  # consistent breathing room per row
-            title="Patient risk vs. Similar-operation mean (95% CI)",
+            title=title,
         )
         .configure_axis(
             grid=False,  # remove distracting lines
@@ -736,6 +793,8 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
     """Combine all layers for the regressor plot into the final chart.
 
     Both outcomes are capped at 90 days, so they share one chart and one axis.
+    Without similar-operation means, only the prediction and its interval are
+    plotted.
 
     Parameters
     ----------
@@ -750,19 +809,25 @@ def _build_regressor_chart(plot_df: DataFrame) -> alt.LayerChart:
     """
     x_max = REGRESSOR_X_MAX
     y_enc = _y_encoding()
-    legend_color = _regressor_legend_color()
+    with_average = _has_average(plot_df)
+    legend_color = _regressor_legend_color(with_average)
 
-    layers = (
-        _error_bars_layer(plot_df, y_enc)
-        + _average_point_layer(plot_df, y_enc, legend_color)
-        + _median_prediction_layer(plot_df, y_enc, legend_color)
-        + _prediction_bars_layer(plot_df, y_enc, x_max)
-        + _prediction_value_text_layer(plot_df, y_enc, x_max)
-        + _prediction_status_text_layer(plot_df, y_enc, x_max)
-    )
+    layers = [
+        _median_prediction_layer(plot_df, y_enc, legend_color),
+        _prediction_bars_layer(plot_df, y_enc, x_max),
+        _prediction_value_text_layer(plot_df, y_enc, x_max),
+    ]
+    if with_average:
+        layers = [
+            _error_bars_layer(plot_df, y_enc),
+            _average_point_layer(plot_df, y_enc, legend_color),
+            *layers,
+            _prediction_status_text_layer(plot_df, y_enc, x_max),
+        ]
 
     return (
-        layers.properties(
+        alt.layer(*layers)
+        .properties(
             height=alt.Step(30),  # consistent breathing room per row
             title="Patient median prediction (95% PI)",
         )
@@ -794,17 +859,17 @@ def _format_average(row: Series, decimals: int = 1, unit: str = "") -> str:
     Returns
     -------
     str
-        For example ``"12.3, 95% CI [10.1, 14.5]%"``, or ``"12.3%, 95% CI not
-        available"`` if the interval could not be computed.
+        For example ``"12.3% (95% CI 10.1-14.5)"``, ``"12.3%, 95% CI not
+        available"`` if the interval could not be computed, or ``"Not available"``
+        if there is no mean.
     """
+    if isna(row["Similar-operation mean"]):
+        return "Not available"
     mean = f"{row['Similar-operation mean']:.{decimals}f}"
     if isna(row["Lower CI"]) or isna(row["Upper CI"]):
         return f"{mean}{unit}, 95% CI not available"
 
-    return (
-        f"{mean}, 95% CI "
-        f"[{row['Lower CI']:.{decimals}f}, {row['Upper CI']:.{decimals}f}]{unit}"
-    )
+    return f"{mean}{unit} (95% CI {row['Lower CI']:.{decimals}f}-{row['Upper CI']:.{decimals}f})"
 
 
 def _format_prediction(row: Series) -> str:
@@ -818,11 +883,11 @@ def _format_prediction(row: Series) -> str:
     Returns
     -------
     str
-        For example ``"12.3, 95% PI [10.1, 14.5]"``.
+        For example ``"12.3 days (95% PI 10.1-14.5)"``.
     """
     return (
-        f"{row['Median prediction']:.0f}, "
-        f"95% PI [{row['Lower PI']:.0f}, {row['Upper PI']:.0f}] days"
+        f"{row['Median prediction']:.0f} days "
+        f"(95% PI {row['Lower PI']:.0f}-{row['Upper PI']:.0f})"
     )
 
 
@@ -916,7 +981,7 @@ def _highlight_regressor_status(row: Series) -> list[str]:
         CSS style for each cell in the row.
     """
     styles = ["color: black"] * len(row)
-    if row["Risk status"] == "Equal":
+    if row["Risk status"] not in ("Higher", "Lower"):  # Equal, or no mean
         colour = COLOR_BLACK
     else:
         colour = COLOR_GREEN if row["Favourable"] else COLOR_RED
@@ -941,8 +1006,9 @@ def _highlight_medical_risk(row: Series) -> list[str]:
     styles = ["color: black"] * len(row)
 
     risk_col_index = row.index.get_loc("Status label")
-    colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN, "Equal": COLOR_BLACK}
-    styles[risk_col_index] = f"color: {colours[row['Risk status']]}; font-weight: bold"
+    colours = {"Higher": COLOR_RED, "Lower": COLOR_GREEN}
+    colour = colours.get(row["Risk status"], COLOR_BLACK)  # Equal, or no mean
+    styles[risk_col_index] = f"color: {colour}; font-weight: bold"
 
     return styles
 
@@ -963,11 +1029,14 @@ def _render_table(
         st.dataframe(
             classifier_table.style.format(
                 {"Risk percentage": f"{{:.{RISK_DECIMALS}f}}%"}
-            ).apply(_highlight_medical_risk, axis=1),
+            )
+            .apply(_highlight_medical_risk, axis=1)
+            .set_properties(subset=["Complications"], **{"font-weight": "bold"}),
             column_config={
                 "Complications": "Outcome",
-                "Risk percentage": "Patient risk",
-                "Similar-operation mean": "Similar-operation mean",
+                # numbers are right-aligned by default
+                "Risk percentage": {"label": "Patient risk (%)", "alignment": "left"},
+                "Similar-operation mean": "Similar-operation mean (%)",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
             },
@@ -976,11 +1045,13 @@ def _render_table(
         )
     if regressor_table is not None:
         st.dataframe(
-            regressor_table.style.apply(_highlight_regressor_status, axis=1),
+            regressor_table.style.apply(
+                _highlight_regressor_status, axis=1
+            ).set_properties(subset=["Complications"], **{"font-weight": "bold"}),
             column_config={
                 "Complications": "Outcome",
-                "Prediction": "Patient median prediction",
-                "Similar-operation mean": "Similar-operation mean",
+                "Prediction": "Patient median prediction (days)",
+                "Similar-operation mean": "Similar-operation mean (days)",
                 "Risk status": None,  # only used for the colours
                 "Status label": "Risk status",
                 "Favourable": None,  # only used for the colours
@@ -995,6 +1066,7 @@ def _render_table(
 def _render_chart(
     classifier_chart: alt.LayerChart | None,
     regressor_chart: alt.LayerChart | None,
+    with_average: bool = True,
 ) -> None:
     """Display the chart with its explanatory text.
 
@@ -1005,6 +1077,9 @@ def _render_chart(
     regressor_chart : altair.LayerChart
         Days alive and out of hospital and length of stay chart returned by
         `_build_regressor_chart`.
+    with_average : bool, default True
+        Whether the charts show the similar-operation means. If not, the help
+        leaves out how to read them.
     """
     show_help = False
     if classifier_chart is not None:
@@ -1018,21 +1093,32 @@ def _render_chart(
         with st.popover(
             "How to read the charts", type="tertiary", icon=":material/help:"
         ):
-            st.write(
-                "The charts above show the current patient's risk relative to the "
-                "similar-operation mean for the selected operation."
-            )
-            st.write(SIMILAR_OPERATION_NOTE)
-            st.write(
-                "The grey bar and shading represent the similar-operation mean "
-                "and its 95% confidence interval."
-            )
-            st.write(
-                "The blue diamond represent the current patient's risk, with the "
-                "exact value specified on the right side of the graph. If the "
-                "patient's outcome is better than the similar-operation mean, the "
-                "text will be green, otherwise, it will be red."
-            )
+            if with_average:
+                st.write(
+                    "The charts above show the current patient's risk relative to "
+                    "the similar-operation mean for the selected operation."
+                )
+                st.write(SIMILAR_OPERATION_NOTE)
+                st.write(
+                    "The grey bar and shading represent the similar-operation mean "
+                    "and its 95% confidence interval."
+                )
+                st.write(
+                    "The blue diamond represent the current patient's risk, with "
+                    "the exact value specified on the right side of the graph. If "
+                    "the patient's outcome is better than the similar-operation "
+                    "mean, the text will be green, otherwise, it will be red."
+                )
+            else:
+                st.write(
+                    "The charts above show the current patient's risk. The "
+                    "similar-operation mean is not available for the selected "
+                    "operation, so it is not shown."
+                )
+                st.write(
+                    "The blue diamond represent the current patient's risk, with "
+                    "the exact value specified on the right side of the graph."
+                )
             st.write(
                 "For days alive and out of hospital and length of stay, the black "
                 "bars around the diamond represent the 95% prediction interval. "
@@ -1048,7 +1134,7 @@ def _render_chart(
 # --------------------------------------------------------------------------- #
 def data_visualisation(
     complications_dict: dict[str, str],
-    op_average: dict[str, tuple[float, float, float]],
+    op_average: dict[str, tuple[float, float, float]] | None,
     display: Literal["graph", "table"] = "graph",
 ) -> tuple[
     alt.LayerChart | None,
@@ -1064,8 +1150,10 @@ def data_visualisation(
     ----------
     complications_dict : dict[str, str]
         Dictionary containing the complications and the corresponding plot label.
-    op_average : dict[str, tuple[float, float, float]]
-        Dictionary containing the operation averages for each complication.
+    op_average : dict[str, tuple[float, float, float]] | None
+        Dictionary containing the operation averages for each complication. None
+        if the operation has no averages, in which case only the patient results
+        are shown.
     display : {"graph", "table"}, default "graph"
         Flag to plot the graph rather than the table.
 
@@ -1106,6 +1194,8 @@ def data_visualisation(
     if display == "table":
         _render_table(classifier_table, regressor_table)
     else:
-        _render_chart(classifier_chart, regressor_chart)
+        _render_chart(
+            classifier_chart, regressor_chart, with_average=op_average is not None
+        )
 
     return classifier_chart, classifier_table, regressor_chart, regressor_table
